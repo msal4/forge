@@ -133,7 +133,7 @@ export function Layout() {
       )}
       
       {/* Main Content */}
-      <main className="flex-1 min-w-0 overflow-y-auto">
+      <main className="flex-1 min-w-0 overflow-y-auto" style={{ scrollbarGutter: 'stable' }}>
         <div className="max-w-7xl mx-auto p-6 lg:p-8">
           <Outlet />
         </div>
