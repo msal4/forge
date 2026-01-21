@@ -1,4 +1,5 @@
 import React from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Plus, RefreshCw, Loader2 } from 'lucide-react';
 import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
 import { IssueCard } from '../components/issues/IssueCard';
@@ -50,6 +51,9 @@ const COLUMNS = [
 ] as const;
 
 export function IssuesPage() {
+  const { issueId } = useParams();
+  const navigate = useNavigate();
+  
   // Data state
   const [issues, setIssues] = React.useState<Issue[]>([]);
   const [users, setUsers] = React.useState<User[]>([]);
@@ -65,17 +69,6 @@ export function IssuesPage() {
   // Drag and drop state
   const [draggedIssue, setDraggedIssue] = React.useState<Issue | null>(null);
   const [dragOverColumn, setDragOverColumn] = React.useState<IssueStatusType | null>(null);
-
-  // Update URL when issue is selected/deselected
-  const updateUrlWithIssue = React.useCallback((issueId: number | null) => {
-    const url = new URL(window.location.href);
-    if (issueId) {
-      url.searchParams.set('issue', String(issueId));
-    } else {
-      url.searchParams.delete('issue');
-    }
-    window.history.replaceState({}, '', url.toString());
-  }, []);
 
   // Load issues and users
   const loadData = React.useCallback(async (signal?: AbortSignal) => {
@@ -101,27 +94,27 @@ export function IssuesPage() {
     }
   }, []);
 
-  // Load data and check URL for issue ID on mount
+  // Load data on mount
   React.useEffect(() => {
     const controller = new AbortController();
-    
-    loadData(controller.signal).then((issuesData) => {
-      if (controller.signal.aborted) return;
-      
-      const url = new URL(window.location.href);
-      const issueId = url.searchParams.get('issue');
-      if (issueId && issuesData.length > 0) {
-        const issue = issuesData.find(i => i.id === Number(issueId));
-        if (issue) {
-          setSelectedIssue(issue);
-          setModalMode('view');
-          setIsModalOpen(true);
-        }
-      }
-    });
-    
+    loadData(controller.signal);
     return () => controller.abort();
   }, [loadData]);
+
+  // Handle URL param changes for issue selection
+  React.useEffect(() => {
+    if (issueId && issues.length > 0) {
+      const issue = issues.find(i => i.id === Number(issueId));
+      if (issue) {
+        setSelectedIssue(issue);
+        setModalMode('view');
+        setIsModalOpen(true);
+      }
+    } else if (!issueId) {
+      setIsModalOpen(false);
+      setSelectedIssue(null);
+    }
+  }, [issueId, issues]);
 
   // Group issues by status
   const issuesByStatus = React.useMemo(() => {
@@ -254,18 +247,13 @@ export function IssuesPage() {
 
   // View issue handler (opens modal in view mode)
   const handleViewIssue = (issue: Issue) => {
-    setSelectedIssue(issue);
-    setModalMode('view');
-    setIsModalOpen(true);
-    updateUrlWithIssue(issue.id);
+    navigate(`/issues/${issue.id}`);
   };
 
   // Edit issue handler (opens modal in edit mode)
   const handleEditIssue = (issue: Issue) => {
-    setSelectedIssue(issue);
     setModalMode('edit');
-    setIsModalOpen(true);
-    updateUrlWithIssue(issue.id);
+    navigate(`/issues/${issue.id}`);
   };
 
   // Handle mode change within modal
@@ -275,9 +263,7 @@ export function IssuesPage() {
 
   // Close modal
   const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedIssue(null);
-    updateUrlWithIssue(null);
+    navigate('/issues');
   };
 
   // Handle delete from modal
@@ -291,6 +277,7 @@ export function IssuesPage() {
   const completedIssues = issuesByStatus[IssueStatus.BAKED].length;
 
   return (
+    <>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -381,6 +368,8 @@ export function IssuesPage() {
         </div>
       )}
 
+    </div>
+
       {/* Unified Issue Modal */}
       <IssueModal
         isOpen={isModalOpen}
@@ -393,7 +382,7 @@ export function IssuesPage() {
         onModeChange={handleModeChange}
         isLoading={isSaving}
       />
-    </div>
+    </>
   );
 }
 

@@ -1,5 +1,7 @@
 import React from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { 
   Plus, 
   Package, 
@@ -27,6 +29,9 @@ import {
 // ============================================
 
 export function ReleasesPage() {
+  const { releaseId } = useParams();
+  const navigate = useNavigate();
+  
   // Data state
   const [releases, setReleases] = React.useState<Release[]>([]);
   const [selectedRelease, setSelectedRelease] = React.useState<Release | null>(null);
@@ -42,6 +47,15 @@ export function ReleasesPage() {
   const [uploadProgress, setUploadProgress] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+  // Helper to select release and update URL
+  const selectRelease = React.useCallback((release: Release | null) => {
+    if (release) {
+      navigate(`/releases/${release.id}`);
+    } else {
+      navigate('/releases');
+    }
+  }, [navigate]);
+
   // Load releases
   const loadReleases = React.useCallback(async (signal?: AbortSignal) => {
     try {
@@ -49,22 +63,37 @@ export function ReleasesPage() {
       setError(null);
       const data = await releasesApi.list({ signal });
       setReleases(data);
+      return data;
     } catch (err) {
       // Ignore abort errors
       if (err instanceof Error && err.name === 'AbortError') {
-        return;
+        return [];
       }
       setError(err instanceof Error ? err.message : 'Failed to load releases');
+      return [];
     } finally {
       setIsLoading(false);
     }
   }, []);
 
+  // Load data on mount
   React.useEffect(() => {
     const controller = new AbortController();
     loadReleases(controller.signal);
     return () => controller.abort();
   }, [loadReleases]);
+
+  // Handle URL param changes for release selection
+  React.useEffect(() => {
+    if (releaseId && releases.length > 0) {
+      const release = releases.find(r => r.id === Number(releaseId));
+      if (release) {
+        setSelectedRelease(release);
+      }
+    } else if (!releaseId) {
+      setSelectedRelease(null);
+    }
+  }, [releaseId, releases]);
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
@@ -83,7 +112,7 @@ export function ReleasesPage() {
     {
       keys: 'Escape',
       description: 'Close release details',
-      handler: () => setSelectedRelease(null),
+      handler: () => selectRelease(null),
       category: 'navigation',
     },
   ]);
@@ -95,7 +124,7 @@ export function ReleasesPage() {
       const created = await releasesApi.create(data);
       setReleases(prev => [created, ...prev]);
       setIsModalOpen(false);
-      setSelectedRelease(created);
+      selectRelease(created);
     } catch (err) {
       throw err;
     } finally {
@@ -111,7 +140,7 @@ export function ReleasesPage() {
       await releasesApi.delete(release.id);
       setReleases(prev => prev.filter(r => r.id !== release.id));
       if (selectedRelease?.id === release.id) {
-        setSelectedRelease(null);
+        selectRelease(null);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete release');
@@ -174,6 +203,7 @@ export function ReleasesPage() {
   };
 
   return (
+    <>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -227,9 +257,15 @@ export function ReleasesPage() {
       )}
 
       {/* Main content */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className={`grid gap-6 ${selectedRelease ? 'lg:grid-cols-3' : ''}`}>
         {/* Releases List */}
-        <div className={`space-y-4 ${selectedRelease ? 'lg:col-span-1' : 'lg:col-span-3'}`}>
+        <div className={`
+          space-y-4 
+          ${selectedRelease 
+            ? 'lg:col-span-1 lg:max-h-[calc(100vh-200px)] lg:overflow-y-auto lg:pr-2 scrollbar-thin' 
+            : ''
+          }
+        `}>
           {!isLoading && releases.length === 0 && (
             <div className="tablet-card p-8 text-center">
               <Package className="mx-auto text-lapis-300" size={48} />
@@ -247,7 +283,7 @@ export function ReleasesPage() {
               key={release.id}
               release={release}
               isSelected={selectedRelease?.id === release.id}
-              onClick={() => setSelectedRelease(release)}
+              onClick={() => selectRelease(release)}
               onDelete={() => handleDeleteRelease(release)}
               formatDate={formatDate}
               formatSize={formatSize}
@@ -257,7 +293,7 @@ export function ReleasesPage() {
 
         {/* Release Details */}
         {selectedRelease && (
-          <div className="lg:col-span-2 tablet-card p-6 space-y-6">
+          <div className="lg:col-span-2 lg:sticky lg:top-4 lg:self-start tablet-card p-6 space-y-6 lg:max-h-[calc(100vh-200px)] lg:overflow-y-auto scrollbar-thin">
             {/* Details Header */}
             <div className="flex items-start justify-between">
               <div>
@@ -271,7 +307,7 @@ export function ReleasesPage() {
                 </div>
                 {selectedRelease.description && (
                   <div className="mt-2 prose-mesopotamian">
-                    <ReactMarkdown>{selectedRelease.description}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedRelease.description}</ReactMarkdown>
                   </div>
                 )}
                 <div className="mt-3 flex items-center gap-4 text-sm text-lapis-500">
@@ -288,7 +324,7 @@ export function ReleasesPage() {
                 </div>
               </div>
               <button
-                onClick={() => setSelectedRelease(null)}
+                onClick={() => selectRelease(null)}
                 className="p-1 rounded hover:bg-parchment-200 text-lapis-500"
               >
                 <X size={20} />
@@ -348,6 +384,8 @@ export function ReleasesPage() {
         )}
       </div>
 
+    </div>
+
       {/* Create Release Modal */}
       <CreateReleaseModal
         isOpen={isModalOpen}
@@ -355,7 +393,7 @@ export function ReleasesPage() {
         onSave={handleCreateRelease}
         isLoading={isSaving}
       />
-    </div>
+    </>
   );
 }
 
@@ -374,27 +412,39 @@ interface ReleaseCardProps {
 
 function ReleaseCard({ release, isSelected, onClick, onDelete, formatDate, formatSize }: ReleaseCardProps) {
   const totalSize = release.files.reduce((acc, f) => acc + f.size, 0);
+  const cardRef = React.useRef<HTMLDivElement>(null);
+  
+  // Auto-scroll to selected card
+  React.useEffect(() => {
+    if (isSelected && cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [isSelected]);
   
   return (
     <div
+      ref={cardRef}
       className={`
-        tablet-card p-4 cursor-pointer
+        group tablet-card p-4 cursor-pointer
         transition-all duration-150
-        ${isSelected ? 'ring-2 ring-lapis-400' : 'hover:border-lapis-300 hover:shadow-tablet'}
+        ${isSelected 
+          ? 'ring-2 ring-lapis-500 bg-lapis-50 border-lapis-400 shadow-tablet' 
+          : 'hover:border-lapis-300 hover:shadow-tablet'
+        }
       `}
       onClick={onClick}
     >
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3">
-          <div className="p-2 rounded-tablet bg-gold-100 text-gold-600">
+          <div className={`p-2 rounded-tablet ${isSelected ? 'bg-lapis-500 text-parchment-100' : 'bg-gold-100 text-gold-600'}`}>
             <Package size={20} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-code bg-lapis-100 text-lapis-600 px-1.5 py-0.5 rounded">
+              <span className={`text-xs font-code px-1.5 py-0.5 rounded ${isSelected ? 'bg-lapis-500 text-parchment-100' : 'bg-lapis-100 text-lapis-600'}`}>
                 {release.version}
               </span>
-              <h3 className="font-medium text-lapis-600">{release.title}</h3>
+              <h3 className={`font-medium ${isSelected ? 'text-lapis-700' : 'text-lapis-600'}`}>{release.title}</h3>
             </div>
             <div className="mt-1 flex items-center gap-3 text-xs text-lapis-500">
               <span>{formatDate(release.createdAt)}</span>

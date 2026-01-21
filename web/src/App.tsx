@@ -28,9 +28,12 @@ function AppRoutes() {
         </ProtectedRoute>
       }>
         <Route path="/" element={<HomePage />} />
-        <Route path="/issues/*" element={<IssuesPage />} />
-        <Route path="/docs/*" element={<DocsPage />} />
-        <Route path="/releases/*" element={<ReleasesPage />} />
+        <Route path="/issues" element={<IssuesPage />} />
+        <Route path="/issues/:issueId" element={<IssuesPage />} />
+        <Route path="/docs" element={<DocsPage />} />
+        <Route path="/docs/:docId" element={<DocsPage />} />
+        <Route path="/releases" element={<ReleasesPage />} />
+        <Route path="/releases/:releaseId" element={<ReleasesPage />} />
       </Route>
       
       {/* Fallback */}

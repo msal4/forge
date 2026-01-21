@@ -267,6 +267,20 @@
   @apply rounded-tablet my-4 max-w-full h-auto;
 }
 
+/* Task list (checkboxes) */
+.prose-mesopotamian ul:has(input[type="checkbox"]) {
+  @apply list-none pl-0;
+}
+
+.prose-mesopotamian li:has(> input[type="checkbox"]) {
+  @apply flex items-start gap-2 my-1;
+}
+
+.prose-mesopotamian input[type="checkbox"] {
+  @apply mt-1 w-4 h-4 rounded border-parchment-400 text-lapis-500 
+         focus:ring-lapis-400 focus:ring-offset-0 cursor-default;
+}
+
 /* ============================================
    Chrome Autofill Detection
    ============================================ */

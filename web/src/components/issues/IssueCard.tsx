@@ -9,6 +9,36 @@ import {
 } from 'lucide-react';
 import type { Issue, PriorityType } from '../../api/issues';
 
+// Strip markdown syntax for plain text preview
+function stripMarkdown(text: string): string {
+  return text
+    // Remove headers
+    .replace(/^#{1,6}\s+/gm, '')
+    // Remove bold/italic
+    .replace(/(\*\*|__)(.*?)\1/g, '$2')
+    .replace(/(\*|_)(.*?)\1/g, '$2')
+    // Remove links, keep text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // Remove images
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
+    // Remove inline code
+    .replace(/`([^`]+)`/g, '$1')
+    // Remove code blocks
+    .replace(/```[\s\S]*?```/g, '')
+    // Remove blockquotes
+    .replace(/^>\s+/gm, '')
+    // Remove horizontal rules
+    .replace(/^[-*_]{3,}\s*$/gm, '')
+    // Remove list markers
+    .replace(/^[\s]*[-*+]\s+/gm, '')
+    .replace(/^[\s]*\d+\.\s+/gm, '')
+    // Remove checkboxes
+    .replace(/\[[ x]\]\s*/gi, '')
+    // Collapse whitespace
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // ============================================
 // Issue Card - Kanban board card component
 // Modern Mesopotamian clay tablet aesthetic
@@ -138,7 +168,7 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
         {/* Description preview (if exists) */}
         {issue.description && (
           <p className="text-xs text-lapis-500 mt-1 line-clamp-1 opacity-70">
-            {issue.description}
+            {stripMarkdown(issue.description)}
           </p>
         )}
 

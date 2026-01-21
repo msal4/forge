@@ -1,5 +1,7 @@
 import React from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { 
   Plus, 
   FolderOpen, 
@@ -23,6 +25,9 @@ import { docsApi, type Doc, type CreateDocRequest, type UpdateDocRequest } from 
 // ============================================
 
 export function DocsPage() {
+  const { docId } = useParams();
+  const navigate = useNavigate();
+  
   // Data state
   const [docs, setDocs] = React.useState<Doc[]>([]);
   const [selectedDoc, setSelectedDoc] = React.useState<Doc | null>(null);
@@ -34,22 +39,14 @@ export function DocsPage() {
   const [editingDoc, setEditingDoc] = React.useState<Doc | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
 
-  // Update URL when doc is selected/deselected
-  const updateUrlWithDoc = React.useCallback((docId: number | null) => {
-    const url = new URL(window.location.href);
-    if (docId) {
-      url.searchParams.set('doc', String(docId));
-    } else {
-      url.searchParams.delete('doc');
-    }
-    window.history.replaceState({}, '', url.toString());
-  }, []);
-
   // Helper to select doc and update URL
   const selectDoc = React.useCallback((doc: Doc | null) => {
-    setSelectedDoc(doc);
-    updateUrlWithDoc(doc?.id ?? null);
-  }, [updateUrlWithDoc]);
+    if (doc) {
+      navigate(`/docs/${doc.id}`);
+    } else {
+      navigate('/docs');
+    }
+  }, [navigate]);
 
   // Load docs
   const loadDocs = React.useCallback(async (signal?: AbortSignal) => {
@@ -71,25 +68,24 @@ export function DocsPage() {
     }
   }, []);
 
-  // Load data and check URL for doc ID on mount
+  // Load data on mount
   React.useEffect(() => {
     const controller = new AbortController();
-    
-    loadDocs(controller.signal).then((docsData) => {
-      if (controller.signal.aborted) return;
-      
-      const url = new URL(window.location.href);
-      const docId = url.searchParams.get('doc');
-      if (docId && docsData.length > 0) {
-        const doc = docsData.find(d => d.id === Number(docId));
-        if (doc) {
-          setSelectedDoc(doc);
-        }
-      }
-    });
-    
+    loadDocs(controller.signal);
     return () => controller.abort();
   }, [loadDocs]);
+
+  // Handle URL param changes for doc selection
+  React.useEffect(() => {
+    if (docId && docs.length > 0) {
+      const doc = docs.find(d => d.id === Number(docId));
+      if (doc) {
+        setSelectedDoc(doc);
+      }
+    } else if (!docId) {
+      setSelectedDoc(null);
+    }
+  }, [docId, docs]);
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
@@ -177,6 +173,7 @@ export function DocsPage() {
   };
 
   return (
+    <>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -273,7 +270,7 @@ export function DocsPage() {
         <div className="tablet-card p-6">
           <div className="prose prose-mesopotamian max-w-none">
             {selectedDoc.content ? (
-              <ReactMarkdown>{selectedDoc.content}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedDoc.content}</ReactMarkdown>
             ) : (
               <p className="text-lapis-400 italic">This scroll is empty.</p>
             )}
@@ -340,6 +337,8 @@ export function DocsPage() {
         </div>
       )}
 
+    </div>
+
       {/* Doc Modal */}
       <DocModal
         isOpen={isModalOpen}
@@ -352,7 +351,7 @@ export function DocsPage() {
         docs={docs}
         isLoading={isSaving}
       />
-    </div>
+    </>
   );
 }
 
