@@ -35,9 +35,9 @@ WHERE user_id = ? AND expires_at > datetime('now');
 -- name: DeleteOldestUserSessions :exec
 -- Keep only the N most recent sessions per user
 DELETE FROM sessions 
-WHERE user_id = ? AND id NOT IN (
-    SELECT id FROM sessions 
-    WHERE user_id = ? 
-    ORDER BY created_at DESC 
+WHERE sessions.user_id = ? AND sessions.id NOT IN (
+    SELECT s.id FROM sessions s
+    WHERE s.user_id = ? 
+    ORDER BY s.created_at DESC 
     LIMIT ?
 );
