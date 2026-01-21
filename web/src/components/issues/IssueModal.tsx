@@ -241,14 +241,17 @@ export function IssueModal({
 			/>
 
 			{/* Modal */}
-			<div className="
-        relative w-full max-w-2xl
-        bg-parchment-50
-        rounded-xl shadow-2xl border border-parchment-300
-        flex flex-col
-        overflow-hidden
-        animate-scale-in
-      ">
+			<div 
+				className="
+					relative w-full max-w-2xl
+					bg-parchment-50
+					rounded-xl shadow-2xl border border-parchment-300
+					flex flex-col
+					overflow-hidden
+					animate-scale-in
+				"
+				onClick={(e) => e.stopPropagation()}
+			>
 				{/* Priority color bar */}
 				<div className={`h-1.5 transition-colors duration-200 ${priority === 'critical' ? 'bg-red-500' :
 						priority === 'high' ? 'bg-clay-500' :
@@ -355,49 +358,32 @@ export function IssueModal({
 					{/* Action buttons */}
 					<div className="flex items-center gap-1">
 						{mode === 'view' && (
-							<>
-								<button
-									onClick={() => onModeChange('edit')}
-									className="p-2 rounded-lg hover:bg-parchment-200 text-lapis-500 transition-colors"
-									title="Edit (e)"
-								>
-									<Edit3 size={18} />
-								</button>
-								{onDelete && issue && (
-									<button
-										onClick={() => onDelete(issue)}
-										className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
-										title="Delete"
-									>
-										<Trash2 size={18} />
-									</button>
-								)}
-							</>
-						)}
-						{mode === 'edit' && (
-							<>
-								<button
-									onClick={handleSave}
-									disabled={isLoading}
-									className="p-2 rounded-lg hover:bg-green-50 text-green-600 transition-colors"
-									title="Save (Ctrl+Enter)"
-								>
-									<Check size={18} />
-								</button>
-								<button
-									onClick={handleCancel}
-									className="p-2 rounded-lg hover:bg-parchment-200 text-lapis-500 transition-colors"
-									title="Cancel edit (Esc)"
-								>
-									<X size={20} />
-								</button>
-							</>
-						)}
-						{(mode === 'view' || mode === 'create') && (
-							<button onClick={onClose} className="p-2 rounded-lg hover:bg-parchment-200 text-lapis-500 transition-colors">
-								<X size={20} />
+							<button
+								onClick={() => onModeChange('edit')}
+								className="p-2 rounded-lg hover:bg-parchment-200 text-lapis-500 transition-colors"
+								title="Edit (e)"
+							>
+								<Edit3 size={18} />
 							</button>
 						)}
+						{/* Delete button - show in view and edit mode (not create) */}
+						{onDelete && issue && (
+							<button
+								onClick={() => onDelete(issue)}
+								className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
+								title="Delete"
+							>
+								<Trash2 size={18} />
+							</button>
+						)}
+						{/* Close/Cancel button - always visible */}
+						<button 
+							onClick={isEditing ? handleCancel : onClose} 
+							className="p-2 rounded-lg hover:bg-parchment-200 text-lapis-500 transition-colors"
+							title={isEditing ? "Cancel (Esc)" : "Close (Esc)"}
+						>
+							<X size={20} />
+						</button>
 					</div>
 				</div>
 

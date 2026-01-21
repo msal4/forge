@@ -141,9 +141,18 @@ All endpoints prefixed with `/api/`:
 - Global shortcuts registered via custom hook
 - `c` - Create new item
 - `e` - Edit (in view mode)
+- `f` - Focus filter search (on Kanban board)
 - `Ctrl+Enter` - Save
-- `Escape` - Close modal
+- `Escape` - Close modal / clear filter
 - `g i` / `g d` / `g r` - Navigate to Issues/Docs/Releases
+
+### FilterBar (FilterBar.tsx)
+- Client-side filtering with `useIssueFilters` hook
+- Search by title/description (case-insensitive)
+- Filter by assignee (single select dropdown)
+- Filter by labels (multi-select, AND logic)
+- Active filters shown as "Clay Tokens" with remove buttons
+- Results count shows "Showing X of Y" when filtering
 
 ## Common Issues & Solutions
 
@@ -197,14 +206,15 @@ All endpoints prefixed with `/api/`:
 - Releases module with file upload and sticky details panel
 - Markdown rendering with GFM support (tables, checkboxes)
 - Arabic language support tested with seed data
+- **FilterBar** for Kanban board (search, assignee, labels filtering)
+- **Enhanced HomePage** with stats, recent issues, latest release, recent docs
 
 ### Recent Commits
 ```
+b1c9164 feat: add filtering to Kanban board and enhance home page dashboard
+14432c9 docs: update AGENTS.md with latest changes and technical notes
 148dd84 fix: add scroll-mt-2 to release card for proper scroll margin
 e37348c feat: improve markdown, navigation, and releases UX
-1733c14 markdown support
-ce4e8e4 feat: add command palette with global search (Ctrl+K)
-fba06d2 feat(issues): unified view/edit modal with seamless mode switching
 ```
 
 ### Known Polish Items
@@ -230,3 +240,13 @@ fba06d2 feat(issues): unified view/edit modal with seamless mode switching
 #### Scrollable Lists with Selection
 - Use `scroll-mt-*` on cards for proper scroll margin when using `scrollIntoView`
 - Add padding with negative margin (`p-1 -m-1`) to prevent ring/shadow clipping
+
+#### Scrollbar Stability
+- `scrollbar-gutter: stable` applied globally on `html` element
+- Prevents content jumping when scrollbar appears/disappears between pages
+
+#### Issue Modal Create Mode
+- Create mode opens modal without URL change (stays on `/issues`)
+- The useEffect that syncs URL to modal state must check `modalMode !== 'create'` before closing
+- `handleCloseModal` handles create mode separately (just closes state, no navigation)
+- Backdrop click calls `onClose`, modal content has `onClick={e => e.stopPropagation()}`

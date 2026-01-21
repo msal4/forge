@@ -118,6 +118,7 @@ export function IssuesPage() {
   }, [loadData]);
 
   // Handle URL param changes for issue selection
+  // Note: Don't close modal if in create mode (no issueId but modal should stay open)
   React.useEffect(() => {
     if (issueId && issues.length > 0) {
       const issue = issues.find(i => i.id === Number(issueId));
@@ -126,11 +127,11 @@ export function IssuesPage() {
         setModalMode('view');
         setIsModalOpen(true);
       }
-    } else if (!issueId) {
+    } else if (!issueId && modalMode !== 'create') {
       setIsModalOpen(false);
       setSelectedIssue(null);
     }
-  }, [issueId, issues]);
+  }, [issueId, issues, modalMode]);
 
   // Group filtered issues by status
   const issuesByStatus = React.useMemo(() => {
@@ -285,7 +286,14 @@ export function IssuesPage() {
 
   // Close modal
   const handleCloseModal = () => {
-    navigate('/issues');
+    if (modalMode === 'create') {
+      // For create mode, just close the modal (no URL to navigate away from)
+      setIsModalOpen(false);
+      setModalMode('view');
+    } else {
+      // For view/edit mode, navigate away from the issue URL
+      navigate('/issues');
+    }
   };
 
   // Handle delete from modal
