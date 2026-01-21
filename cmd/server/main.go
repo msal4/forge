@@ -46,55 +46,49 @@ func main() {
 	mux.HandleFunc("GET /api/health", handlers.HealthCheck)
 
 	// ============================================
-	// Protected API Routes
+	// Protected API Routes (With Auth Middleware)
 	// ============================================
-	// We'll create a sub-mux for protected routes
-	protectedMux := http.NewServeMux()
+	requireAuth := middleware.RequireAuth(authHandler)
 
 	// User routes
-	protectedMux.HandleFunc("GET /api/users/me", h.GetCurrentUser)
-	protectedMux.HandleFunc("GET /api/users", h.ListUsers)
+	mux.Handle("GET /api/users/me", requireAuth(http.HandlerFunc(h.GetCurrentUser)))
+	mux.Handle("GET /api/users", requireAuth(http.HandlerFunc(h.ListUsers)))
 
 	// Issues (The "Tablet") routes
-	protectedMux.HandleFunc("GET /api/issues", h.ListIssues)
-	protectedMux.HandleFunc("POST /api/issues", h.CreateIssue)
-	protectedMux.HandleFunc("GET /api/issues/{id}", h.GetIssue)
-	protectedMux.HandleFunc("PUT /api/issues/{id}", h.UpdateIssue)
-	protectedMux.HandleFunc("DELETE /api/issues/{id}", h.DeleteIssue)
-	protectedMux.HandleFunc("PATCH /api/issues/{id}/status", h.UpdateIssueStatus)
+	mux.Handle("GET /api/issues", requireAuth(http.HandlerFunc(h.ListIssues)))
+	mux.Handle("POST /api/issues", requireAuth(http.HandlerFunc(h.CreateIssue)))
+	mux.Handle("GET /api/issues/{id}", requireAuth(http.HandlerFunc(h.GetIssue)))
+	mux.Handle("PUT /api/issues/{id}", requireAuth(http.HandlerFunc(h.UpdateIssue)))
+	mux.Handle("DELETE /api/issues/{id}", requireAuth(http.HandlerFunc(h.DeleteIssue)))
+	mux.Handle("PATCH /api/issues/{id}/status", requireAuth(http.HandlerFunc(h.UpdateIssueStatus)))
 
 	// Docs (The "Library") routes
-	protectedMux.HandleFunc("GET /api/docs", h.ListDocs)
-	protectedMux.HandleFunc("POST /api/docs", h.CreateDoc)
-	protectedMux.HandleFunc("GET /api/docs/{id}", h.GetDoc)
-	protectedMux.HandleFunc("PUT /api/docs/{id}", h.UpdateDoc)
-	protectedMux.HandleFunc("DELETE /api/docs/{id}", h.DeleteDoc)
+	mux.Handle("GET /api/docs", requireAuth(http.HandlerFunc(h.ListDocs)))
+	mux.Handle("POST /api/docs", requireAuth(http.HandlerFunc(h.CreateDoc)))
+	mux.Handle("GET /api/docs/{id}", requireAuth(http.HandlerFunc(h.GetDoc)))
+	mux.Handle("PUT /api/docs/{id}", requireAuth(http.HandlerFunc(h.UpdateDoc)))
+	mux.Handle("DELETE /api/docs/{id}", requireAuth(http.HandlerFunc(h.DeleteDoc)))
 
 	// Releases (The "Granary") routes
-	protectedMux.HandleFunc("GET /api/releases", h.ListReleases)
-	protectedMux.HandleFunc("POST /api/releases", h.CreateRelease)
-	protectedMux.HandleFunc("GET /api/releases/{id}", h.GetRelease)
-	protectedMux.HandleFunc("DELETE /api/releases/{id}", h.DeleteRelease)
-	protectedMux.HandleFunc("GET /api/releases/{id}/download/{filename}", h.DownloadReleaseFile)
-	protectedMux.HandleFunc("POST /api/releases/{id}/files", h.UploadReleaseFile)
-
-	// Mount protected routes with auth middleware
-	mux.Handle("/api/", middleware.Auth(authHandler)(protectedMux))
+	mux.Handle("GET /api/releases", requireAuth(http.HandlerFunc(h.ListReleases)))
+	mux.Handle("POST /api/releases", requireAuth(http.HandlerFunc(h.CreateRelease)))
+	mux.Handle("GET /api/releases/{id}", requireAuth(http.HandlerFunc(h.GetRelease)))
+	mux.Handle("DELETE /api/releases/{id}", requireAuth(http.HandlerFunc(h.DeleteRelease)))
+	mux.Handle("GET /api/releases/{id}/download/{filename}", requireAuth(http.HandlerFunc(h.DownloadReleaseFile)))
+	mux.Handle("POST /api/releases/{id}/files", requireAuth(http.HandlerFunc(h.UploadReleaseFile)))
 
 	// ============================================
 	// Static File Serving (React SPA)
 	// ============================================
-	// In development, serve from web/dist directory
-	// In production, this would be embedded or served from a CDN
 	staticDir := os.Getenv("STATIC_DIR")
 	if staticDir == "" {
 		staticDir = "./web/dist"
 	}
 
-	// Check if static directory exists, otherwise serve a simple HTML page
+	// Check if static directory exists
 	if _, err := os.Stat(staticDir); os.IsNotExist(err) {
-		// Serve a placeholder during development before frontend is built
-		mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+		// Serve a placeholder during development
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/html")
 			w.Write([]byte(`<!DOCTYPE html>
 <html>

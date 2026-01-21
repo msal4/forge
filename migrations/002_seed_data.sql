@@ -11,20 +11,20 @@
 -- ============================================
 
 -- bcrypt hash of 'admin' (cost 10)
--- $2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqLlKXP1X0xvTdPIGN1U3FX4j6aYS
+-- Generated with: go run -e 'golang.org/x/crypto/bcrypt.GenerateFromPassword([]byte("admin"), 10)'
 
 INSERT INTO users (username, email, password_hash, full_name, is_active) VALUES
     (
         'zahra',
         'zahra@sarray.de',
-        '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqLlKXP1X0xvTdPIGN1U3FX4j6aYS',
+        '$2a$10$PySSJxw1iG6Yk0CvoIORh.66//qS9Pnaw9iVN6MrD7sImieSKlVg2',
         'Zahra Sarray',
         1
     ),
     (
         'salman',
         'salman@sarray.de',
-        '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqLlKXP1X0xvTdPIGN1U3FX4j6aYS',
+        '$2a$10$PySSJxw1iG6Yk0CvoIORh.66//qS9Pnaw9iVN6MrD7sImieSKlVg2',
         'Salman Sarray',
         1
     )
