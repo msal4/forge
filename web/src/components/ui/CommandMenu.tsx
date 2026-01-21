@@ -72,7 +72,7 @@ export function CommandMenu() {
     if (result.type === 'issue') {
       navigate(`/issues?issue=${result.id}`);
     } else {
-      navigate(`/docs/${result.id}`);
+      navigate(`/docs?doc=${result.id}`);
     }
     closeCommandPalette();
   }, [navigate, closeCommandPalette]);

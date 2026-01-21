@@ -34,6 +34,23 @@ export function DocsPage() {
   const [editingDoc, setEditingDoc] = React.useState<Doc | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
 
+  // Update URL when doc is selected/deselected
+  const updateUrlWithDoc = React.useCallback((docId: number | null) => {
+    const url = new URL(window.location.href);
+    if (docId) {
+      url.searchParams.set('doc', String(docId));
+    } else {
+      url.searchParams.delete('doc');
+    }
+    window.history.replaceState({}, '', url.toString());
+  }, []);
+
+  // Helper to select doc and update URL
+  const selectDoc = React.useCallback((doc: Doc | null) => {
+    setSelectedDoc(doc);
+    updateUrlWithDoc(doc?.id ?? null);
+  }, [updateUrlWithDoc]);
+
   // Load docs
   const loadDocs = React.useCallback(async (signal?: AbortSignal) => {
     try {
@@ -41,20 +58,36 @@ export function DocsPage() {
       setError(null);
       const data = await docsApi.list({ signal });
       setDocs(data);
+      return data;
     } catch (err) {
       // Ignore abort errors
       if (err instanceof Error && err.name === 'AbortError') {
-        return;
+        return [];
       }
       setError(err instanceof Error ? err.message : 'Failed to load documents');
+      return [];
     } finally {
       setIsLoading(false);
     }
   }, []);
 
+  // Load data and check URL for doc ID on mount
   React.useEffect(() => {
     const controller = new AbortController();
-    loadDocs(controller.signal);
+    
+    loadDocs(controller.signal).then((docsData) => {
+      if (controller.signal.aborted) return;
+      
+      const url = new URL(window.location.href);
+      const docId = url.searchParams.get('doc');
+      if (docId && docsData.length > 0) {
+        const doc = docsData.find(d => d.id === Number(docId));
+        if (doc) {
+          setSelectedDoc(doc);
+        }
+      }
+    });
+    
     return () => controller.abort();
   }, [loadDocs]);
 
@@ -78,7 +111,7 @@ export function DocsPage() {
     {
       keys: 'Escape',
       description: 'Back to list',
-      handler: () => setSelectedDoc(null),
+      handler: () => selectDoc(null),
       category: 'navigation',
     },
   ]);
@@ -91,7 +124,7 @@ export function DocsPage() {
         const updated = await docsApi.update(editingDoc.id, data as UpdateDocRequest);
         setDocs(prev => prev.map(d => d.id === updated.id ? updated : d));
         if (selectedDoc?.id === updated.id) {
-          setSelectedDoc(updated);
+          selectDoc(updated);
         }
       } else {
         const created = await docsApi.create(data as CreateDocRequest);
@@ -110,7 +143,7 @@ export function DocsPage() {
       await docsApi.delete(doc.id);
       setDocs(prev => prev.filter(d => d.id !== doc.id));
       if (selectedDoc?.id === doc.id) {
-        setSelectedDoc(null);
+        selectDoc(null);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete document');
@@ -127,7 +160,7 @@ export function DocsPage() {
   const handleViewDoc = async (doc: Doc) => {
     try {
       const fullDoc = await docsApi.get(doc.id);
-      setSelectedDoc(fullDoc);
+      selectDoc(fullDoc);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load document');
     }
@@ -150,7 +183,7 @@ export function DocsPage() {
         <div className="flex items-center gap-4">
           {selectedDoc && (
             <button
-              onClick={() => setSelectedDoc(null)}
+              onClick={() => selectDoc(null)}
               className="p-2 rounded-tablet hover:bg-parchment-200 text-lapis-500"
             >
               <ArrowLeft size={20} />
