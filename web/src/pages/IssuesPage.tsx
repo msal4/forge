@@ -60,6 +60,7 @@ export function IssuesPage() {
   const [issues, setIssues] = React.useState<Issue[]>([]);
   const [users, setUsers] = React.useState<User[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [hasLoaded, setHasLoaded] = React.useState(false); // Track if initial load is complete
   const [error, setError] = React.useState<string | null>(null);
   
   // Modal state
@@ -97,6 +98,7 @@ export function IssuesPage() {
       ]);
       setIssues(issuesData);
       setUsers(usersData);
+      setHasLoaded(true);
       return issuesData;
     } catch (err) {
       // Ignore abort errors
@@ -351,8 +353,8 @@ export function IssuesPage() {
         </div>
       </div>
 
-      {/* Filter Bar */}
-      {!isLoading && issues.length > 0 && (
+      {/* Filter Bar - always show once we have issues, even during refresh */}
+      {(issues.length > 0 || hasActiveFilters) && (
         <FilterBar
           filters={filters}
           users={users}
@@ -378,8 +380,8 @@ export function IssuesPage() {
         </div>
       )}
 
-      {/* Loading state */}
-      {isLoading && issues.length === 0 && (
+      {/* Loading state - only show full loading screen on initial load */}
+      {isLoading && !hasLoaded && (
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-lapis-100 mb-4">
@@ -390,8 +392,8 @@ export function IssuesPage() {
         </div>
       )}
 
-      {/* Kanban Board */}
-      {!isLoading && (
+      {/* Kanban Board - show once initially loaded, even during refresh */}
+      {hasLoaded && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {COLUMNS.map(column => (
             <KanbanColumn
