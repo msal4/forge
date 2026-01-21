@@ -30,7 +30,7 @@ export function Layout() {
   };
   
   return (
-    <div className="min-h-screen bg-parchment-100 flex">
+    <div className="h-screen bg-parchment-100 flex overflow-hidden">
       {/* Sidebar */}
       <aside 
         className={`
@@ -38,7 +38,7 @@ export function Layout() {
           w-64 bg-parchment-50 border-r border-parchment-300
           transform transition-transform duration-200 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:relative lg:translate-x-0
+          lg:relative lg:translate-x-0 lg:flex-shrink-0
         `}
       >
         <div className="flex flex-col h-full">
@@ -133,7 +133,7 @@ export function Layout() {
       )}
       
       {/* Main Content */}
-      <main className="flex-1 min-w-0">
+      <main className="flex-1 min-w-0 overflow-y-auto">
         <div className="max-w-7xl mx-auto p-6 lg:p-8">
           <Outlet />
         </div>
