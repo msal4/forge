@@ -1,3 +1,6 @@
+/* Import fonts - must be first */
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,9 +8,6 @@
 /* ============================================
    Sarray Forge - Modern Mesopotamian Theme
    ============================================ */
-
-/* Import fonts */
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 /* Base styles */
 @layer base {
@@ -158,4 +158,106 @@
 
 .mermaid svg {
   @apply mx-auto;
+}
+
+/* ============================================
+   Prose / Markdown Styling (Mesopotamian theme)
+   ============================================ */
+.prose-mesopotamian {
+  @apply text-lapis-700 leading-relaxed;
+}
+
+.prose-mesopotamian h1,
+.prose-mesopotamian h2,
+.prose-mesopotamian h3,
+.prose-mesopotamian h4,
+.prose-mesopotamian h5,
+.prose-mesopotamian h6 {
+  @apply font-inscription text-lapis-600 mt-6 mb-4 first:mt-0;
+}
+
+.prose-mesopotamian h1 {
+  @apply text-2xl border-b border-parchment-300 pb-2;
+}
+
+.prose-mesopotamian h2 {
+  @apply text-xl;
+}
+
+.prose-mesopotamian h3 {
+  @apply text-lg;
+}
+
+.prose-mesopotamian p {
+  @apply my-4 first:mt-0 last:mb-0;
+}
+
+.prose-mesopotamian a {
+  @apply text-lapis-500 underline hover:text-lapis-600;
+}
+
+.prose-mesopotamian strong {
+  @apply font-semibold text-lapis-800;
+}
+
+.prose-mesopotamian em {
+  @apply italic;
+}
+
+.prose-mesopotamian code {
+  @apply font-code text-sm bg-parchment-200 text-clay-600 px-1.5 py-0.5 rounded;
+}
+
+.prose-mesopotamian pre {
+  @apply bg-lapis-800 text-parchment-100 p-4 rounded-tablet overflow-x-auto my-4;
+}
+
+.prose-mesopotamian pre code {
+  @apply bg-transparent text-parchment-100 p-0;
+}
+
+.prose-mesopotamian blockquote {
+  @apply border-l-4 border-clay-400 pl-4 my-4 text-lapis-600 italic;
+}
+
+.prose-mesopotamian ul,
+.prose-mesopotamian ol {
+  @apply my-4 pl-6;
+}
+
+.prose-mesopotamian ul {
+  @apply list-disc;
+}
+
+.prose-mesopotamian ol {
+  @apply list-decimal;
+}
+
+.prose-mesopotamian li {
+  @apply my-1;
+}
+
+.prose-mesopotamian hr {
+  @apply border-parchment-300 my-8;
+}
+
+.prose-mesopotamian table {
+  @apply w-full my-4 border-collapse;
+}
+
+.prose-mesopotamian th,
+.prose-mesopotamian td {
+  @apply border border-parchment-300 px-3 py-2 text-left;
+}
+
+.prose-mesopotamian th {
+  @apply bg-parchment-200 font-semibold text-lapis-600;
+}
+
+.prose-mesopotamian tr:nth-child(even) {
+  @apply bg-parchment-100;
+}
+
+.prose-mesopotamian img {
+  @apply rounded-tablet my-4 max-w-full h-auto;
 }
