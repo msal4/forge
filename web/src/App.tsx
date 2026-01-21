@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, ProtectedRoute } from './context/AuthContext';
 import { KeyboardProvider } from './context/KeyboardContext';
 import { CommandPalette } from './components/ui/CommandPalette';
 import { Layout } from './components/layout/Layout';
@@ -15,27 +16,39 @@ import { ReleasesPage } from './pages/ReleasesPage';
 // Sarray Forge - Main Application
 // ============================================
 
+function AppRoutes() {
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route path="/login" element={<LoginPage />} />
+      
+      {/* Protected routes with layout */}
+      <Route element={
+        <ProtectedRoute>
+          <Layout />
+        </ProtectedRoute>
+      }>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/issues/*" element={<IssuesPage />} />
+        <Route path="/docs/*" element={<DocsPage />} />
+        <Route path="/releases/*" element={<ReleasesPage />} />
+      </Route>
+      
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
-      <KeyboardProvider>
-        <CommandPalette />
-        <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<LoginPage />} />
-          
-          {/* Protected routes with layout */}
-          <Route element={<Layout />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/issues/*" element={<IssuesPage />} />
-            <Route path="/docs/*" element={<DocsPage />} />
-            <Route path="/releases/*" element={<ReleasesPage />} />
-          </Route>
-          
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </KeyboardProvider>
+      <AuthProvider>
+        <KeyboardProvider>
+          <CommandPalette />
+          <AppRoutes />
+        </KeyboardProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

@@ -17,6 +17,8 @@ const (
 	RequestIDKey ContextKey = "requestID"
 	UserIDKey    ContextKey = "userID"
 	UserEmailKey ContextKey = "userEmail"
+	UsernameKey  ContextKey = "username"
+	SessionKey   ContextKey = "session"
 )
 
 // Middleware represents a function that wraps an http.Handler
