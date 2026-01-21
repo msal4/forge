@@ -284,7 +284,6 @@ export function ReleasesPage() {
               release={release}
               isSelected={selectedRelease?.id === release.id}
               onClick={() => selectRelease(release)}
-              onDelete={() => handleDeleteRelease(release)}
               formatDate={formatDate}
               formatSize={formatSize}
             />
@@ -380,6 +379,17 @@ export function ReleasesPage() {
                 </div>
               )}
             </div>
+
+            {/* Danger Zone */}
+            <div className="pt-4 border-t border-parchment-300">
+              <button
+                onClick={() => handleDeleteRelease(selectedRelease)}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-tablet transition-colors"
+              >
+                <Trash2 size={16} />
+                Delete release
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -405,19 +415,18 @@ interface ReleaseCardProps {
   release: Release;
   isSelected: boolean;
   onClick: () => void;
-  onDelete: () => void;
   formatDate: (date: string) => string;
   formatSize: (bytes: number) => string;
 }
 
-function ReleaseCard({ release, isSelected, onClick, onDelete, formatDate, formatSize }: ReleaseCardProps) {
+function ReleaseCard({ release, isSelected, onClick, formatDate, formatSize }: ReleaseCardProps) {
   const totalSize = release.files.reduce((acc, f) => acc + f.size, 0);
   const cardRef = React.useRef<HTMLDivElement>(null);
   
-  // Auto-scroll to selected card
+  // Auto-scroll to selected card (position at top)
   React.useEffect(() => {
     if (isSelected && cardRef.current) {
-      cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [isSelected]);
   
@@ -425,7 +434,7 @@ function ReleaseCard({ release, isSelected, onClick, onDelete, formatDate, forma
     <div
       ref={cardRef}
       className={`
-        group tablet-card p-4 cursor-pointer
+        tablet-card p-4 cursor-pointer
         transition-all duration-150
         ${isSelected 
           ? 'ring-2 ring-lapis-500 bg-lapis-50 border-lapis-400 shadow-tablet' 
@@ -434,34 +443,23 @@ function ReleaseCard({ release, isSelected, onClick, onDelete, formatDate, forma
       `}
       onClick={onClick}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-3">
-          <div className={`p-2 rounded-tablet ${isSelected ? 'bg-lapis-500 text-parchment-100' : 'bg-gold-100 text-gold-600'}`}>
-            <Package size={20} />
+      <div className="flex items-start gap-3">
+        <div className={`p-2 rounded-tablet ${isSelected ? 'bg-lapis-500 text-parchment-100' : 'bg-gold-100 text-gold-600'}`}>
+          <Package size={20} />
+        </div>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className={`text-xs font-code px-1.5 py-0.5 rounded ${isSelected ? 'bg-lapis-500 text-parchment-100' : 'bg-lapis-100 text-lapis-600'}`}>
+              {release.version}
+            </span>
+            <h3 className={`font-medium ${isSelected ? 'text-lapis-700' : 'text-lapis-600'}`}>{release.title}</h3>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className={`text-xs font-code px-1.5 py-0.5 rounded ${isSelected ? 'bg-lapis-500 text-parchment-100' : 'bg-lapis-100 text-lapis-600'}`}>
-                {release.version}
-              </span>
-              <h3 className={`font-medium ${isSelected ? 'text-lapis-700' : 'text-lapis-600'}`}>{release.title}</h3>
-            </div>
-            <div className="mt-1 flex items-center gap-3 text-xs text-lapis-500">
-              <span>{formatDate(release.createdAt)}</span>
-              <span>{release.files.length} file{release.files.length !== 1 ? 's' : ''}</span>
-              {totalSize > 0 && <span>{formatSize(totalSize)}</span>}
-            </div>
+          <div className="mt-1 flex items-center gap-3 text-xs text-lapis-500">
+            <span>{formatDate(release.createdAt)}</span>
+            <span>{release.files.length} file{release.files.length !== 1 ? 's' : ''}</span>
+            {totalSize > 0 && <span>{formatSize(totalSize)}</span>}
           </div>
         </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="p-1 rounded hover:bg-red-50 text-lapis-400 hover:text-red-500 opacity-0 group-hover:opacity-100"
-        >
-          <Trash2 size={16} />
-        </button>
       </div>
     </div>
   );
