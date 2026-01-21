@@ -284,7 +284,7 @@ export function HomePage() {
                 {recentDocs.map(doc => (
                   <Link
                     key={doc.id}
-                    to={`/docs/${doc.slug}`}
+                    to={`/docs/${doc.id}`}
                     className="block p-2 -mx-2 rounded-tablet hover:bg-parchment-100 transition-colors"
                   >
                     <div className="flex items-center gap-2">
