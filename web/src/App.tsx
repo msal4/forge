@@ -1,0 +1,43 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { KeyboardProvider } from './context/KeyboardContext';
+import { CommandPalette } from './components/ui/CommandPalette';
+import { Layout } from './components/layout/Layout';
+
+// Pages
+import { HomePage } from './pages/HomePage';
+import { LoginPage } from './pages/LoginPage';
+import { IssuesPage } from './pages/IssuesPage';
+import { DocsPage } from './pages/DocsPage';
+import { ReleasesPage } from './pages/ReleasesPage';
+
+// ============================================
+// Sarray Forge - Main Application
+// ============================================
+
+function App() {
+  return (
+    <BrowserRouter>
+      <KeyboardProvider>
+        <CommandPalette />
+        <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={<LoginPage />} />
+          
+          {/* Protected routes with layout */}
+          <Route element={<Layout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/issues/*" element={<IssuesPage />} />
+            <Route path="/docs/*" element={<DocsPage />} />
+            <Route path="/releases/*" element={<ReleasesPage />} />
+          </Route>
+          
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </KeyboardProvider>
+    </BrowserRouter>
+  );
+}
+
+export default App;

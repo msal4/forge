@@ -1,0 +1,176 @@
+package models
+
+import "time"
+
+// User represents a team member in Sarray Forge
+type User struct {
+	ID        int64     `json:"id"`
+	Username  string    `json:"username"`
+	Email     string    `json:"email"`
+	FullName  string    `json:"fullName"`
+	AvatarURL string    `json:"avatarUrl,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// Session represents an authenticated user session
+type Session struct {
+	ID        int64     `json:"id"`
+	UserID    int64     `json:"userId"`
+	Email     string    `json:"email"`
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expiresAt"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+// IssueStatus represents the Kanban column status
+type IssueStatus string
+
+const (
+	StatusToInscribe IssueStatus = "to_inscribe" // Todo
+	StatusCarving    IssueStatus = "carving"     // In Progress
+	StatusBaked      IssueStatus = "baked"       // Done
+)
+
+// IssuePriority represents issue priority levels
+type IssuePriority string
+
+const (
+	PriorityLow      IssuePriority = "low"
+	PriorityMedium   IssuePriority = "medium"
+	PriorityHigh     IssuePriority = "high"
+	PriorityCritical IssuePriority = "critical"
+)
+
+// Issue represents a task/ticket in the Tablet (Kanban board)
+type Issue struct {
+	ID          int64         `json:"id"`
+	Title       string        `json:"title"`
+	Description string        `json:"description"`
+	Status      IssueStatus   `json:"status"`
+	Priority    IssuePriority `json:"priority"`
+	AssigneeID  *int64        `json:"assigneeId,omitempty"`
+	Assignee    *User         `json:"assignee,omitempty"`
+	ReporterID  int64         `json:"reporterId"`
+	Reporter    *User         `json:"reporter,omitempty"`
+	Labels      []string      `json:"labels"`
+	DueDate     *time.Time    `json:"dueDate,omitempty"`
+	CreatedAt   time.Time     `json:"createdAt"`
+	UpdatedAt   time.Time     `json:"updatedAt"`
+}
+
+// Doc represents a document in the Library
+type Doc struct {
+	ID        int64     `json:"id"`
+	Title     string    `json:"title"`
+	Content   string    `json:"content"` // Markdown content
+	ParentID  *int64    `json:"parentId,omitempty"`
+	AuthorID  int64     `json:"authorId"`
+	Author    *User     `json:"author,omitempty"`
+	Slug      string    `json:"slug"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// Release represents a release in the Granary
+type Release struct {
+	ID          int64         `json:"id"`
+	Version     string        `json:"version"`
+	Title       string        `json:"title"`
+	Description string        `json:"description"` // Markdown changelog
+	AuthorID    int64         `json:"authorId"`
+	Author      *User         `json:"author,omitempty"`
+	Files       []ReleaseFile `json:"files"`
+	PublishedAt *time.Time    `json:"publishedAt,omitempty"`
+	CreatedAt   time.Time     `json:"createdAt"`
+	UpdatedAt   time.Time     `json:"updatedAt"`
+}
+
+// ReleaseFile represents a file attached to a release
+type ReleaseFile struct {
+	ID        int64     `json:"id"`
+	ReleaseID int64     `json:"releaseId"`
+	Filename  string    `json:"filename"`
+	Size      int64     `json:"size"`
+	MimeType  string    `json:"mimeType"`
+	Path      string    `json:"-"` // Internal path, not exposed in JSON
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+// ============================================
+// Request/Response DTOs
+// ============================================
+
+// LoginRequest is the request body for login
+type LoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+// LoginResponse is the response body for successful login
+type LoginResponse struct {
+	Token string `json:"token"`
+	User  User   `json:"user"`
+}
+
+// CreateIssueRequest is the request body for creating an issue
+type CreateIssueRequest struct {
+	Title       string        `json:"title"`
+	Description string        `json:"description"`
+	Priority    IssuePriority `json:"priority"`
+	AssigneeID  *int64        `json:"assigneeId,omitempty"`
+	Labels      []string      `json:"labels"`
+	DueDate     *time.Time    `json:"dueDate,omitempty"`
+}
+
+// UpdateIssueRequest is the request body for updating an issue
+type UpdateIssueRequest struct {
+	Title       *string        `json:"title,omitempty"`
+	Description *string        `json:"description,omitempty"`
+	Status      *IssueStatus   `json:"status,omitempty"`
+	Priority    *IssuePriority `json:"priority,omitempty"`
+	AssigneeID  *int64         `json:"assigneeId,omitempty"`
+	Labels      []string       `json:"labels,omitempty"`
+	DueDate     *time.Time     `json:"dueDate,omitempty"`
+}
+
+// UpdateIssueStatusRequest is the request body for updating issue status
+type UpdateIssueStatusRequest struct {
+	Status IssueStatus `json:"status"`
+}
+
+// CreateDocRequest is the request body for creating a doc
+type CreateDocRequest struct {
+	Title    string `json:"title"`
+	Content  string `json:"content"`
+	ParentID *int64 `json:"parentId,omitempty"`
+}
+
+// UpdateDocRequest is the request body for updating a doc
+type UpdateDocRequest struct {
+	Title    *string `json:"title,omitempty"`
+	Content  *string `json:"content,omitempty"`
+	ParentID *int64  `json:"parentId,omitempty"`
+}
+
+// CreateReleaseRequest is the request body for creating a release
+type CreateReleaseRequest struct {
+	Version     string `json:"version"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+}
+
+// ErrorResponse is a standard error response
+type ErrorResponse struct {
+	Error   string `json:"error"`
+	Message string `json:"message"`
+}
+
+// ListResponse is a generic paginated list response
+type ListResponse[T any] struct {
+	Items      []T   `json:"items"`
+	Total      int64 `json:"total"`
+	Page       int   `json:"page"`
+	PageSize   int   `json:"pageSize"`
+	TotalPages int   `json:"totalPages"`
+}

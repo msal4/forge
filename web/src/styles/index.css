@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   Sarray Forge - Modern Mesopotamian Theme
+   ============================================ */
+
+/* Import fonts */
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* Base styles */
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  
+  body {
+    @apply bg-parchment-100 text-lapis-700 font-body antialiased;
+  }
+  
+  /* Inscription-style headers */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-inscription font-semibold text-lapis-600;
+  }
+  
+  h1 {
+    @apply text-3xl tracking-tight;
+  }
+  
+  h2 {
+    @apply text-2xl;
+  }
+  
+  h3 {
+    @apply text-xl;
+  }
+  
+  /* Focus styles */
+  :focus-visible {
+    @apply outline-none ring-2 ring-lapis-400 ring-offset-2 ring-offset-parchment-100;
+  }
+  
+  /* Selection color */
+  ::selection {
+    @apply bg-lapis-500 text-parchment-100;
+  }
+}
+
+/* Component styles */
+@layer components {
+  /* Card - resembles clay tablet */
+  .tablet-card {
+    @apply bg-parchment-50 border border-parchment-300 rounded-tablet shadow-tablet;
+    @apply transition-shadow duration-200;
+  }
+  
+  .tablet-card:hover {
+    @apply shadow-tablet-hover;
+  }
+  
+  /* Input fields */
+  .forge-input {
+    @apply w-full px-3 py-2 rounded-tablet;
+    @apply bg-parchment-50 border border-parchment-400;
+    @apply text-lapis-700 placeholder-lapis-400;
+    @apply focus:border-lapis-500 focus:ring-2 focus:ring-lapis-400/20;
+    @apply transition-colors duration-150;
+  }
+  
+  /* Sidebar navigation */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2 rounded-tablet;
+    @apply text-lapis-600 font-medium;
+    @apply hover:bg-parchment-200 hover:text-lapis-700;
+    @apply transition-colors duration-150;
+  }
+  
+  .nav-item.active {
+    @apply bg-lapis-500 text-parchment-100;
+    @apply hover:bg-lapis-600;
+  }
+  
+  /* Status badges for Kanban */
+  .status-badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+  
+  .status-to-inscribe {
+    @apply bg-parchment-300 text-lapis-600;
+  }
+  
+  .status-carving {
+    @apply bg-clay-200 text-clay-700;
+  }
+  
+  .status-baked {
+    @apply bg-gold-200 text-gold-800;
+  }
+  
+  /* Priority indicators */
+  .priority-critical {
+    @apply text-red-600;
+  }
+  
+  .priority-high {
+    @apply text-clay-600;
+  }
+  
+  .priority-medium {
+    @apply text-gold-600;
+  }
+  
+  .priority-low {
+    @apply text-lapis-400;
+  }
+}
+
+/* Utility styles */
+@layer utilities {
+  /* Text truncation */
+  .truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  /* Scrollbar styling */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.parchment.400') transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: theme('colors.parchment.400');
+    border-radius: 3px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: theme('colors.parchment.500');
+  }
+}
+
+/* Mermaid diagram styling overrides */
+.mermaid {
+  @apply my-4;
+}
+
+.mermaid svg {
+  @apply mx-auto;
+}
