@@ -262,7 +262,7 @@ export function ReleasesPage() {
         <div className={`
           space-y-4 
           ${selectedRelease 
-            ? 'lg:col-span-1 lg:max-h-[calc(100vh-200px)] lg:overflow-y-auto lg:pr-2 scrollbar-thin' 
+            ? 'lg:col-span-1 lg:max-h-[calc(100vh-200px)] lg:overflow-y-auto lg:px-1 lg:-mx-1 scrollbar-thin' 
             : ''
           }
         `}>
