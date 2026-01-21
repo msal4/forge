@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 
@@ -16,12 +16,41 @@ export function LoginPage() {
   const [focusedField, setFocusedField] = useState<'username' | 'password' | null>(null);
   
   const usernameRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const navigate = useNavigate();
 
   // Auto-focus username input on mount
   useEffect(() => {
     usernameRef.current?.focus();
   }, []);
+
+  // Check for autofilled values (browsers autofill before React can track)
+  // This handles the case where Chrome autofills credentials
+  const checkAutofill = useCallback(() => {
+    const usernameInput = usernameRef.current;
+    const passwordInput = passwordRef.current;
+    
+    if (usernameInput && usernameInput.value && usernameInput.value !== username) {
+      setUsername(usernameInput.value);
+    }
+    if (passwordInput && passwordInput.value && passwordInput.value !== password) {
+      setPassword(passwordInput.value);
+    }
+  }, [username, password]);
+
+  // Check for autofill on mount and after a short delay (browser autofill timing varies)
+  useEffect(() => {
+    // Check immediately
+    checkAutofill();
+    // Check again after browser has had time to autofill
+    const timeoutId = setTimeout(checkAutofill, 100);
+    const timeoutId2 = setTimeout(checkAutofill, 500);
+    return () => {
+      clearTimeout(timeoutId);
+      clearTimeout(timeoutId2);
+    };
+  }, [checkAutofill]);
 
   // Clear error when user types
   useEffect(() => {
@@ -31,13 +60,23 @@ export function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    // Get values directly from inputs to handle autofill
+    const usernameValue = usernameRef.current?.value || username;
+    const passwordValue = passwordRef.current?.value || password;
+    
+    if (!usernameValue.trim() || !passwordValue) {
+      setError('Please enter username and password');
+      return;
+    }
+    
     setLoading(true);
 
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username.trim(), password }),
+        body: JSON.stringify({ username: usernameValue.trim(), password: passwordValue }),
       });
 
       const data = await response.json();
@@ -103,7 +142,7 @@ export function LoginPage() {
           <div className="absolute inset-0 shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)] pointer-events-none rounded-2xl" />
 
           <div className="relative p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
+                <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
               {/* Username Field */}
               <div>
                 <label 
@@ -116,18 +155,25 @@ export function LoginPage() {
                   Username
                 </label>
                 <div className="relative">
-                  <input
-                    ref={usernameRef}
-                    id="username"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    onFocus={() => setFocusedField('username')}
-                    onBlur={() => setFocusedField(null)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="zahra"
-                    autoComplete="username"
-                    disabled={loading}
+                    <input
+                        ref={usernameRef}
+                        id="username"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        onInput={(e) => setUsername((e.target as HTMLInputElement).value)}
+                        onFocus={() => setFocusedField('username')}
+                        onBlur={() => setFocusedField(null)}
+                        onKeyDown={handleKeyDown}
+                        onAnimationStart={(e) => {
+                          // Detect Chrome autofill animation
+                          if (e.animationName === 'onAutoFillStart') {
+                            checkAutofill();
+                          }
+                        }}
+                        placeholder="zahra"
+                        autoComplete="username"
+                        disabled={loading}
                     className={`
                       w-full px-4 py-3 pr-28
                       bg-parchment-50 
@@ -167,16 +213,24 @@ export function LoginPage() {
                 </label>
                 <div className="relative">
                   <input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onFocus={() => setFocusedField('password')}
-                    onBlur={() => setFocusedField(null)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="••••••••"
-                    autoComplete="current-password"
-                    disabled={loading}
+                        ref={passwordRef}
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        onInput={(e) => setPassword((e.target as HTMLInputElement).value)}
+                        onFocus={() => setFocusedField('password')}
+                        onBlur={() => setFocusedField(null)}
+                        onKeyDown={handleKeyDown}
+                        onAnimationStart={(e) => {
+                          // Detect Chrome autofill animation
+                          if (e.animationName === 'onAutoFillStart') {
+                            checkAutofill();
+                          }
+                        }}
+                        placeholder="••••••••"
+                        autoComplete="current-password"
+                        disabled={loading}
                     className={`
                       w-full px-4 py-3 pr-12
                       bg-parchment-50 
@@ -225,7 +279,7 @@ export function LoginPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loading || !username.trim() || !password}
+                disabled={loading}
                 className={`
                   w-full py-3.5 px-6
                   flex items-center justify-center gap-2

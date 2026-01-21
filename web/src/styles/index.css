@@ -261,3 +261,26 @@
 .prose-mesopotamian img {
   @apply rounded-tablet my-4 max-w-full h-auto;
 }
+
+/* ============================================
+   Chrome Autofill Detection
+   ============================================ */
+@keyframes onAutoFillStart {
+  from { /* empty */ }
+  to { /* empty */ }
+}
+
+@keyframes onAutoFillCancel {
+  from { /* empty */ }
+  to { /* empty */ }
+}
+
+input:-webkit-autofill {
+  animation-name: onAutoFillStart;
+  animation-duration: 0.001s;
+}
+
+input:not(:-webkit-autofill) {
+  animation-name: onAutoFillCancel;
+  animation-duration: 0.001s;
+}
