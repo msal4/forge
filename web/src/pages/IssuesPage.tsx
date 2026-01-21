@@ -66,6 +66,17 @@ export function IssuesPage() {
   const [draggedIssue, setDraggedIssue] = React.useState<Issue | null>(null);
   const [dragOverColumn, setDragOverColumn] = React.useState<IssueStatusType | null>(null);
 
+  // Update URL when issue is selected/deselected
+  const updateUrlWithIssue = React.useCallback((issueId: number | null) => {
+    const url = new URL(window.location.href);
+    if (issueId) {
+      url.searchParams.set('issue', String(issueId));
+    } else {
+      url.searchParams.delete('issue');
+    }
+    window.history.replaceState({}, '', url.toString());
+  }, []);
+
   // Load issues and users
   const loadData = React.useCallback(async () => {
     try {
@@ -77,15 +88,29 @@ export function IssuesPage() {
       ]);
       setIssues(issuesData);
       setUsers(usersData);
+      return issuesData;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
+      return [];
     } finally {
       setIsLoading(false);
     }
   }, []);
 
+  // Load data and check URL for issue ID on mount
   React.useEffect(() => {
-    loadData();
+    loadData().then((issuesData) => {
+      const url = new URL(window.location.href);
+      const issueId = url.searchParams.get('issue');
+      if (issueId && issuesData.length > 0) {
+        const issue = issuesData.find(i => i.id === Number(issueId));
+        if (issue) {
+          setSelectedIssue(issue);
+          setModalMode('view');
+          setIsModalOpen(true);
+        }
+      }
+    });
   }, [loadData]);
 
   // Group issues by status
@@ -222,6 +247,7 @@ export function IssuesPage() {
     setSelectedIssue(issue);
     setModalMode('view');
     setIsModalOpen(true);
+    updateUrlWithIssue(issue.id);
   };
 
   // Edit issue handler (opens modal in edit mode)
@@ -229,6 +255,7 @@ export function IssuesPage() {
     setSelectedIssue(issue);
     setModalMode('edit');
     setIsModalOpen(true);
+    updateUrlWithIssue(issue.id);
   };
 
   // Handle mode change within modal
@@ -240,6 +267,7 @@ export function IssuesPage() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedIssue(null);
+    updateUrlWithIssue(null);
   };
 
   // Handle delete from modal

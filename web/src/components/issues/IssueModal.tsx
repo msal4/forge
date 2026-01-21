@@ -211,16 +211,16 @@ export function IssueModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] px-4 pb-8 overflow-y-auto overflow-x-hidden">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-lapis-900/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 bg-lapis-900/60 backdrop-blur-sm" onClick={onClose} />
       
       {/* Modal */}
       <div className="
-        relative w-full max-w-2xl max-h-[90vh] overflow-hidden
-        bg-gradient-to-b from-parchment-50 to-parchment-100
+        relative w-full max-w-2xl
+        bg-parchment-50
         rounded-xl shadow-2xl border border-parchment-300
-        animate-scale-in flex flex-col
+        flex flex-col
       ">
         {/* Priority color bar */}
         <div className={`h-1.5 transition-colors duration-200 ${
@@ -300,26 +300,30 @@ export function IssueModal({
             </div>
             
             {/* Title */}
-            {isEditing ? (
-              <input
-                ref={titleInputRef}
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="What needs to be inscribed?"
-                className="
-                  w-full text-xl font-inscription text-lapis-700
-                  bg-transparent border-b-2 border-transparent
-                  focus:border-lapis-400 focus:outline-none
-                  placeholder:text-lapis-400
-                  transition-colors py-1
-                "
-              />
-            ) : (
-              <h2 className="text-xl font-inscription text-lapis-700 leading-tight">
-                {title}
-              </h2>
-            )}
+            <div className="min-h-[32px] flex items-center">
+              {isEditing ? (
+                <input
+                  ref={titleInputRef}
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="What needs to be inscribed?"
+                  className="
+                    w-full text-xl font-inscription font-normal text-lapis-700
+                    bg-transparent
+                    border-none outline-none ring-0
+                    focus:border-none focus:outline-none focus:ring-0
+                    placeholder:text-lapis-400
+                    caret-lapis-500
+                  "
+                  style={{ boxShadow: 'none' }}
+                />
+              ) : (
+                <h2 className="text-xl font-inscription font-normal text-lapis-700 leading-tight">
+                  {title}
+                </h2>
+              )}
+            </div>
           </div>
           
           {/* Action buttons */}
@@ -344,19 +348,43 @@ export function IssueModal({
                 )}
               </>
             )}
-            {isEditing && (
-              <button
-                onClick={handleSave}
-                disabled={isLoading}
-                className="p-2 rounded-lg hover:bg-green-50 text-green-600 transition-colors"
-                title="Save (Ctrl+Enter)"
-              >
-                <Check size={18} />
+            {mode === 'edit' && (
+              <>
+                <button
+                  onClick={handleSave}
+                  disabled={isLoading}
+                  className="p-2 rounded-lg hover:bg-green-50 text-green-600 transition-colors"
+                  title="Save (Ctrl+Enter)"
+                >
+                  <Check size={18} />
+                </button>
+                <button 
+                  onClick={() => {
+                    // Reset form to original issue values and go back to view
+                    if (issue) {
+                      setTitle(issue.title);
+                      setDescription(issue.description || '');
+                      setPriority(issue.priority);
+                      setStatus(issue.status);
+                      setAssigneeId(issue.assigneeId || null);
+                      setDueDate(issue.dueDate?.split('T')[0] || '');
+                      setLabels(issue.labels || []);
+                    }
+                    setError('');
+                    onModeChange('view');
+                  }} 
+                  className="p-2 rounded-lg hover:bg-parchment-200 text-lapis-500 transition-colors"
+                  title="Cancel edit"
+                >
+                  <X size={20} />
+                </button>
+              </>
+            )}
+            {(mode === 'view' || mode === 'create') && (
+              <button onClick={onClose} className="p-2 rounded-lg hover:bg-parchment-200 text-lapis-500 transition-colors">
+                <X size={20} />
               </button>
             )}
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-parchment-200 text-lapis-500 transition-colors">
-              <X size={20} />
-            </button>
           </div>
         </div>
 
@@ -382,19 +410,20 @@ export function IssueModal({
                 placeholder="Add a description..."
                 rows={4}
                 className="
-                  w-full px-4 py-3 rounded-lg 
-                  border-2 border-parchment-300 
-                  bg-parchment-50 text-lapis-700 resize-none
-                  focus:border-lapis-400 focus:ring-2 focus:ring-lapis-400/20 focus:outline-none
-                  placeholder:text-lapis-400 transition-all
+                  w-full min-h-[120px] p-4 rounded-lg 
+                  bg-parchment-100/30 text-lapis-700 resize-none
+                  outline-none
+                  placeholder:text-lapis-400
                 "
               />
             ) : description ? (
-              <div className="prose prose-sm max-w-none text-lapis-700 bg-parchment-50 border border-parchment-200 rounded-lg p-4 whitespace-pre-wrap">
+              <div className="min-h-[120px] text-lapis-700 bg-parchment-100/30 rounded-lg p-4 whitespace-pre-wrap">
                 {description}
               </div>
             ) : (
-              <p className="text-lapis-400 italic text-sm">No description provided.</p>
+              <div className="min-h-[120px] flex items-center justify-center text-lapis-400 italic text-sm bg-parchment-100/30 rounded-lg">
+                No description provided.
+              </div>
             )}
           </div>
 
@@ -404,7 +433,7 @@ export function IssueModal({
               <Tag size={16} />
               Labels
             </h3>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {labels.map((label) => (
                 <span
                   key={label}
@@ -425,33 +454,29 @@ export function IssueModal({
               {labels.length === 0 && !isEditing && (
                 <span className="text-lapis-400 italic text-sm">No labels</span>
               )}
-            </div>
-            {isEditing && (
-              <div className="flex gap-2 mt-3">
+              {isEditing && (
                 <input
                   type="text"
                   value={labelInput}
                   onChange={(e) => setLabelInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addLabel())}
-                  placeholder="Add label..."
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addLabel();
+                    }
+                  }}
+                  placeholder="+ Add label"
                   className="
-                    flex-1 px-3 py-2 rounded-lg text-sm
-                    border-2 border-parchment-300 bg-parchment-50 text-lapis-700
-                    focus:border-lapis-400 focus:outline-none
+                    px-3 py-1.5 rounded-lg text-sm w-28
+                    bg-transparent text-lapis-600
+                    outline-none
                     placeholder:text-lapis-400
+                    focus:bg-parchment-100 focus:w-40
+                    transition-all
                   "
                 />
-                <button
-                  onClick={addLabel}
-                  disabled={!labelInput.trim()}
-                  className="px-3 py-2 rounded-lg text-sm font-medium
-                    bg-parchment-200 text-lapis-600 border-2 border-parchment-300
-                    hover:bg-parchment-300 disabled:opacity-50 transition-all"
-                >
-                  Add
-                </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Details grid */}
@@ -462,68 +487,70 @@ export function IssueModal({
                 <User size={12} />
                 Assignee
               </h4>
-              {isEditing ? (
-                <div className="relative">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setShowAssigneeDropdown(!showAssigneeDropdown); }}
-                    className="
-                      w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left
-                      border-2 border-parchment-300 bg-parchment-50
-                      hover:border-lapis-400 transition-colors
-                    "
-                  >
-                    {selectedAssignee ? (
-                      <>
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-lapis-400 to-lapis-600 flex items-center justify-center">
-                          <span className="text-[10px] text-parchment-100 font-semibold">
-                            {(selectedAssignee.fullName?.[0] || selectedAssignee.username[0]).toUpperCase()}
-                          </span>
-                        </div>
-                        <span className="text-sm text-lapis-700">{selectedAssignee.fullName || selectedAssignee.username}</span>
-                      </>
-                    ) : (
-                      <span className="text-sm text-lapis-400">Unassigned</span>
-                    )}
-                    <ChevronDown size={14} className="ml-auto text-lapis-400" />
-                  </button>
-                  {showAssigneeDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-parchment-50 border border-parchment-300 rounded-lg shadow-lg py-1 z-10 max-h-48 overflow-y-auto">
-                      <button
-                        onClick={() => { setAssigneeId(null); setShowAssigneeDropdown(false); }}
-                        className={`w-full px-3 py-2 text-left text-sm hover:bg-parchment-200 ${!assigneeId ? 'bg-parchment-200' : ''}`}
-                      >
-                        <span className="text-lapis-400">Unassigned</span>
-                      </button>
-                      {users.map((user) => (
-                        <button
-                          key={user.id}
-                          onClick={() => { setAssigneeId(user.id); setShowAssigneeDropdown(false); }}
-                          className={`w-full px-3 py-2 text-left text-sm hover:bg-parchment-200 flex items-center gap-2
-                            ${assigneeId === user.id ? 'bg-parchment-200' : ''}`}
-                        >
-                          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-lapis-400 to-lapis-600 flex items-center justify-center">
-                            <span className="text-[9px] text-parchment-100 font-semibold">
-                              {(user.fullName?.[0] || user.username[0]).toUpperCase()}
+              <div className="h-10 flex items-center">
+                {isEditing ? (
+                  <div className="relative w-full">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowAssigneeDropdown(!showAssigneeDropdown); }}
+                      className="
+                        w-full h-10 flex items-center gap-2 px-3 rounded-lg text-left
+                        border border-parchment-300 bg-parchment-100/50
+                        hover:border-lapis-400 hover:bg-parchment-100 transition-colors
+                      "
+                    >
+                      {selectedAssignee ? (
+                        <>
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-lapis-400 to-lapis-600 flex items-center justify-center flex-shrink-0">
+                            <span className="text-[10px] text-parchment-100 font-semibold">
+                              {(selectedAssignee.fullName?.[0] || selectedAssignee.username[0]).toUpperCase()}
                             </span>
                           </div>
-                          {user.fullName || user.username}
+                          <span className="text-sm text-lapis-700 truncate">{selectedAssignee.fullName || selectedAssignee.username}</span>
+                        </>
+                      ) : (
+                        <span className="text-sm text-lapis-400">Unassigned</span>
+                      )}
+                      <ChevronDown size={14} className="ml-auto text-lapis-400 flex-shrink-0" />
+                    </button>
+                    {showAssigneeDropdown && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-parchment-50 border border-parchment-300 rounded-lg shadow-lg py-1 z-10 max-h-48 overflow-y-auto">
+                        <button
+                          onClick={() => { setAssigneeId(null); setShowAssigneeDropdown(false); }}
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-parchment-200 ${!assigneeId ? 'bg-parchment-200' : ''}`}
+                        >
+                          <span className="text-lapis-400">Unassigned</span>
                         </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : selectedAssignee ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-lapis-400 to-lapis-600 flex items-center justify-center ring-2 ring-parchment-200">
-                    <span className="text-xs text-parchment-100 font-semibold">
-                      {(selectedAssignee.fullName?.[0] || selectedAssignee.username[0]).toUpperCase()}
-                    </span>
+                        {users.map((user) => (
+                          <button
+                            key={user.id}
+                            onClick={() => { setAssigneeId(user.id); setShowAssigneeDropdown(false); }}
+                            className={`w-full px-3 py-2 text-left text-sm hover:bg-parchment-200 flex items-center gap-2
+                              ${assigneeId === user.id ? 'bg-parchment-200' : ''}`}
+                          >
+                            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-lapis-400 to-lapis-600 flex items-center justify-center">
+                              <span className="text-[9px] text-parchment-100 font-semibold">
+                                {(user.fullName?.[0] || user.username[0]).toUpperCase()}
+                              </span>
+                            </div>
+                            {user.fullName || user.username}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <span className="text-sm text-lapis-700 font-medium">{selectedAssignee.fullName || selectedAssignee.username}</span>
-                </div>
-              ) : (
-                <span className="text-sm text-lapis-400 italic">Unassigned</span>
-              )}
+                ) : selectedAssignee ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-lapis-400 to-lapis-600 flex items-center justify-center ring-2 ring-parchment-200">
+                      <span className="text-xs text-parchment-100 font-semibold">
+                        {(selectedAssignee.fullName?.[0] || selectedAssignee.username[0]).toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="text-sm text-lapis-700 font-medium">{selectedAssignee.fullName || selectedAssignee.username}</span>
+                  </div>
+                ) : (
+                  <span className="text-sm text-lapis-400 italic">Unassigned</span>
+                )}
+              </div>
             </div>
 
             {/* Reporter (view only) */}
@@ -532,18 +559,20 @@ export function IssueModal({
                 <User size={12} />
                 Reporter
               </h4>
-              {issue?.reporter ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-clay-400 to-clay-600 flex items-center justify-center ring-2 ring-parchment-200">
-                    <span className="text-xs text-parchment-100 font-semibold">
-                      {(issue.reporter.fullName?.[0] || issue.reporter.username[0]).toUpperCase()}
-                    </span>
+              <div className="h-10 flex items-center">
+                {issue?.reporter ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-clay-400 to-clay-600 flex items-center justify-center ring-2 ring-parchment-200">
+                      <span className="text-xs text-parchment-100 font-semibold">
+                        {(issue.reporter.fullName?.[0] || issue.reporter.username[0]).toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="text-sm text-lapis-700 font-medium">{issue.reporter.fullName || issue.reporter.username}</span>
                   </div>
-                  <span className="text-sm text-lapis-700 font-medium">{issue.reporter.fullName || issue.reporter.username}</span>
-                </div>
-              ) : (
-                <span className="text-sm text-lapis-400 italic">{isCreating ? 'You' : 'Unknown'}</span>
-              )}
+                ) : (
+                  <span className="text-sm text-lapis-400 italic">{isCreating ? 'You' : 'Unknown'}</span>
+                )}
+              </div>
             </div>
 
             {/* Due Date */}
@@ -552,25 +581,27 @@ export function IssueModal({
                 <Calendar size={12} />
                 Due Date
               </h4>
-              {isEditing ? (
-                <input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className="
-                    w-full px-3 py-2 rounded-lg text-sm
-                    border-2 border-parchment-300 bg-parchment-50 text-lapis-700
-                    focus:border-lapis-400 focus:outline-none transition-all
-                  "
-                />
-              ) : dueDate ? (
-                <span className={`text-sm font-medium ${isDueOverdue ? 'text-red-600' : 'text-lapis-700'}`}>
-                  {formatDate(dueDate)}
-                  {isDueOverdue && <span className="ml-2 text-xs text-red-500">(Overdue)</span>}
-                </span>
-              ) : (
-                <span className="text-sm text-lapis-400 italic">No due date</span>
-              )}
+              <div className="h-10 flex items-center">
+                {isEditing ? (
+                  <input
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className="
+                      w-full h-10 px-3 rounded-lg text-sm
+                      border border-parchment-300 bg-parchment-100/50 text-lapis-700
+                      focus:border-lapis-400 focus:bg-parchment-100 outline-none transition-all
+                    "
+                  />
+                ) : dueDate ? (
+                  <span className={`text-sm font-medium ${isDueOverdue ? 'text-red-600' : 'text-lapis-700'}`}>
+                    {formatDate(dueDate)}
+                    {isDueOverdue && <span className="ml-2 text-xs text-red-500">(Overdue)</span>}
+                  </span>
+                ) : (
+                  <span className="text-sm text-lapis-400 italic">No due date</span>
+                )}
+              </div>
             </div>
 
             {/* Created (view only) */}
@@ -579,9 +610,11 @@ export function IssueModal({
                 <Clock size={12} />
                 Created
               </h4>
-              <span className="text-sm text-lapis-700">
-                {issue?.createdAt ? formatRelativeTime(issue.createdAt) : 'Now'}
-              </span>
+              <div className="h-10 flex items-center">
+                <span className="text-sm text-lapis-700">
+                  {issue?.createdAt ? formatRelativeTime(issue.createdAt) : 'Now'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
