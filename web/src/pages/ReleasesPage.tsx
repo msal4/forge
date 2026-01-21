@@ -434,7 +434,7 @@ function ReleaseCard({ release, isSelected, onClick, formatDate, formatSize }: R
     <div
       ref={cardRef}
       className={`
-        tablet-card p-4 cursor-pointer
+        tablet-card p-4 cursor-pointer scroll-mt-2
         transition-all duration-150
         ${isSelected 
           ? 'ring-2 ring-lapis-500 bg-lapis-50 border-lapis-400 shadow-tablet' 
