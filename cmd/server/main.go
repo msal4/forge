@@ -54,6 +54,9 @@ func main() {
 	mux.Handle("GET /api/users/me", requireAuth(http.HandlerFunc(h.GetCurrentUser)))
 	mux.Handle("GET /api/users", requireAuth(http.HandlerFunc(h.ListUsers)))
 
+	// Global search
+	mux.Handle("GET /api/search", requireAuth(http.HandlerFunc(h.GlobalSearch)))
+
 	// Issues (The "Tablet") routes
 	mux.Handle("GET /api/issues", requireAuth(http.HandlerFunc(h.ListIssues)))
 	mux.Handle("POST /api/issues", requireAuth(http.HandlerFunc(h.CreateIssue)))

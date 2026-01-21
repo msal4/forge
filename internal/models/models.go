@@ -174,3 +174,16 @@ type ListResponse[T any] struct {
 	PageSize   int   `json:"pageSize"`
 	TotalPages int   `json:"totalPages"`
 }
+
+// SearchResult represents a single item in global search results
+type SearchResult struct {
+	Type   string      `json:"type"` // "issue" or "doc"
+	ID     int64       `json:"id"`
+	Title  string      `json:"title"`
+	Status IssueStatus `json:"status,omitempty"` // Only for issues
+}
+
+// SearchResponse is the response body for global search
+type SearchResponse struct {
+	Results []SearchResult `json:"results"`
+}

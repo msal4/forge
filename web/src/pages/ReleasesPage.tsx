@@ -188,7 +188,7 @@ export function ReleasesPage() {
           <ButtonWithHotkey
             variant="secondary"
             hotkey="r"
-            onClick={loadReleases}
+            onClick={() => loadReleases()}
             disabled={isLoading}
           >
             {isLoading ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}

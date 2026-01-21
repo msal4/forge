@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, ProtectedRoute } from './context/AuthContext';
 import { KeyboardProvider } from './context/KeyboardContext';
-import { CommandPalette } from './components/ui/CommandPalette';
+import { CommandMenu } from './components/ui/CommandMenu';
 import { Layout } from './components/layout/Layout';
 
 // Pages
@@ -44,7 +44,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <KeyboardProvider>
-          <CommandPalette />
+          <CommandMenu />
           <AppRoutes />
         </KeyboardProvider>
       </AuthProvider>

@@ -88,9 +88,29 @@ export function useKeyboardShortcuts(bindings: KeyBinding[]) {
     
     // Don't trigger shortcuts when typing in inputs (unless global)
     const target = event.target as HTMLElement;
+    const isInCommandPalette = target?.closest('[cmdk-root]') !== null;
     const isInput = target?.tagName === 'INPUT' || 
                     target?.tagName === 'TEXTAREA' || 
                     target?.isContentEditable;
+    
+    // When command palette is open, block ALL shortcuts (Escape is handled by cmdk)
+    if (isInCommandPalette) {
+      return;
+    }
+    
+    // If we're in a regular input, skip all non-global shortcuts entirely
+    // (don't even add to key sequence)
+    if (isInput) {
+      // Only process global bindings
+      for (const binding of bindings) {
+        if (binding.global && matchesKey(event, binding.keys)) {
+          event.preventDefault();
+          binding.handler();
+          return;
+        }
+      }
+      return;
+    }
     
     const now = Date.now();
     
@@ -106,9 +126,6 @@ export function useKeyboardShortcuts(bindings: KeyBinding[]) {
     
     // Check each binding
     for (const binding of bindings) {
-      // Skip non-global bindings when in input
-      if (isInput && !binding.global) continue;
-      
       // Skip if binding.keys is not defined
       if (!binding.keys) continue;
       

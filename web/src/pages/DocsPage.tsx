@@ -174,7 +174,7 @@ export function DocsPage() {
               <ButtonWithHotkey
                 variant="secondary"
                 hotkey="r"
-                onClick={loadDocs}
+                onClick={() => loadDocs()}
                 disabled={isLoading}
               >
                 {isLoading ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}

@@ -512,3 +512,65 @@ func joinStrings(strs []string, sep string) string {
 	}
 	return result
 }
+
+// ============================================
+// Global Search Handler
+// ============================================
+
+// GlobalSearch handles GET /api/search?q=searchterm
+func (h *Handlers) GlobalSearch(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("q")
+	if query == "" {
+		writeJSON(w, http.StatusOK, models.SearchResponse{Results: []models.SearchResult{}})
+		return
+	}
+
+	// Prepare LIKE pattern
+	pattern := "%" + query + "%"
+	var results []models.SearchResult
+
+	// Search issues by title
+	issueRows, err := h.db.Query(`
+		SELECT id, title, status
+		FROM issues
+		WHERE title LIKE ?
+		ORDER BY updated_at DESC
+		LIMIT 10
+	`, pattern)
+	if err == nil {
+		defer issueRows.Close()
+		for issueRows.Next() {
+			var result models.SearchResult
+			if err := issueRows.Scan(&result.ID, &result.Title, &result.Status); err == nil {
+				result.Type = "issue"
+				results = append(results, result)
+			}
+		}
+	}
+
+	// Search docs by title and content
+	docRows, err := h.db.Query(`
+		SELECT id, title
+		FROM docs
+		WHERE title LIKE ? OR content LIKE ?
+		ORDER BY updated_at DESC
+		LIMIT 10
+	`, pattern, pattern)
+	if err == nil {
+		defer docRows.Close()
+		for docRows.Next() {
+			var result models.SearchResult
+			if err := docRows.Scan(&result.ID, &result.Title); err == nil {
+				result.Type = "doc"
+				results = append(results, result)
+			}
+		}
+	}
+
+	// Ensure results is never nil
+	if results == nil {
+		results = []models.SearchResult{}
+	}
+
+	writeJSON(w, http.StatusOK, models.SearchResponse{Results: results})
+}
