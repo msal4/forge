@@ -355,11 +355,97 @@ func (h *Handlers) UpdateIssueStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.db.Exec(`
+	result, err := h.db.Exec(`
 		UPDATE issues SET status = ?, updated_at = datetime('now') WHERE id = ?
 	`, req.Status, id)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "db_error", "Failed to update status")
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		writeError(w, http.StatusNotFound, "not_found", "Issue not found")
+		return
+	}
+
+	h.getIssueByID(w, id)
+}
+
+// PatchIssue handles PATCH /api/issues/{id} - partial update (for Kanban column moves)
+func (h *Handlers) PatchIssue(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_id", "Invalid issue ID")
+		return
+	}
+
+	var req models.UpdateIssueRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", "Invalid request body")
+		return
+	}
+
+	// Build dynamic update query
+	updates := []string{}
+	args := []interface{}{}
+
+	if req.Title != nil {
+		updates = append(updates, "title = ?")
+		args = append(args, *req.Title)
+	}
+	if req.Description != nil {
+		updates = append(updates, "description = ?")
+		args = append(args, *req.Description)
+	}
+	if req.Status != nil {
+		// Validate status
+		switch *req.Status {
+		case models.StatusToInscribe, models.StatusCarving, models.StatusBaked:
+			updates = append(updates, "status = ?")
+			args = append(args, *req.Status)
+		default:
+			writeError(w, http.StatusBadRequest, "invalid_status", "Status must be: to_inscribe, carving, or baked")
+			return
+		}
+	}
+	if req.Priority != nil {
+		updates = append(updates, "priority = ?")
+		args = append(args, *req.Priority)
+	}
+	if req.AssigneeID != nil {
+		updates = append(updates, "assignee_id = ?")
+		args = append(args, *req.AssigneeID)
+	}
+	if req.Labels != nil {
+		labelsJSON, _ := json.Marshal(req.Labels)
+		updates = append(updates, "labels = ?")
+		args = append(args, string(labelsJSON))
+	}
+	if req.DueDate != nil {
+		updates = append(updates, "due_date = ?")
+		args = append(args, *req.DueDate)
+	}
+
+	if len(updates) == 0 {
+		writeError(w, http.StatusBadRequest, "no_updates", "No fields to update")
+		return
+	}
+
+	updates = append(updates, "updated_at = datetime('now')")
+	args = append(args, id)
+
+	query := "UPDATE issues SET " + joinStrings(updates, ", ") + " WHERE id = ?"
+	result, err := h.db.Exec(query, args...)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "db_error", "Failed to update issue")
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		writeError(w, http.StatusNotFound, "not_found", "Issue not found")
 		return
 	}
 

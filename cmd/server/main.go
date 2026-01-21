@@ -59,6 +59,7 @@ func main() {
 	mux.Handle("POST /api/issues", requireAuth(http.HandlerFunc(h.CreateIssue)))
 	mux.Handle("GET /api/issues/{id}", requireAuth(http.HandlerFunc(h.GetIssue)))
 	mux.Handle("PUT /api/issues/{id}", requireAuth(http.HandlerFunc(h.UpdateIssue)))
+	mux.Handle("PATCH /api/issues/{id}", requireAuth(http.HandlerFunc(h.PatchIssue)))
 	mux.Handle("DELETE /api/issues/{id}", requireAuth(http.HandlerFunc(h.DeleteIssue)))
 	mux.Handle("PATCH /api/issues/{id}/status", requireAuth(http.HandlerFunc(h.UpdateIssueStatus)))
 
