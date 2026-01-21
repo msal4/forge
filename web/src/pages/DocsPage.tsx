@@ -1,5 +1,4 @@
-import React from 'react';
-import { Plus, FileText, FolderOpen } from 'lucide-react';
+import { Plus, FolderOpen } from 'lucide-react';
 import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
 
 // ============================================

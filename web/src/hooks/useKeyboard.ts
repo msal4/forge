@@ -65,7 +65,6 @@ function matchesKey(event: KeyboardEvent, keyString: string): boolean {
     (parsed.key === 'enter' && event.key === 'Enter');
   
   const ctrlMatch = parsed.ctrl === (event.ctrlKey || event.metaKey);
-  const metaMatch = parsed.meta === event.metaKey;
   const shiftMatch = parsed.shift === event.shiftKey;
   const altMatch = parsed.alt === event.altKey;
   

@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Plus, Package, Upload, Download } from 'lucide-react';
 import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
 

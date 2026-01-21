@@ -1,7 +1,5 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { FileText, BookOpen, Package, ArrowRight } from 'lucide-react';
-import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
 
 // ============================================
 // Home Page - Dashboard Overview
