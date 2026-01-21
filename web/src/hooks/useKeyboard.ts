@@ -88,22 +88,21 @@ export function useKeyboardShortcuts(bindings: KeyBinding[]) {
     
     // Don't trigger shortcuts when typing in inputs (unless global)
     const target = event.target as HTMLElement;
-    const isInCommandPalette = target?.closest('[cmdk-root]') !== null;
     const isInput = target?.tagName === 'INPUT' || 
                     target?.tagName === 'TEXTAREA' || 
                     target?.isContentEditable;
     
-    // When command palette is open, block ALL shortcuts (Escape is handled by cmdk)
-    if (isInCommandPalette) {
-      return;
-    }
-    
-    // If we're in a regular input, skip all non-global shortcuts entirely
-    // (don't even add to key sequence)
+    // If we're in an input, only allow global shortcuts with modifiers (Ctrl/Cmd+key)
+    // This prevents single-key shortcuts like 'e' from firing while typing
     if (isInput) {
-      // Only process global bindings
       for (const binding of bindings) {
-        if (binding.global && matchesKey(event, binding.keys)) {
+        if (!binding.global) continue;
+        // Only allow global shortcuts that have modifiers (Ctrl, Cmd, etc.)
+        const hasModifier = binding.keys.toLowerCase().includes('ctrl') ||
+                           binding.keys.toLowerCase().includes('cmd') ||
+                           binding.keys.toLowerCase().includes('meta') ||
+                           binding.keys === 'Escape';
+        if (hasModifier && matchesKey(event, binding.keys)) {
           event.preventDefault();
           binding.handler();
           return;

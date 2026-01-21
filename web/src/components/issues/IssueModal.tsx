@@ -155,7 +155,6 @@ export function IssueModal({
       keys: 'e', 
       description: 'Edit', 
       handler: () => mode === 'view' && onModeChange('edit'), 
-      global: true 
     },
     { 
       keys: 'Ctrl+Enter', 
