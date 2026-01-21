@@ -149,6 +149,11 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background-color: theme('colors.parchment.500');
   }
+  
+  /* Prevent content jump when scrollbar appears */
+  .scrollbar-stable {
+    scrollbar-gutter: stable;
+  }
 }
 
 /* Mermaid diagram styling overrides */

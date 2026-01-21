@@ -2,7 +2,7 @@
 // Users API
 // ============================================
 
-import { api } from './client';
+import { api, type RequestOptions } from './client';
 
 export interface User {
   id: number;
@@ -16,8 +16,8 @@ export interface User {
 
 export const usersApi = {
   // List all users
-  list: () => api.get<User[]>('/users'),
+  list: (options?: RequestOptions) => api.get<User[]>('/users', options),
 
   // Get current user
-  me: () => api.get<User>('/users/me'),
+  me: (options?: RequestOptions) => api.get<User>('/users/me', options),
 };

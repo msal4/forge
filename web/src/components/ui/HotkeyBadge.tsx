@@ -9,13 +9,14 @@ interface HotkeyBadgeProps {
   keys: string;
   className?: string;
   size?: 'sm' | 'md';
+  variant?: 'default' | 'dark';
 }
 
 /**
  * Displays a keyboard shortcut badge
  * Used on buttons to show their hotkey
  */
-export function HotkeyBadge({ keys, className = '', size = 'sm' }: HotkeyBadgeProps) {
+export function HotkeyBadge({ keys, className = '', size = 'sm', variant = 'default' }: HotkeyBadgeProps) {
   const formatted = formatShortcut(keys);
   
   const sizeClasses = {
@@ -23,15 +24,19 @@ export function HotkeyBadge({ keys, className = '', size = 'sm' }: HotkeyBadgePr
     md: 'text-xs px-1.5 py-0.5 min-w-[22px]',
   };
   
+  const variantClasses = {
+    default: 'bg-parchment-300 text-lapis-600 border-parchment-400',
+    dark: 'bg-white/20 text-parchment-100 border-white/30',
+  };
+  
   return (
     <kbd
       className={`
         inline-flex items-center justify-center
         font-code font-medium
-        bg-parchment-300 text-lapis-600
-        border border-parchment-400
-        rounded
+        border rounded
         shadow-inner-glow
+        ${variantClasses[variant]}
         ${sizeClasses[size]}
         ${className}
       `}

@@ -2,7 +2,7 @@
 // Issues API - The Tablet
 // ============================================
 
-import { api } from './client';
+import { api, type RequestOptions } from './client';
 
 // Issue status values (Mesopotamian theme)
 export const IssueStatus = {
@@ -76,28 +76,32 @@ export interface UpdateIssueStatusRequest {
 // API functions
 export const issuesApi = {
   // List all issues, optionally filtered
-  list: (params?: { status?: IssueStatusType; assigneeId?: number }) => {
+  list: (options?: RequestOptions & { status?: IssueStatusType; assigneeId?: number }) => {
+    const { signal, status, assigneeId } = options || {};
     const searchParams = new URLSearchParams();
-    if (params?.status) searchParams.set('status', params.status);
-    if (params?.assigneeId) searchParams.set('assignee_id', String(params.assigneeId));
+    if (status) searchParams.set('status', status);
+    if (assigneeId) searchParams.set('assignee_id', String(assigneeId));
     const query = searchParams.toString();
-    return api.get<Issue[]>(`/issues${query ? `?${query}` : ''}`);
+    return api.get<Issue[]>(`/issues${query ? `?${query}` : ''}`, { signal });
   },
 
   // Get single issue by ID
-  get: (id: number) => api.get<Issue>(`/issues/${id}`),
+  get: (id: number, options?: RequestOptions) => 
+    api.get<Issue>(`/issues/${id}`, options),
 
   // Create new issue
-  create: (data: CreateIssueRequest) => api.post<Issue>('/issues', data),
+  create: (data: CreateIssueRequest, options?: RequestOptions) => 
+    api.post<Issue>('/issues', data, options),
 
   // Update issue
-  update: (id: number, data: UpdateIssueRequest) => 
-    api.put<Issue>(`/issues/${id}`, data),
+  update: (id: number, data: UpdateIssueRequest, options?: RequestOptions) => 
+    api.put<Issue>(`/issues/${id}`, data, options),
 
   // Update just the status (for drag-and-drop)
-  updateStatus: (id: number, status: IssueStatusType) =>
-    api.patch<Issue>(`/issues/${id}/status`, { status }),
+  updateStatus: (id: number, status: IssueStatusType, options?: RequestOptions) =>
+    api.patch<Issue>(`/issues/${id}/status`, { status }, options),
 
   // Delete issue
-  delete: (id: number) => api.delete<{ message: string }>(`/issues/${id}`),
+  delete: (id: number, options?: RequestOptions) => 
+    api.delete<{ message: string }>(`/issues/${id}`, options),
 };

@@ -37,6 +37,10 @@ export interface CreateReleaseRequest {
   description?: string;
 }
 
+export interface RequestOptions {
+  signal?: AbortSignal;
+}
+
 const API_BASE = '/api';
 
 async function request<T>(
@@ -69,25 +73,31 @@ async function request<T>(
 
 export const releasesApi = {
   // List all releases
-  list: () => request<Release[]>('/releases'),
+  list: (options?: RequestOptions) => 
+    request<Release[]>('/releases', { signal: options?.signal }),
 
   // Get single release by ID
-  get: (id: number) => request<Release>(`/releases/${id}`),
+  get: (id: number, options?: RequestOptions) => 
+    request<Release>(`/releases/${id}`, { signal: options?.signal }),
 
   // Create new release
-  create: (data: CreateReleaseRequest) => 
+  create: (data: CreateReleaseRequest, options?: RequestOptions) => 
     request<Release>('/releases', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
+      signal: options?.signal,
     }),
 
   // Delete release
-  delete: (id: number) => 
-    request<{ message: string }>(`/releases/${id}`, { method: 'DELETE' }),
+  delete: (id: number, options?: RequestOptions) => 
+    request<{ message: string }>(`/releases/${id}`, { 
+      method: 'DELETE',
+      signal: options?.signal,
+    }),
 
   // Upload file to release
-  uploadFile: async (releaseId: number, file: File): Promise<ReleaseFile> => {
+  uploadFile: async (releaseId: number, file: File, options?: RequestOptions): Promise<ReleaseFile> => {
     const formData = new FormData();
     formData.append('file', file);
     
@@ -95,6 +105,7 @@ export const releasesApi = {
       method: 'POST',
       credentials: 'include',
       body: formData,
+      signal: options?.signal,
     });
 
     const data = await response.json();

@@ -12,6 +12,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboard';
+import { HotkeyBadge } from '../ui/HotkeyBadge';
 import type { Issue, CreateIssueRequest, UpdateIssueRequest, PriorityType, IssueStatusType } from '../../api/issues';
 import { Priority, IssueStatus } from '../../api/issues';
 import type { User as UserType } from '../../api/users';
@@ -127,9 +128,29 @@ export function IssueModal({
     }
   }, [isOpen]);
 
+  // Handle cancel/escape - edit mode goes to view, view/create closes
+  const handleCancel = () => {
+    if (mode === 'edit') {
+      // Reset form to original issue values and go back to view
+      if (issue) {
+        setTitle(issue.title);
+        setDescription(issue.description || '');
+        setPriority(issue.priority);
+        setStatus(issue.status);
+        setAssigneeId(issue.assigneeId || null);
+        setDueDate(issue.dueDate?.split('T')[0] || '');
+        setLabels(issue.labels || []);
+      }
+      setError('');
+      onModeChange('view');
+    } else {
+      onClose();
+    }
+  };
+
   // Keyboard shortcuts
   useKeyboardShortcuts([
-    { keys: 'Escape', description: 'Close', handler: onClose, global: true },
+    { keys: 'Escape', description: 'Close/Cancel', handler: handleCancel, global: true },
     { 
       keys: 'e', 
       description: 'Edit', 
@@ -213,7 +234,10 @@ export function IssueModal({
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] px-4 pb-8 overflow-y-auto overflow-x-hidden">
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-lapis-900/60 backdrop-blur-sm" onClick={onClose} />
+      <div 
+        className="fixed inset-0 bg-lapis-900/60 backdrop-blur-sm animate-fade-in" 
+        onClick={onClose} 
+      />
       
       {/* Modal */}
       <div className="
@@ -221,16 +245,18 @@ export function IssueModal({
         bg-parchment-50
         rounded-xl shadow-2xl border border-parchment-300
         flex flex-col
+        overflow-hidden
+        animate-scale-in
       ">
         {/* Priority color bar */}
         <div className={`h-1.5 transition-colors duration-200 ${
-          priority === 'critical' ? 'bg-red-400' :
-          priority === 'high' ? 'bg-clay-400' :
-          priority === 'medium' ? 'bg-gold-400' : 'bg-lapis-400'
+          priority === 'critical' ? 'bg-red-500' :
+          priority === 'high' ? 'bg-clay-500' :
+          priority === 'medium' ? 'bg-gold-500' : 'bg-lapis-400'
         }`} />
         
         {/* Header */}
-        <div className="flex items-start justify-between px-6 py-4 border-b border-parchment-300 bg-parchment-100/50">
+        <div className="flex items-start justify-between px-6 py-4 border-b border-parchment-200 bg-parchment-100/50">
           <div className="flex-1 pr-4">
             {/* Status & Priority badges */}
             <div className="flex items-center gap-2 mb-3">
@@ -359,22 +385,9 @@ export function IssueModal({
                   <Check size={18} />
                 </button>
                 <button 
-                  onClick={() => {
-                    // Reset form to original issue values and go back to view
-                    if (issue) {
-                      setTitle(issue.title);
-                      setDescription(issue.description || '');
-                      setPriority(issue.priority);
-                      setStatus(issue.status);
-                      setAssigneeId(issue.assigneeId || null);
-                      setDueDate(issue.dueDate?.split('T')[0] || '');
-                      setLabels(issue.labels || []);
-                    }
-                    setError('');
-                    onModeChange('view');
-                  }} 
+                  onClick={handleCancel}
                   className="p-2 rounded-lg hover:bg-parchment-200 text-lapis-500 transition-colors"
-                  title="Cancel edit"
+                  title="Cancel edit (Esc)"
                 >
                   <X size={20} />
                 </button>
@@ -396,9 +409,9 @@ export function IssueModal({
         )}
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-stable scrollbar-thin">
           {/* Description */}
-          <div className="mb-6">
+          <div>
             <h3 className="flex items-center gap-2 text-sm font-semibold text-lapis-600 mb-3">
               <FileText size={16} />
               Description
@@ -411,9 +424,11 @@ export function IssueModal({
                 rows={4}
                 className="
                   w-full min-h-[120px] p-4 rounded-lg 
-                  bg-parchment-100/30 text-lapis-700 resize-none
-                  outline-none
+                  bg-parchment-100/50 text-lapis-700 resize-none
+                  border border-parchment-300 
+                  outline-none focus:border-lapis-400 focus:bg-parchment-100
                   placeholder:text-lapis-400
+                  transition-colors
                 "
               />
             ) : description ? (
@@ -428,7 +443,7 @@ export function IssueModal({
           </div>
 
           {/* Labels */}
-          <div className="mb-6">
+          <div>
             <h3 className="flex items-center gap-2 text-sm font-semibold text-lapis-600 mb-3">
               <Tag size={16} />
               Labels
@@ -480,7 +495,7 @@ export function IssueModal({
           </div>
 
           {/* Details grid */}
-          <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-parchment-100 border border-parchment-200">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4 p-4 rounded-lg bg-parchment-100/60 border border-parchment-200">
             {/* Assignee */}
             <div>
               <h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 mb-2">
@@ -620,21 +635,57 @@ export function IssueModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-3 border-t border-parchment-300 bg-parchment-100">
-          <p className="text-xs text-lapis-400">
-            {isEditing ? (
-              <>Press <kbd className="px-1.5 py-0.5 bg-parchment-200 rounded text-[10px]">Ctrl+Enter</kbd> to save</>
-            ) : (
-              <>Press <kbd className="px-1.5 py-0.5 bg-parchment-200 rounded text-[10px]">e</kbd> to edit</>
+        <div className="flex items-center justify-between px-6 py-4 border-t border-parchment-200 bg-parchment-100/80">
+          <div className="text-xs text-lapis-400">
+            {issue?.updatedAt && !isCreating && (
+              <span>Last updated: {formatRelativeTime(issue.updatedAt)}</span>
             )}
-            {' '}&bull;{' '}
-            <kbd className="px-1.5 py-0.5 bg-parchment-200 rounded text-[10px]">Esc</kbd> to close
-          </p>
-          {issue?.updatedAt && (
-            <p className="text-xs text-lapis-400">
-              Last updated: {formatRelativeTime(issue.updatedAt)}
-            </p>
-          )}
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {isEditing ? (
+              <>
+                <button
+                  onClick={handleCancel}
+                  className="
+                    px-4 py-2 rounded-lg text-sm font-medium
+                    text-lapis-600 hover:bg-parchment-200
+                    transition-colors
+                    flex items-center gap-2
+                  "
+                >
+                  Cancel
+                  <HotkeyBadge keys="Escape" />
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={isLoading}
+                  className="
+                    px-5 py-2 rounded-lg text-sm font-medium
+                    bg-lapis-500 text-parchment-50
+                    hover:bg-lapis-600 
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                    transition-colors
+                    flex items-center gap-2
+                  "
+                >
+                  {isLoading ? (
+                    <span className="inline-block w-4 h-4 border-2 border-parchment-200 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Check size={16} />
+                  )}
+                  {isCreating ? 'Create Issue' : 'Save Changes'}
+                  <HotkeyBadge keys="Ctrl+Enter" variant="dark" />
+                </button>
+              </>
+            ) : (
+              <p className="text-xs text-lapis-400 flex items-center gap-1">
+                Press <HotkeyBadge keys="e" /> to edit
+                {' '}&bull;{' '}
+                <HotkeyBadge keys="Escape" /> to close
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

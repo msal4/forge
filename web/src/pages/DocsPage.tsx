@@ -35,13 +35,17 @@ export function DocsPage() {
   const [isSaving, setIsSaving] = React.useState(false);
 
   // Load docs
-  const loadDocs = React.useCallback(async () => {
+  const loadDocs = React.useCallback(async (signal?: AbortSignal) => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await docsApi.list();
+      const data = await docsApi.list({ signal });
       setDocs(data);
     } catch (err) {
+      // Ignore abort errors
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
       setError(err instanceof Error ? err.message : 'Failed to load documents');
     } finally {
       setIsLoading(false);
@@ -49,7 +53,9 @@ export function DocsPage() {
   }, []);
 
   React.useEffect(() => {
-    loadDocs();
+    const controller = new AbortController();
+    loadDocs(controller.signal);
+    return () => controller.abort();
   }, [loadDocs]);
 
   // Keyboard shortcuts

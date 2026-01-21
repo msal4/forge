@@ -109,13 +109,15 @@ func main() {
 
 	// ============================================
 	// Apply Global Middleware Stack
+	// Order: RequestID -> Recovery -> CORS -> Logger -> Handler
+	// (Chain applies in reverse, so list outermost first)
 	// ============================================
 	handler := middleware.Chain(
 		mux,
-		middleware.Logger,
-		middleware.CORS,
-		middleware.Recovery,
 		middleware.RequestID,
+		middleware.Recovery,
+		middleware.CORS,
+		middleware.Logger,
 	)
 
 	// Start server

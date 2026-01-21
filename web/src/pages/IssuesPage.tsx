@@ -78,18 +78,22 @@ export function IssuesPage() {
   }, []);
 
   // Load issues and users
-  const loadData = React.useCallback(async () => {
+  const loadData = React.useCallback(async (signal?: AbortSignal) => {
     try {
       setIsLoading(true);
       setError(null);
       const [issuesData, usersData] = await Promise.all([
-        issuesApi.list(),
-        usersApi.list(),
+        issuesApi.list({ signal }),
+        usersApi.list({ signal }),
       ]);
       setIssues(issuesData);
       setUsers(usersData);
       return issuesData;
     } catch (err) {
+      // Ignore abort errors
+      if (err instanceof Error && err.name === 'AbortError') {
+        return [];
+      }
       setError(err instanceof Error ? err.message : 'Failed to load data');
       return [];
     } finally {
@@ -99,7 +103,11 @@ export function IssuesPage() {
 
   // Load data and check URL for issue ID on mount
   React.useEffect(() => {
-    loadData().then((issuesData) => {
+    const controller = new AbortController();
+    
+    loadData(controller.signal).then((issuesData) => {
+      if (controller.signal.aborted) return;
+      
       const url = new URL(window.location.href);
       const issueId = url.searchParams.get('issue');
       if (issueId && issuesData.length > 0) {
@@ -111,6 +119,8 @@ export function IssuesPage() {
         }
       }
     });
+    
+    return () => controller.abort();
   }, [loadData]);
 
   // Group issues by status

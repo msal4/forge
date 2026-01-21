@@ -42,13 +42,17 @@ export function ReleasesPage() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Load releases
-  const loadReleases = React.useCallback(async () => {
+  const loadReleases = React.useCallback(async (signal?: AbortSignal) => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await releasesApi.list();
+      const data = await releasesApi.list({ signal });
       setReleases(data);
     } catch (err) {
+      // Ignore abort errors
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
       setError(err instanceof Error ? err.message : 'Failed to load releases');
     } finally {
       setIsLoading(false);
@@ -56,7 +60,9 @@ export function ReleasesPage() {
   }, []);
 
   React.useEffect(() => {
-    loadReleases();
+    const controller = new AbortController();
+    loadReleases(controller.signal);
+    return () => controller.abort();
   }, [loadReleases]);
 
   // Keyboard shortcuts

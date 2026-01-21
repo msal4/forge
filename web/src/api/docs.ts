@@ -2,7 +2,7 @@
 // Docs API - The Library
 // ============================================
 
-import { api } from './client';
+import { api, type RequestOptions } from './client';
 
 export interface Doc {
   id: number;
@@ -37,25 +37,29 @@ export interface UpdateDocRequest {
 
 export const docsApi = {
   // List all docs, optionally filtered by parent
-  list: (params?: { parentId?: number | 'root' }) => {
+  list: (options?: RequestOptions & { parentId?: number | 'root' }) => {
+    const { signal, parentId } = options || {};
     const searchParams = new URLSearchParams();
-    if (params?.parentId !== undefined) {
-      searchParams.set('parent_id', String(params.parentId));
+    if (parentId !== undefined) {
+      searchParams.set('parent_id', String(parentId));
     }
     const query = searchParams.toString();
-    return api.get<Doc[]>(`/docs${query ? `?${query}` : ''}`);
+    return api.get<Doc[]>(`/docs${query ? `?${query}` : ''}`, { signal });
   },
 
   // Get single doc by ID or slug
-  get: (idOrSlug: number | string) => api.get<Doc>(`/docs/${idOrSlug}`),
+  get: (idOrSlug: number | string, options?: RequestOptions) => 
+    api.get<Doc>(`/docs/${idOrSlug}`, options),
 
   // Create new doc
-  create: (data: CreateDocRequest) => api.post<Doc>('/docs', data),
+  create: (data: CreateDocRequest, options?: RequestOptions) => 
+    api.post<Doc>('/docs', data, options),
 
   // Update doc
-  update: (id: number, data: UpdateDocRequest) => 
-    api.put<Doc>(`/docs/${id}`, data),
+  update: (id: number, data: UpdateDocRequest, options?: RequestOptions) => 
+    api.put<Doc>(`/docs/${id}`, data, options),
 
   // Delete doc
-  delete: (id: number) => api.delete<{ message: string }>(`/docs/${id}`),
+  delete: (id: number, options?: RequestOptions) => 
+    api.delete<{ message: string }>(`/docs/${id}`, options),
 };
