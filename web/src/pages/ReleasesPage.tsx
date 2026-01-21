@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
 import { 
   Plus, 
   Package, 
@@ -269,7 +270,9 @@ export function ReleasesPage() {
                   </h2>
                 </div>
                 {selectedRelease.description && (
-                  <p className="mt-2 text-lapis-600">{selectedRelease.description}</p>
+                  <div className="mt-2 prose-mesopotamian">
+                    <ReactMarkdown>{selectedRelease.description}</ReactMarkdown>
+                  </div>
                 )}
                 <div className="mt-3 flex items-center gap-4 text-sm text-lapis-500">
                   {selectedRelease.author && (

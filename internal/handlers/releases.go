@@ -240,9 +240,9 @@ func (h *Handlers) UploadReleaseFile(w http.ResponseWriter, r *http.Request) {
 
 	// Save to database
 	result, err := h.db.Exec(`
-		INSERT INTO release_files (release_id, filename, size, mime_type, path)
-		VALUES (?, ?, ?, ?, ?)
-	`, releaseID, filename, size, mimeType, filePath)
+		INSERT INTO release_files (release_id, filename, original_filename, file_path, file_size, mime_type)
+		VALUES (?, ?, ?, ?, ?, ?)
+	`, releaseID, filename, header.Filename, filePath, size, mimeType)
 
 	if err != nil {
 		os.Remove(filePath)
@@ -279,7 +279,7 @@ func (h *Handlers) DownloadReleaseFile(w http.ResponseWriter, r *http.Request) {
 	// Get file path from database
 	var filePath, mimeType string
 	err = h.db.QueryRow(`
-		SELECT path, mime_type FROM release_files 
+		SELECT file_path, mime_type FROM release_files 
 		WHERE release_id = ? AND filename = ?
 	`, releaseID, filename).Scan(&filePath, &mimeType)
 
@@ -338,7 +338,7 @@ func (h *Handlers) getReleaseByID(w http.ResponseWriter, id int64) {
 
 func (h *Handlers) getReleaseFiles(releaseID int64) []models.ReleaseFile {
 	rows, err := h.db.Query(`
-		SELECT id, release_id, filename, size, mime_type, created_at
+		SELECT id, release_id, filename, file_size, mime_type, created_at
 		FROM release_files WHERE release_id = ?
 	`, releaseID)
 	if err != nil {

@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
 import { 
   X, 
   Edit3, 
@@ -431,8 +432,8 @@ export function IssueModal({
                 "
               />
             ) : description ? (
-              <div className="min-h-[120px] text-lapis-700 bg-parchment-100/30 rounded-lg p-4 whitespace-pre-wrap">
-                {description}
+              <div className="min-h-[120px] bg-parchment-100/30 rounded-lg p-4 prose-mesopotamian">
+                <ReactMarkdown>{description}</ReactMarkdown>
               </div>
             ) : (
               <div className="min-h-[120px] flex items-center justify-center text-lapis-400 italic text-sm bg-parchment-100/30 rounded-lg">

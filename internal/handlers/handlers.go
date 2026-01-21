@@ -538,7 +538,6 @@ func (h *Handlers) GlobalSearch(w http.ResponseWriter, r *http.Request) {
 		LIMIT 10
 	`, pattern)
 	if err == nil {
-		defer issueRows.Close()
 		for issueRows.Next() {
 			var result models.SearchResult
 			if err := issueRows.Scan(&result.ID, &result.Title, &result.Status); err == nil {
@@ -546,6 +545,7 @@ func (h *Handlers) GlobalSearch(w http.ResponseWriter, r *http.Request) {
 				results = append(results, result)
 			}
 		}
+		issueRows.Close() // Close immediately before next query
 	}
 
 	// Search docs by title and content
@@ -557,7 +557,6 @@ func (h *Handlers) GlobalSearch(w http.ResponseWriter, r *http.Request) {
 		LIMIT 10
 	`, pattern, pattern)
 	if err == nil {
-		defer docRows.Close()
 		for docRows.Next() {
 			var result models.SearchResult
 			if err := docRows.Scan(&result.ID, &result.Title); err == nil {
@@ -565,6 +564,7 @@ func (h *Handlers) GlobalSearch(w http.ResponseWriter, r *http.Request) {
 				results = append(results, result)
 			}
 		}
+		docRows.Close() // Close immediately after use
 	}
 
 	// Ensure results is never nil

@@ -40,8 +40,10 @@ func Open(dbPath string) (*DB, error) {
 	}
 
 	// Set connection pool settings
-	sqlDB.SetMaxOpenConns(1) // SQLite only supports one writer
-	sqlDB.SetMaxIdleConns(1)
+	// SQLite with WAL mode supports concurrent readers, so allow multiple connections.
+	// The database file locking handles write serialization.
+	sqlDB.SetMaxOpenConns(10)
+	sqlDB.SetMaxIdleConns(5)
 
 	return &DB{sqlDB}, nil
 }
