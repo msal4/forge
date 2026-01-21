@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 // ============================================
 // Login Page - Clay Tablet Design
@@ -18,7 +18,7 @@ export function LoginPage() {
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const navigate = useNavigate();
+  const { login } = useAuth();
 
   // Auto-focus username input on mount
   useEffect(() => {
@@ -73,20 +73,9 @@ export function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: usernameValue.trim(), password: passwordValue }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Authentication failed');
-      }
-
-      // Success - redirect to home
-      navigate('/', { replace: true });
+      // Use AuthContext's login function which handles state and navigation
+      await login(usernameValue.trim(), passwordValue);
+      // Navigation is handled by AuthContext's login function
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
     } finally {

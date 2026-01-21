@@ -4,7 +4,9 @@ import { Plus, RefreshCw, Loader2 } from 'lucide-react';
 import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
 import { IssueCard } from '../components/issues/IssueCard';
 import { IssueModal } from '../components/issues/IssueModal';
+import { FilterBar } from '../components/issues/FilterBar';
 import { useKeyboardShortcuts } from '../hooks/useKeyboard';
+import { useIssueFilters } from '../hooks/useIssueFilters';
 import { 
   issuesApi, 
   IssueStatus, 
@@ -70,6 +72,20 @@ export function IssuesPage() {
   const [draggedIssue, setDraggedIssue] = React.useState<Issue | null>(null);
   const [dragOverColumn, setDragOverColumn] = React.useState<IssueStatusType | null>(null);
 
+  // Filtering
+  const {
+    filters,
+    setSearchQuery,
+    setSelectedAssignee,
+    toggleLabel,
+    clearFilters,
+    hasActiveFilters,
+    filteredIssues,
+    availableLabels,
+    searchInputRef,
+    focusSearch,
+  } = useIssueFilters(issues);
+
   // Load issues and users
   const loadData = React.useCallback(async (signal?: AbortSignal) => {
     try {
@@ -116,7 +132,7 @@ export function IssuesPage() {
     }
   }, [issueId, issues]);
 
-  // Group issues by status
+  // Group filtered issues by status
   const issuesByStatus = React.useMemo(() => {
     const grouped: Record<IssueStatusType, Issue[]> = {
       [IssueStatus.TO_INSCRIBE]: [],
@@ -124,14 +140,14 @@ export function IssuesPage() {
       [IssueStatus.BAKED]: [],
     };
     
-    issues.forEach(issue => {
+    filteredIssues.forEach(issue => {
       if (grouped[issue.status]) {
         grouped[issue.status].push(issue);
       }
     });
     
     return grouped;
-  }, [issues]);
+  }, [filteredIssues]);
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
@@ -149,6 +165,12 @@ export function IssuesPage() {
       keys: 'r',
       description: 'Refresh issues',
       handler: loadData,
+      category: 'actions',
+    },
+    {
+      keys: 'f',
+      description: 'Focus filter search',
+      handler: focusSearch,
       category: 'actions',
     },
   ]);
@@ -272,8 +294,9 @@ export function IssuesPage() {
     handleCloseModal();
   };
 
-  // Stats
+  // Stats - use filtered count for display, total for reference
   const totalIssues = issues.length;
+  const filteredTotal = filteredIssues.length;
   const completedIssues = issuesByStatus[IssueStatus.BAKED].length;
 
   return (
@@ -289,7 +312,9 @@ export function IssuesPage() {
           <p className="text-lapis-500 text-sm mt-1">
             {totalIssues === 0 
               ? 'No inscriptions yet — begin your record'
-              : `${completedIssues} of ${totalIssues} inscriptions complete`
+              : hasActiveFilters
+                ? `${completedIssues} of ${filteredTotal} filtered inscriptions complete`
+                : `${completedIssues} of ${totalIssues} inscriptions complete`
             }
           </p>
         </div>
@@ -317,6 +342,23 @@ export function IssuesPage() {
           </ButtonWithHotkey>
         </div>
       </div>
+
+      {/* Filter Bar */}
+      {!isLoading && issues.length > 0 && (
+        <FilterBar
+          filters={filters}
+          users={users}
+          availableLabels={availableLabels}
+          hasActiveFilters={hasActiveFilters}
+          onSearchChange={setSearchQuery}
+          onAssigneeChange={setSelectedAssignee}
+          onToggleLabel={toggleLabel}
+          onClearFilters={clearFilters}
+          searchInputRef={searchInputRef}
+          totalCount={totalIssues}
+          filteredCount={filteredTotal}
+        />
+      )}
 
       {/* Error message */}
       {error && (
@@ -363,6 +405,7 @@ export function IssuesPage() {
                 setModalMode('create');
                 setIsModalOpen(true);
               }}
+              isFiltering={hasActiveFilters}
             />
           ))}
         </div>
@@ -414,6 +457,7 @@ interface KanbanColumnProps {
   isDragOver: boolean;
   draggedIssueId?: number;
   onCreateIssue: () => void;
+  isFiltering?: boolean;
 }
 
 function KanbanColumn({
@@ -430,6 +474,7 @@ function KanbanColumn({
   isDragOver,
   draggedIssueId,
   onCreateIssue,
+  isFiltering = false,
 }: KanbanColumnProps) {
   return (
     <div
@@ -478,6 +523,7 @@ function KanbanColumn({
             columnId={column.id} 
             isDragOver={isDragOver}
             onCreateIssue={onCreateIssue}
+            isFiltering={isFiltering}
           />
         ) : (
           issues.map(issue => (
@@ -511,24 +557,25 @@ interface EmptyColumnStateProps {
   columnId: IssueStatusType;
   isDragOver: boolean;
   onCreateIssue: () => void;
+  isFiltering?: boolean;
 }
 
-function EmptyColumnState({ columnId, isDragOver, onCreateIssue }: EmptyColumnStateProps) {
+function EmptyColumnState({ columnId, isDragOver, onCreateIssue, isFiltering = false }: EmptyColumnStateProps) {
   const messages: Record<IssueStatusType, { icon: string; title: string; subtitle: string }> = {
     [IssueStatus.TO_INSCRIBE]: {
       icon: '𒀭',
-      title: 'Ready for inscriptions',
-      subtitle: 'Create a new task to begin',
+      title: isFiltering ? 'No matches found' : 'Ready for inscriptions',
+      subtitle: isFiltering ? 'Try adjusting your filters' : 'Create a new task to begin',
     },
     [IssueStatus.CARVING]: {
       icon: '𒁹',
-      title: 'No work in progress',
-      subtitle: 'Drag tasks here to start carving',
+      title: isFiltering ? 'No matches found' : 'No work in progress',
+      subtitle: isFiltering ? 'Try adjusting your filters' : 'Drag tasks here to start carving',
     },
     [IssueStatus.BAKED]: {
       icon: '𒂗',
-      title: 'Nothing completed yet',
-      subtitle: 'Finished tasks will appear here',
+      title: isFiltering ? 'No matches found' : 'Nothing completed yet',
+      subtitle: isFiltering ? 'Try adjusting your filters' : 'Finished tasks will appear here',
     },
   };
 

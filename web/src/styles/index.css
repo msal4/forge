@@ -13,10 +13,14 @@
 @layer base {
   html {
     @apply scroll-smooth;
+    /* Prevent content jump when scrollbar appears/disappears */
+    scrollbar-gutter: stable;
   }
   
   body {
     @apply bg-parchment-100 text-lapis-700 font-body antialiased;
+    /* Ensure body takes full height for proper scrollbar behavior */
+    min-height: 100vh;
   }
   
   /* Inscription-style headers */

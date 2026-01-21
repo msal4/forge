@@ -1,21 +1,145 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, BookOpen, Package, ArrowRight } from 'lucide-react';
+import { 
+  FileText, 
+  BookOpen, 
+  Package, 
+  ArrowRight, 
+  Loader2,
+  Clock,
+  CheckCircle2,
+  Circle,
+  Hammer,
+  Tag,
+  User,
+  AlertCircle,
+} from 'lucide-react';
+import { issuesApi, IssueStatus, type Issue } from '../api/issues';
+import { releasesApi, type Release } from '../api/releases';
+import { docsApi, type Doc } from '../api/docs';
+import { useAuth } from '../context/AuthContext';
 
 // ============================================
 // Home Page - Dashboard Overview
 // ============================================
 
 export function HomePage() {
+  const { user } = useAuth();
+  const [issues, setIssues] = React.useState<Issue[]>([]);
+  const [releases, setReleases] = React.useState<Release[]>([]);
+  const [docs, setDocs] = React.useState<Doc[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  // Load dashboard data
+  React.useEffect(() => {
+    const controller = new AbortController();
+    
+    async function loadData() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const [issuesData, releasesData, docsData] = await Promise.all([
+          issuesApi.list({ signal: controller.signal }),
+          releasesApi.list({ signal: controller.signal }),
+          docsApi.list({ signal: controller.signal }),
+        ]);
+        
+        setIssues(issuesData);
+        setReleases(releasesData);
+        setDocs(docsData);
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return;
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    loadData();
+    return () => controller.abort();
+  }, []);
+
+  // Calculate stats
+  const stats = React.useMemo(() => {
+    const toInscribe = issues.filter(i => i.status === IssueStatus.TO_INSCRIBE).length;
+    const carving = issues.filter(i => i.status === IssueStatus.CARVING).length;
+    const baked = issues.filter(i => i.status === IssueStatus.BAKED).length;
+    const myIssues = issues.filter(i => i.assigneeId === user?.id).length;
+    
+    return { toInscribe, carving, baked, total: issues.length, myIssues };
+  }, [issues, user]);
+
+  // Get recent items (sorted by updatedAt)
+  const recentIssues = React.useMemo(() => {
+    return [...issues]
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 5);
+  }, [issues]);
+
+  const latestRelease = React.useMemo(() => {
+    return [...releases]
+      .filter(r => r.publishedAt)
+      .sort((a, b) => new Date(b.publishedAt!).getTime() - new Date(a.publishedAt!).getTime())[0];
+  }, [releases]);
+
+  const recentDocs = React.useMemo(() => {
+    return [...docs]
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 3);
+  }, [docs]);
+
   return (
     <div className="space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-inscription text-lapis-600">
-          Welcome to the Forge
+          Welcome back, {user?.fullName?.split(' ')[0] || user?.username}
         </h1>
         <p className="mt-2 text-lapis-500">
           Where ancient wisdom meets modern development.
         </p>
+      </div>
+
+      {/* Error message */}
+      {error && (
+        <div className="p-4 bg-clay-50 border border-clay-200 rounded-tablet text-clay-700 flex items-center gap-3">
+          <AlertCircle size={20} />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Quick Stats */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <StatCard
+          icon={<Circle size={18} />}
+          label="To Inscribe"
+          value={stats.toInscribe}
+          color="parchment"
+          loading={isLoading}
+        />
+        <StatCard
+          icon={<Hammer size={18} />}
+          label="Carving"
+          value={stats.carving}
+          color="clay"
+          loading={isLoading}
+        />
+        <StatCard
+          icon={<CheckCircle2 size={18} />}
+          label="Baked"
+          value={stats.baked}
+          color="gold"
+          loading={isLoading}
+        />
+        <StatCard
+          icon={<User size={18} />}
+          label="Assigned to Me"
+          value={stats.myIssues}
+          color="lapis"
+          loading={isLoading}
+        />
       </div>
       
       {/* Quick Actions */}
@@ -45,17 +169,138 @@ export function HomePage() {
           shortcut="g+r"
         />
       </div>
-      
-      {/* Recent Activity */}
-      <div className="tablet-card p-6">
-        <h2 className="text-xl font-inscription text-lapis-600 mb-4">
-          Recent Inscriptions
-        </h2>
-        <div className="text-center py-8 text-lapis-500">
-          <p>No recent activity yet.</p>
-          <p className="text-sm mt-2">
-            Press <kbd className="px-1.5 py-0.5 bg-parchment-200 rounded text-xs">C</kbd> to create your first issue.
-          </p>
+
+      {/* Main Content Grid */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Recent Inscriptions - Takes 2 columns */}
+        <div className="lg:col-span-2 tablet-card p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-inscription text-lapis-600">
+              Recent Inscriptions
+            </h2>
+            <Link 
+              to="/issues" 
+              className="text-sm text-lapis-500 hover:text-lapis-600 flex items-center gap-1"
+            >
+              View all <ArrowRight size={14} />
+            </Link>
+          </div>
+          
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="animate-spin text-lapis-400" size={24} />
+            </div>
+          ) : recentIssues.length === 0 ? (
+            <EmptyState 
+              message="No inscriptions yet"
+              hint="Press C to create your first issue"
+            />
+          ) : (
+            <div className="space-y-3">
+              {recentIssues.map(issue => (
+                <IssueRow key={issue.id} issue={issue} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar - Latest Release & Recent Docs */}
+        <div className="space-y-6">
+          {/* Latest Release */}
+          <div className="tablet-card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-inscription text-lapis-600">
+                Latest Release
+              </h2>
+              <Link 
+                to="/releases" 
+                className="text-sm text-lapis-500 hover:text-lapis-600"
+              >
+                All releases
+              </Link>
+            </div>
+            
+            {isLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="animate-spin text-lapis-400" size={20} />
+              </div>
+            ) : latestRelease ? (
+              <Link 
+                to={`/releases/${latestRelease.id}`}
+                className="block group"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-tablet bg-gold-100 flex items-center justify-center flex-shrink-0">
+                    <Package size={18} className="text-gold-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sm font-semibold text-lapis-600 group-hover:text-lapis-700">
+                        {latestRelease.version}
+                      </span>
+                    </div>
+                    <p className="text-sm text-lapis-700 font-medium truncate">
+                      {latestRelease.title}
+                    </p>
+                    <p className="text-xs text-lapis-400 mt-1">
+                      {formatRelativeTime(latestRelease.publishedAt!)}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <EmptyState 
+                message="No releases yet"
+                small
+              />
+            )}
+          </div>
+
+          {/* Recent Docs */}
+          <div className="tablet-card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-inscription text-lapis-600">
+                Recent Documents
+              </h2>
+              <Link 
+                to="/docs" 
+                className="text-sm text-lapis-500 hover:text-lapis-600"
+              >
+                Library
+              </Link>
+            </div>
+            
+            {isLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="animate-spin text-lapis-400" size={20} />
+              </div>
+            ) : recentDocs.length === 0 ? (
+              <EmptyState 
+                message="No documents yet"
+                small
+              />
+            ) : (
+              <div className="space-y-2">
+                {recentDocs.map(doc => (
+                  <Link
+                    key={doc.id}
+                    to={`/docs/${doc.slug}`}
+                    className="block p-2 -mx-2 rounded-tablet hover:bg-parchment-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <BookOpen size={14} className="text-lapis-400 flex-shrink-0" />
+                      <span className="text-sm text-lapis-600 truncate">
+                        {doc.title}
+                      </span>
+                    </div>
+                    <p className="text-xs text-lapis-400 mt-0.5 ml-6">
+                      {formatRelativeTime(doc.updatedAt)}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
       
@@ -73,7 +318,142 @@ export function HomePage() {
   );
 }
 
+// ============================================
+// Stat Card Component
+// ============================================
+
+interface StatCardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  color: 'lapis' | 'clay' | 'gold' | 'parchment';
+  loading?: boolean;
+}
+
+function StatCard({ icon, label, value, color, loading }: StatCardProps) {
+  const colorClasses = {
+    lapis: 'bg-lapis-50 text-lapis-600 border-lapis-200',
+    clay: 'bg-clay-50 text-clay-600 border-clay-200',
+    gold: 'bg-gold-50 text-gold-700 border-gold-200',
+    parchment: 'bg-parchment-100 text-lapis-600 border-parchment-300',
+  };
+
+  const iconColors = {
+    lapis: 'text-lapis-500',
+    clay: 'text-clay-500',
+    gold: 'text-gold-600',
+    parchment: 'text-lapis-400',
+  };
+
+  return (
+    <div className={`p-4 rounded-tablet border ${colorClasses[color]}`}>
+      <div className="flex items-center gap-2 mb-1">
+        <span className={iconColors[color]}>{icon}</span>
+        <span className="text-sm font-medium">{label}</span>
+      </div>
+      {loading ? (
+        <div className="h-8 flex items-center">
+          <Loader2 size={16} className="animate-spin opacity-50" />
+        </div>
+      ) : (
+        <p className="text-2xl font-semibold">{value}</p>
+      )}
+    </div>
+  );
+}
+
+// ============================================
+// Issue Row Component
+// ============================================
+
+interface IssueRowProps {
+  issue: Issue;
+}
+
+function IssueRow({ issue }: IssueRowProps) {
+  const statusConfig = {
+    [IssueStatus.TO_INSCRIBE]: { 
+      icon: <Circle size={14} />, 
+      color: 'text-lapis-400',
+      bg: 'bg-parchment-200',
+    },
+    [IssueStatus.CARVING]: { 
+      icon: <Hammer size={14} />, 
+      color: 'text-clay-500',
+      bg: 'bg-clay-100',
+    },
+    [IssueStatus.BAKED]: { 
+      icon: <CheckCircle2 size={14} />, 
+      color: 'text-gold-600',
+      bg: 'bg-gold-100',
+    },
+  };
+
+  const priorityColors = {
+    critical: 'text-red-600',
+    high: 'text-clay-600',
+    medium: 'text-gold-600',
+    low: 'text-lapis-400',
+  };
+
+  const config = statusConfig[issue.status];
+
+  return (
+    <Link
+      to={`/issues/${issue.id}`}
+      className="flex items-center gap-3 p-3 -mx-3 rounded-tablet hover:bg-parchment-100 transition-colors group"
+    >
+      {/* Status icon */}
+      <div className={`w-8 h-8 rounded-full ${config.bg} flex items-center justify-center flex-shrink-0`}>
+        <span className={config.color}>{config.icon}</span>
+      </div>
+
+      {/* Issue info */}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-lapis-700 group-hover:text-lapis-800 truncate">
+            {issue.title}
+          </span>
+          {issue.priority === 'critical' && (
+            <span className={`text-xs ${priorityColors.critical}`}>!</span>
+          )}
+        </div>
+        <div className="flex items-center gap-3 mt-0.5 text-xs text-lapis-400">
+          <span className="flex items-center gap-1">
+            <Clock size={10} />
+            {formatRelativeTime(issue.updatedAt)}
+          </span>
+          {issue.labels && issue.labels.length > 0 && (
+            <span className="flex items-center gap-1">
+              <Tag size={10} />
+              {issue.labels.slice(0, 2).join(', ')}
+              {issue.labels.length > 2 && ` +${issue.labels.length - 2}`}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Assignee avatar */}
+      {issue.assignee && (
+        <div 
+          className="w-6 h-6 rounded-full bg-lapis-100 flex items-center justify-center flex-shrink-0"
+          title={issue.assignee.fullName || issue.assignee.username}
+        >
+          <span className="text-[10px] text-lapis-600 font-medium">
+            {(issue.assignee.fullName?.[0] || issue.assignee.username[0]).toUpperCase()}
+          </span>
+        </div>
+      )}
+
+      <ArrowRight size={14} className="text-lapis-300 group-hover:text-lapis-500 flex-shrink-0" />
+    </Link>
+  );
+}
+
+// ============================================
 // Quick Action Card Component
+// ============================================
+
 interface QuickActionCardProps {
   to: string;
   icon: React.ReactNode;
@@ -124,4 +504,52 @@ function QuickActionCard({ to, icon, title, description, color, shortcut }: Quic
       </div>
     </Link>
   );
+}
+
+// ============================================
+// Empty State Component
+// ============================================
+
+interface EmptyStateProps {
+  message: string;
+  hint?: string;
+  small?: boolean;
+}
+
+function EmptyState({ message, hint, small }: EmptyStateProps) {
+  return (
+    <div className={`text-center ${small ? 'py-4' : 'py-8'} text-lapis-500`}>
+      <p className={small ? 'text-sm' : ''}>{message}</p>
+      {hint && (
+        <p className="text-sm mt-2 text-lapis-400">
+          Press <kbd className="px-1.5 py-0.5 bg-parchment-200 rounded text-xs">{hint.includes('C') ? 'C' : hint}</kbd> {hint.replace('Press C to', 'to')}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ============================================
+// Utility Functions
+// ============================================
+
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffSecs < 60) return 'just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  
+  return date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric',
+    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+  });
 }

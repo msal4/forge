@@ -94,14 +94,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Login function
   const login = useCallback(async (username: string, password: string) => {
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ username, password }),
-    });
+    let response: Response;
+    
+    try {
+      response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ username, password }),
+      });
+    } catch (err) {
+      // Network error - backend might not be running
+      throw new Error('Unable to connect to server. Please try again.');
+    }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error('Invalid response from server');
+    }
 
     if (!response.ok) {
       throw new Error(data.message || 'Login failed');
