@@ -37,7 +37,8 @@ sarray-forge/
 │       └── sqlc/                   # Generated sqlc code
 ├── migrations/
 │   ├── 001_initial_schema.sql      # Database schema
-│   └── 002_seed_data.sql           # Seed data (users, sample issues)
+│   ├── 002_seed_data.sql           # Seed data (users, sample issues)
+│   └── 003_arabic_seed_data.sql    # Arabic/English test data (issues, docs, 110 releases)
 ├── web/
 │   ├── src/
 │   │   ├── api/                    # API client functions
@@ -120,13 +121,21 @@ All endpoints prefixed with `/api/`:
 ### Issue Modal (IssueModal.tsx)
 - Unified modal for view/edit/create modes
 - Seamless switching between modes without closing
-- URL persistence: `?issue=123` keeps issue open on refresh
+- URL persistence via path params: `/issues/123` keeps issue open on refresh
 - Consistent heights for all fields to prevent layout jumping
+- Markdown rendering with `remark-gfm` for GFM tables and checkboxes
 
 ### Kanban Board (IssuesPage.tsx)
 - Drag-and-drop between columns
 - Optimistic updates with rollback on error
 - Status values: `to_inscribe`, `carving`, `baked`
+- Issue description preview strips markdown for clean display
+
+### Releases Page (ReleasesPage.tsx)
+- Split layout: scrollable list (left) + sticky details panel (right)
+- Selected release auto-scrolls to top with `scroll-mt-2` for ring visibility
+- Delete action moved to details panel (not on cards)
+- Markdown rendering for release descriptions
 
 ### Keyboard Shortcuts (useKeyboard.ts)
 - Global shortcuts registered via custom hook
@@ -180,20 +189,44 @@ All endpoints prefixed with `/api/`:
 - Authentication with session cookies
 - Full CRUD for Issues with Kanban board
 - Unified issue modal with view/edit/create modes
-- URL persistence for open issues
+- URL persistence via path params (`/issues/123`, `/docs/456`, `/releases/789`)
 - Drag-and-drop status changes
 - Keyboard shortcuts throughout
+- Command palette (Ctrl+K) with global search
 - Docs module with Markdown editor
-- Releases module with file upload
+- Releases module with file upload and sticky details panel
+- Markdown rendering with GFM support (tables, checkboxes)
+- Arabic language support tested with seed data
 
 ### Recent Commits
 ```
-fb28418 feat(kanban): enhance board with Mesopotamian aesthetic
+148dd84 fix: add scroll-mt-2 to release card for proper scroll margin
+e37348c feat: improve markdown, navigation, and releases UX
+1733c14 markdown support
+ce4e8e4 feat: add command palette with global search (Ctrl+K)
 fba06d2 feat(issues): unified view/edit modal with seamless mode switching
 ```
 
 ### Known Polish Items
-- Command palette (Ctrl+K) needs implementation
 - Activity log/audit trail not exposed in UI
 - No notifications system yet
 - Mobile responsiveness could be improved
+
+### Important Technical Notes
+
+#### SQLite Connection Handling
+- `MaxOpenConns` set to 10 (not 1) to allow concurrent reads
+- Always close `*sql.Rows` immediately after use, not with `defer`, when multiple queries run sequentially
+- WAL mode enabled for better concurrency
+
+#### URL Navigation
+- Use path params (`/issues/:id`) NOT query params (`?issue=id`) for proper browser back/forward
+- Pages use `useParams()` and `useNavigate()` from react-router-dom
+
+#### Modal Placement
+- Modals must be outside `space-y-*` containers to avoid margin on overlay
+- Use React fragments to separate page content from modals
+
+#### Scrollable Lists with Selection
+- Use `scroll-mt-*` on cards for proper scroll margin when using `scrollIntoView`
+- Add padding with negative margin (`p-1 -m-1`) to prevent ring/shadow clipping
