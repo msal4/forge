@@ -4,7 +4,6 @@ import { AuthProvider, ProtectedRoute } from './context/AuthContext';
 import { KeyboardProvider } from './context/KeyboardContext';
 import { CommandMenu } from './components/ui/CommandMenu';
 import { Layout } from './components/layout/Layout';
-import { Loader2 } from 'lucide-react';
 
 // Pages
 import { HomePage } from './pages/HomePage';
@@ -35,8 +34,8 @@ function GlobalLoadingIndicator() {
   
   return (
     <div className="fixed top-4 right-4 z-50 flex items-center gap-2 px-3 py-2 bg-parchment-50 border border-parchment-300 rounded-tablet shadow-tablet">
-      <Loader2 size={16} className="animate-spin text-lapis-500" />
-      <span className="text-sm text-lapis-600">Loading...</span>
+      <span className="text-lg animate-pulse">𒀭</span>
+      <span className="text-sm text-lapis-600 font-inscription">Loading...</span>
     </div>
   );
 }
