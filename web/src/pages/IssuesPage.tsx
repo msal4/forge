@@ -58,7 +58,8 @@ export function IssuesPage() {
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [editingIssue, setEditingIssue] = React.useState<Issue | null>(null);
+  const [modalMode, setModalMode] = React.useState<'view' | 'edit' | 'create'>('view');
+  const [selectedIssue, setSelectedIssue] = React.useState<Issue | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
   
   // Drag and drop state
@@ -110,7 +111,8 @@ export function IssuesPage() {
       keys: 'c',
       description: 'Create new issue',
       handler: () => {
-        setEditingIssue(null);
+        setSelectedIssue(null);
+        setModalMode('create');
         setIsModalOpen(true);
       },
       category: 'actions',
@@ -127,9 +129,10 @@ export function IssuesPage() {
   const handleSaveIssue = async (data: CreateIssueRequest | UpdateIssueRequest) => {
     setIsSaving(true);
     try {
-      if (editingIssue) {
-        const updated = await issuesApi.update(editingIssue.id, data as UpdateIssueRequest);
+      if (selectedIssue) {
+        const updated = await issuesApi.update(selectedIssue.id, data as UpdateIssueRequest);
         setIssues(prev => prev.map(i => i.id === updated.id ? updated : i));
+        setSelectedIssue(updated); // Update selected issue for detail view
       } else {
         const created = await issuesApi.create(data as CreateIssueRequest);
         setIssues(prev => [created, ...prev]);
@@ -214,10 +217,35 @@ export function IssuesPage() {
     }
   };
 
-  // Edit issue handler
-  const handleEditIssue = (issue: Issue) => {
-    setEditingIssue(issue);
+  // View issue handler (opens modal in view mode)
+  const handleViewIssue = (issue: Issue) => {
+    setSelectedIssue(issue);
+    setModalMode('view');
     setIsModalOpen(true);
+  };
+
+  // Edit issue handler (opens modal in edit mode)
+  const handleEditIssue = (issue: Issue) => {
+    setSelectedIssue(issue);
+    setModalMode('edit');
+    setIsModalOpen(true);
+  };
+
+  // Handle mode change within modal
+  const handleModeChange = (mode: 'view' | 'edit') => {
+    setModalMode(mode);
+  };
+
+  // Close modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedIssue(null);
+  };
+
+  // Handle delete from modal
+  const handleDeleteFromModal = async (issue: Issue) => {
+    await handleDeleteIssue(issue);
+    handleCloseModal();
   };
 
   // Stats
@@ -254,7 +282,8 @@ export function IssuesPage() {
             variant="primary"
             hotkey="c"
             onClick={() => {
-              setEditingIssue(null);
+              setSelectedIssue(null);
+              setModalMode('create');
               setIsModalOpen(true);
             }}
           >
@@ -294,6 +323,7 @@ export function IssuesPage() {
               key={column.id}
               column={column}
               issues={issuesByStatus[column.id]}
+              onViewIssue={handleViewIssue}
               onEditIssue={handleEditIssue}
               onDeleteIssue={handleDeleteIssue}
               onDragStart={handleDragStart}
@@ -304,7 +334,8 @@ export function IssuesPage() {
               isDragOver={dragOverColumn === column.id}
               draggedIssueId={draggedIssue?.id}
               onCreateIssue={() => {
-                setEditingIssue(null);
+                setSelectedIssue(null);
+                setModalMode('create');
                 setIsModalOpen(true);
               }}
             />
@@ -312,16 +343,16 @@ export function IssuesPage() {
         </div>
       )}
 
-      {/* Issue Modal */}
+      {/* Unified Issue Modal */}
       <IssueModal
         isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setEditingIssue(null);
-        }}
-        onSave={handleSaveIssue}
-        issue={editingIssue}
+        issue={selectedIssue}
         users={users}
+        mode={modalMode}
+        onClose={handleCloseModal}
+        onSave={handleSaveIssue}
+        onDelete={handleDeleteFromModal}
+        onModeChange={handleModeChange}
         isLoading={isSaving}
       />
     </div>
@@ -345,6 +376,7 @@ interface ColumnConfig {
 interface KanbanColumnProps {
   column: ColumnConfig;
   issues: Issue[];
+  onViewIssue: (issue: Issue) => void;
   onEditIssue: (issue: Issue) => void;
   onDeleteIssue: (issue: Issue) => void;
   onDragStart: (e: React.DragEvent, issue: Issue) => void;
@@ -360,6 +392,7 @@ interface KanbanColumnProps {
 function KanbanColumn({
   column,
   issues,
+  onViewIssue,
   onEditIssue,
   onDeleteIssue,
   onDragStart,
@@ -430,6 +463,7 @@ function KanbanColumn({
             >
               <IssueCard
                 issue={issue}
+                onView={onViewIssue}
                 onEdit={onEditIssue}
                 onDelete={onDeleteIssue}
                 isDragging={draggedIssueId === issue.id}

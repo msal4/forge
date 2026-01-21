@@ -16,6 +16,7 @@ import type { Issue, PriorityType } from '../../api/issues';
 
 interface IssueCardProps {
   issue: Issue;
+  onView?: (issue: Issue) => void;
   onEdit?: (issue: Issue) => void;
   onDelete?: (issue: Issue) => void;
   isDragging?: boolean;
@@ -49,7 +50,7 @@ const priorityConfig: Record<PriorityType, {
   },
 };
 
-export function IssueCard({ issue, onEdit, onDelete, isDragging }: IssueCardProps) {
+export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: IssueCardProps) {
   const [showMenu, setShowMenu] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
   
@@ -102,7 +103,7 @@ export function IssueCard({ issue, onEdit, onDelete, isDragging }: IssueCardProp
           : 'hover:-translate-y-0.5'
         }
       `}
-      onClick={() => onEdit?.(issue)}
+      onClick={() => onView?.(issue)}
     >
       {/* Top accent line based on priority */}
       <div className={`

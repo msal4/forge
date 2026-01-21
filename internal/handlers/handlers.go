@@ -212,9 +212,10 @@ func (h *Handlers) CreateIssue(w http.ResponseWriter, r *http.Request) {
 		labelsJSON = []byte("[]")
 	}
 
+	// Use project_id = 1 (default project) and issue_number = 0 (trigger will auto-assign)
 	result, err := h.db.Exec(`
-		INSERT INTO issues (title, description, priority, assignee_id, reporter_id, labels, due_date)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO issues (project_id, issue_number, title, description, priority, assignee_id, reporter_id, labels, due_date)
+		VALUES (1, 0, ?, ?, ?, ?, ?, ?, ?)
 	`, req.Title, req.Description, req.Priority, req.AssigneeID, userID, string(labelsJSON), req.DueDate)
 
 	if err != nil {
