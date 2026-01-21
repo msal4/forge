@@ -400,10 +400,12 @@ export function DocsPage() {
 
       {/* Loading state */}
       {isLoading && docs.length === 0 && mode === 'list' && (
-        <div className="flex items-center justify-center py-12">
+        <div className="flex items-center justify-center py-16">
           <div className="text-center">
-            <Loader2 size={32} className="animate-spin text-lapis-500 mx-auto mb-2" />
-            <p className="text-lapis-500">Loading scrolls...</p>
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-lapis-100 mb-4">
+              <span className="text-3xl animate-pulse">𒀭</span>
+            </div>
+            <p className="text-lapis-500 font-inscription">Retrieving scrolls...</p>
           </div>
         </div>
       )}
