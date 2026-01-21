@@ -53,6 +53,9 @@ function parseKeyString(keyString: string): {
  * Check if an event matches a key binding
  */
 function matchesKey(event: KeyboardEvent, keyString: string): boolean {
+  // Guard against undefined event.key
+  if (!event.key) return false;
+  
   const parsed = parseKeyString(keyString);
   const eventKey = event.key.toLowerCase();
   
@@ -81,11 +84,14 @@ export function useKeyboardShortcuts(bindings: KeyBinding[]) {
   const sequenceState = useRef<KeySequenceState>({ keys: [], timestamp: 0 });
   
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    // Guard against undefined event.key (can happen with some input methods)
+    if (!event.key) return;
+    
     // Don't trigger shortcuts when typing in inputs (unless global)
     const target = event.target as HTMLElement;
-    const isInput = target.tagName === 'INPUT' || 
-                    target.tagName === 'TEXTAREA' || 
-                    target.isContentEditable;
+    const isInput = target?.tagName === 'INPUT' || 
+                    target?.tagName === 'TEXTAREA' || 
+                    target?.isContentEditable;
     
     const now = Date.now();
     
@@ -104,10 +110,18 @@ export function useKeyboardShortcuts(bindings: KeyBinding[]) {
       // Skip non-global bindings when in input
       if (isInput && !binding.global) continue;
       
+      // Skip if binding.keys is not defined
+      if (!binding.keys) continue;
+      
       // Check for key sequences (e.g., 'g+i')
-      if (binding.keys.includes('+') && !binding.keys.toLowerCase().includes('ctrl') && 
-          !binding.keys.toLowerCase().includes('cmd') && !binding.keys.toLowerCase().includes('meta')) {
-        const sequenceKeys = binding.keys.toLowerCase().split('+');
+      const keysLower = binding.keys.toLowerCase();
+      if (binding.keys.includes('+') && 
+          !keysLower.includes('ctrl') && 
+          !keysLower.includes('cmd') && 
+          !keysLower.includes('meta') &&
+          !keysLower.includes('shift') &&
+          !keysLower.includes('alt')) {
+        const sequenceKeys = keysLower.split('+');
         const currentSequence = sequenceState.current.keys.slice(-sequenceKeys.length);
         
         if (JSON.stringify(currentSequence) === JSON.stringify(sequenceKeys)) {
@@ -143,8 +157,11 @@ export function useCommandPalette(
 ) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Guard against undefined event.key
+      if (!event.key) return;
+      
       // Cmd+K or Ctrl+K to toggle command palette
-      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
         if (isOpen) {
           onClose();
@@ -170,6 +187,8 @@ export function useCommandPalette(
  * Converts internal format to display format
  */
 export function formatShortcut(keys: string): string {
+  if (!keys) return '';
+  
   const isMac = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
   
   return keys
