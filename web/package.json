@@ -10,6 +10,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.19",
     "cmdk": "^1.1.1",
     "lucide-react": "^0.460.0",
     "mermaid": "^11.3.0",

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Plus, RefreshCw, Loader2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
 import { IssueCard } from '../components/issues/IssueCard';
 import { IssueModal } from '../components/issues/IssueModal';
@@ -8,14 +9,21 @@ import { FilterBar } from '../components/issues/FilterBar';
 import { useKeyboardShortcuts } from '../hooks/useKeyboard';
 import { useIssueFilters } from '../hooks/useIssueFilters';
 import { 
-  issuesApi, 
+  useIssues, 
+  useUsers, 
+  useCreateIssue, 
+  useUpdateIssue, 
+  useUpdateIssueStatus, 
+  useDeleteIssue,
+  queryKeys,
+} from '../hooks/useApi';
+import { 
   IssueStatus, 
   type Issue, 
   type IssueStatusType,
   type CreateIssueRequest,
   type UpdateIssueRequest 
 } from '../api/issues';
-import { usersApi, type User } from '../api/users';
 
 // ============================================
 // Issues Page - The Tablet (Kanban Board)
@@ -55,19 +63,23 @@ const COLUMNS = [
 export function IssuesPage() {
   const { issueId } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
-  // Data state
-  const [issues, setIssues] = React.useState<Issue[]>([]);
-  const [users, setUsers] = React.useState<User[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [hasLoaded, setHasLoaded] = React.useState(false); // Track if initial load is complete
-  const [error, setError] = React.useState<string | null>(null);
+  // React Query hooks
+  const { data: issues = [], isLoading, isError, error } = useIssues();
+  const { data: users = [] } = useUsers();
+  const createIssueMutation = useCreateIssue();
+  const updateIssueMutation = useUpdateIssue();
+  const updateStatusMutation = useUpdateIssueStatus();
+  const deleteIssueMutation = useDeleteIssue();
+  
+  // Track if we've ever loaded (for UI stability)
+  const hasLoaded = issues.length > 0 || !isLoading;
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [modalMode, setModalMode] = React.useState<'view' | 'edit' | 'create'>('view');
   const [selectedIssue, setSelectedIssue] = React.useState<Issue | null>(null);
-  const [isSaving, setIsSaving] = React.useState(false);
   
   // Drag and drop state
   const [draggedIssue, setDraggedIssue] = React.useState<Issue | null>(null);
@@ -87,40 +99,7 @@ export function IssuesPage() {
     focusSearch,
   } = useIssueFilters(issues);
 
-  // Load issues and users
-  const loadData = React.useCallback(async (signal?: AbortSignal) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const [issuesData, usersData] = await Promise.all([
-        issuesApi.list({ signal }),
-        usersApi.list({ signal }),
-      ]);
-      setIssues(issuesData);
-      setUsers(usersData);
-      setHasLoaded(true);
-      return issuesData;
-    } catch (err) {
-      // Ignore abort errors
-      if (err instanceof Error && err.name === 'AbortError') {
-        return [];
-      }
-      setError(err instanceof Error ? err.message : 'Failed to load data');
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Load data on mount
-  React.useEffect(() => {
-    const controller = new AbortController();
-    loadData(controller.signal);
-    return () => controller.abort();
-  }, [loadData]);
-
   // Handle URL param changes for issue selection
-  // Note: Don't close modal if in create mode (no issueId but modal should stay open)
   React.useEffect(() => {
     if (issueId && issues.length > 0) {
       const issue = issues.find(i => i.id === Number(issueId));
@@ -167,7 +146,7 @@ export function IssuesPage() {
     {
       keys: 'r',
       description: 'Refresh issues',
-      handler: loadData,
+      handler: () => queryClient.invalidateQueries({ queryKey: queryKeys.issues.all }),
       category: 'actions',
     },
     {
@@ -180,38 +159,27 @@ export function IssuesPage() {
 
   // Create or update issue
   const handleSaveIssue = async (data: CreateIssueRequest | UpdateIssueRequest) => {
-    setIsSaving(true);
-    try {
-      if (selectedIssue) {
-        const updated = await issuesApi.update(selectedIssue.id, data as UpdateIssueRequest);
-        setIssues(prev => prev.map(i => i.id === updated.id ? updated : i));
-        setSelectedIssue(updated); // Update selected issue for detail view
-      } else {
-        const created = await issuesApi.create(data as CreateIssueRequest);
-        setIssues(prev => [created, ...prev]);
-      }
-    } finally {
-      setIsSaving(false);
+    if (selectedIssue) {
+      const updated = await updateIssueMutation.mutateAsync({ 
+        id: selectedIssue.id, 
+        data: data as UpdateIssueRequest 
+      });
+      setSelectedIssue(updated);
+    } else {
+      await createIssueMutation.mutateAsync(data as CreateIssueRequest);
     }
   };
 
   // Delete issue
   const handleDeleteIssue = async (issue: Issue) => {
     if (!confirm(`Delete "${issue.title}"?`)) return;
-    
-    try {
-      await issuesApi.delete(issue.id);
-      setIssues(prev => prev.filter(i => i.id !== issue.id));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete issue');
-    }
+    await deleteIssueMutation.mutateAsync(issue.id);
   };
 
   // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent, issue: Issue) => {
     setDraggedIssue(issue);
     e.dataTransfer.effectAllowed = 'move';
-    // Add a slight delay for the drag image
     const target = e.currentTarget as HTMLElement;
     target.style.opacity = '0.5';
   };
@@ -232,7 +200,6 @@ export function IssuesPage() {
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    // Only clear if we're leaving the column entirely
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     if (
       e.clientX < rect.left ||
@@ -253,29 +220,19 @@ export function IssuesPage() {
       return;
     }
 
-    const originalIssue = draggedIssue;
-    const updatedIssue = { ...draggedIssue, status };
-    
-    // Optimistic update
-    setIssues(prev => prev.map(i => i.id === draggedIssue.id ? updatedIssue : i));
     setDraggedIssue(null);
     setDragOverColumn(null);
 
-    try {
-      await issuesApi.updateStatus(originalIssue.id, status);
-    } catch (err) {
-      // Revert on error
-      setIssues(prev => prev.map(i => i.id === originalIssue.id ? originalIssue : i));
-      setError(err instanceof Error ? err.message : 'Failed to update status');
-    }
+    // Use mutation with optimistic update
+    updateStatusMutation.mutate({ id: draggedIssue.id, status });
   };
 
-  // View issue handler (opens modal in view mode)
+  // View issue handler
   const handleViewIssue = (issue: Issue) => {
     navigate(`/issues/${issue.id}`);
   };
 
-  // Edit issue handler (opens modal in edit mode)
+  // Edit issue handler
   const handleEditIssue = (issue: Issue) => {
     setModalMode('edit');
     navigate(`/issues/${issue.id}`);
@@ -289,11 +246,9 @@ export function IssuesPage() {
   // Close modal
   const handleCloseModal = () => {
     if (modalMode === 'create') {
-      // For create mode, just close the modal (no URL to navigate away from)
       setIsModalOpen(false);
       setModalMode('view');
     } else {
-      // For view/edit mode, navigate away from the issue URL
       navigate('/issues');
     }
   };
@@ -304,10 +259,12 @@ export function IssuesPage() {
     handleCloseModal();
   };
 
-  // Stats - use filtered count for display, total for reference
+  // Stats
   const totalIssues = issues.length;
   const filteredTotal = filteredIssues.length;
   const completedIssues = issuesByStatus[IssueStatus.BAKED].length;
+
+  const isSaving = createIssueMutation.isPending || updateIssueMutation.isPending;
 
   return (
     <>
@@ -332,7 +289,7 @@ export function IssuesPage() {
           <ButtonWithHotkey
             variant="secondary"
             hotkey="r"
-            onClick={() => loadData()}
+            onClick={() => queryClient.invalidateQueries({ queryKey: queryKeys.issues.all })}
             disabled={isLoading}
           >
             {isLoading ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
@@ -353,7 +310,7 @@ export function IssuesPage() {
         </div>
       </div>
 
-      {/* Filter Bar - always show once we have issues, even during refresh */}
+      {/* Filter Bar - always show once we have issues */}
       {(issues.length > 0 || hasActiveFilters) && (
         <FilterBar
           filters={filters}
@@ -371,17 +328,20 @@ export function IssuesPage() {
       )}
 
       {/* Error message */}
-      {error && (
+      {isError && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-tablet text-red-600 flex items-center justify-between">
-          <span>{error}</span>
-          <button onClick={() => setError(null)} className="text-sm underline hover:no-underline">
-            Dismiss
+          <span>{error instanceof Error ? error.message : 'Failed to load data'}</span>
+          <button 
+            onClick={() => queryClient.invalidateQueries({ queryKey: queryKeys.issues.all })} 
+            className="text-sm underline hover:no-underline"
+          >
+            Retry
           </button>
         </div>
       )}
 
       {/* Loading state - only show full loading screen on initial load */}
-      {isLoading && !hasLoaded && (
+      {isLoading && issues.length === 0 && (
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-lapis-100 mb-4">
@@ -392,7 +352,7 @@ export function IssuesPage() {
         </div>
       )}
 
-      {/* Kanban Board - show once initially loaded, even during refresh */}
+      {/* Kanban Board - show once initially loaded */}
       {hasLoaded && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {COLUMNS.map(column => (
@@ -613,7 +573,7 @@ function EmptyColumnState({ columnId, isDragOver, onCreateIssue, isFiltering = f
       <p className="text-xs text-lapis-400 mt-1">
         {isDragOver ? 'Release to move the inscription' : message.subtitle}
       </p>
-      {columnId === IssueStatus.TO_INSCRIBE && !isDragOver && (
+      {columnId === IssueStatus.TO_INSCRIBE && !isDragOver && !isFiltering && (
         <button
           onClick={onCreateIssue}
           className="mt-4 text-xs text-lapis-500 hover:text-lapis-600 underline"

@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useQueryClient } from '@tanstack/react-query';
 import { 
   Plus, 
   Package, 
@@ -17,12 +18,8 @@ import {
 } from 'lucide-react';
 import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
 import { useKeyboardShortcuts } from '../hooks/useKeyboard';
-import { 
-  releasesApi, 
-  type Release, 
-  type ReleaseFile,
-  type CreateReleaseRequest 
-} from '../api/releases';
+import { useReleases, useCreateRelease, useDeleteRelease, useUploadReleaseFile, queryKeys } from '../hooks/useApi';
+import { releasesApi, type Release, type ReleaseFile, type CreateReleaseRequest } from '../api/releases';
 
 // ============================================
 // Releases Page - The Granary (File Storage)
@@ -31,19 +28,17 @@ import {
 export function ReleasesPage() {
   const { releaseId } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
-  // Data state
-  const [releases, setReleases] = React.useState<Release[]>([]);
+  // React Query hooks
+  const { data: releases = [], isLoading, isError, error } = useReleases();
+  const createReleaseMutation = useCreateRelease();
+  const deleteReleaseMutation = useDeleteRelease();
+  const uploadFileMutation = useUploadReleaseFile();
+  
+  // Local state
   const [selectedRelease, setSelectedRelease] = React.useState<Release | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-  
-  // Modal state
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [isSaving, setIsSaving] = React.useState(false);
-  
-  // Upload state
-  const [isUploading, setIsUploading] = React.useState(false);
   const [uploadProgress, setUploadProgress] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -55,33 +50,6 @@ export function ReleasesPage() {
       navigate('/releases');
     }
   }, [navigate]);
-
-  // Load releases
-  const loadReleases = React.useCallback(async (signal?: AbortSignal) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await releasesApi.list({ signal });
-      setReleases(data);
-      return data;
-    } catch (err) {
-      // Ignore abort errors
-      if (err instanceof Error && err.name === 'AbortError') {
-        return [];
-      }
-      setError(err instanceof Error ? err.message : 'Failed to load releases');
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Load data on mount
-  React.useEffect(() => {
-    const controller = new AbortController();
-    loadReleases(controller.signal);
-    return () => controller.abort();
-  }, [loadReleases]);
 
   // Handle URL param changes for release selection
   React.useEffect(() => {
@@ -106,7 +74,7 @@ export function ReleasesPage() {
     {
       keys: 'r',
       description: 'Refresh releases',
-      handler: loadReleases,
+      handler: () => queryClient.invalidateQueries({ queryKey: queryKeys.releases.all }),
       category: 'actions',
     },
     {
@@ -119,70 +87,50 @@ export function ReleasesPage() {
 
   // Create release
   const handleCreateRelease = async (data: CreateReleaseRequest) => {
-    setIsSaving(true);
-    try {
-      const created = await releasesApi.create(data);
-      setReleases(prev => [created, ...prev]);
-      setIsModalOpen(false);
-      selectRelease(created);
-    } catch (err) {
-      throw err;
-    } finally {
-      setIsSaving(false);
-    }
+    const created = await createReleaseMutation.mutateAsync(data);
+    setIsModalOpen(false);
+    selectRelease(created);
   };
 
   // Delete release
   const handleDeleteRelease = async (release: Release) => {
     if (!confirm(`Delete release "${release.version}"? This will also delete all associated files.`)) return;
     
-    try {
-      await releasesApi.delete(release.id);
-      setReleases(prev => prev.filter(r => r.id !== release.id));
-      if (selectedRelease?.id === release.id) {
-        selectRelease(null);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete release');
+    await deleteReleaseMutation.mutateAsync(release.id);
+    if (selectedRelease?.id === release.id) {
+      selectRelease(null);
     }
   };
 
   // Upload file
   const handleUploadFile = async (files: FileList | null) => {
     if (!files || files.length === 0 || !selectedRelease) return;
-
-    setIsUploading(true);
     
-    try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        setUploadProgress(`Uploading ${file.name}... (${i + 1}/${files.length})`);
-        
-        const uploadedFile = await releasesApi.uploadFile(selectedRelease.id, file);
-        
-        // Update the release with the new file
-        setSelectedRelease(prev => prev ? {
-          ...prev,
-          files: [...prev.files, uploadedFile]
-        } : null);
-        
-        // Update in the list too
-        setReleases(prev => prev.map(r => 
-          r.id === selectedRelease.id 
-            ? { ...r, files: [...r.files, uploadedFile] }
-            : r
-        ));
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload file');
-    } finally {
-      setIsUploading(false);
-      setUploadProgress(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      setUploadProgress(`Uploading ${file.name}... (${i + 1}/${files.length})`);
+      
+      await uploadFileMutation.mutateAsync({ releaseId: selectedRelease.id, file });
+    }
+    
+    setUploadProgress(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    
+    // Refresh the selected release from updated data
+    queryClient.invalidateQueries({ queryKey: queryKeys.releases.list() });
+  };
+
+  // Update selectedRelease when releases data changes (after upload)
+  React.useEffect(() => {
+    if (selectedRelease && releases.length > 0) {
+      const updated = releases.find(r => r.id === selectedRelease.id);
+      if (updated) {
+        setSelectedRelease(updated);
       }
     }
-  };
+  }, [releases, selectedRelease?.id]);
 
   // Format file size
   const formatSize = (bytes: number) => {
@@ -202,6 +150,10 @@ export function ReleasesPage() {
     });
   };
 
+  const hasLoaded = releases.length > 0 || !isLoading;
+  const isUploading = uploadFileMutation.isPending;
+  const isSaving = createReleaseMutation.isPending;
+
   return (
     <>
     <div className="space-y-6">
@@ -219,7 +171,7 @@ export function ReleasesPage() {
           <ButtonWithHotkey
             variant="secondary"
             hotkey="r"
-            onClick={() => loadReleases()}
+            onClick={() => queryClient.invalidateQueries({ queryKey: queryKeys.releases.all })}
             disabled={isLoading}
           >
             {isLoading ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
@@ -237,11 +189,17 @@ export function ReleasesPage() {
       </div>
 
       {/* Error message */}
-      {error && (
+      {(isError || deleteReleaseMutation.isError || uploadFileMutation.isError) && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-tablet text-red-600">
-          {error}
-          <button onClick={() => setError(null)} className="ml-2 underline">
-            Dismiss
+          {error instanceof Error ? error.message : 
+           deleteReleaseMutation.error instanceof Error ? deleteReleaseMutation.error.message :
+           uploadFileMutation.error instanceof Error ? uploadFileMutation.error.message :
+           'An error occurred'}
+          <button 
+            onClick={() => queryClient.invalidateQueries({ queryKey: queryKeys.releases.all })} 
+            className="ml-2 underline"
+          >
+            Retry
           </button>
         </div>
       )}
@@ -257,142 +215,149 @@ export function ReleasesPage() {
       )}
 
       {/* Main content */}
-      <div className={`grid gap-6 ${selectedRelease ? 'lg:grid-cols-3' : ''}`}>
-        {/* Releases List */}
-        <div className={`
-          space-y-4 
-          ${selectedRelease 
-            ? 'lg:col-span-1 lg:max-h-[calc(100vh-200px)] lg:overflow-y-auto lg:p-1 lg:-m-1 scrollbar-thin' 
-            : ''
-          }
-        `}>
-          {!isLoading && releases.length === 0 && (
-            <div className="tablet-card p-8 text-center">
-              <Package className="mx-auto text-lapis-300" size={48} />
-              <h3 className="mt-4 font-inscription text-lg text-lapis-600">
-                The Granary is empty
-              </h3>
-              <p className="mt-2 text-lapis-500 text-sm">
-                Create your first release to start distributing artifacts.
-              </p>
-            </div>
-          )}
+      {hasLoaded && (
+        <div className={`grid gap-6 ${selectedRelease ? 'lg:grid-cols-3' : ''}`}>
+          {/* Releases List */}
+          <div className={`
+            space-y-4 
+            ${selectedRelease 
+              ? 'lg:col-span-1 lg:max-h-[calc(100vh-200px)] lg:overflow-y-auto lg:p-1 lg:-m-1 scrollbar-thin' 
+              : ''
+            }
+          `}>
+            {releases.length === 0 && (
+              <div className="tablet-card p-8 text-center">
+                <Package className="mx-auto text-lapis-300" size={48} />
+                <h3 className="mt-4 font-inscription text-lg text-lapis-600">
+                  The Granary is empty
+                </h3>
+                <p className="mt-2 text-lapis-500 text-sm">
+                  Create your first release to start distributing artifacts.
+                </p>
+              </div>
+            )}
 
-          {releases.map(release => (
-            <ReleaseCard
-              key={release.id}
-              release={release}
-              isSelected={selectedRelease?.id === release.id}
-              onClick={() => selectRelease(release)}
-              formatDate={formatDate}
-              formatSize={formatSize}
-            />
-          ))}
-        </div>
+            {releases.map(release => (
+              <ReleaseCard
+                key={release.id}
+                release={release}
+                isSelected={selectedRelease?.id === release.id}
+                onClick={() => selectRelease(release)}
+                formatDate={formatDate}
+                formatSize={formatSize}
+              />
+            ))}
+          </div>
 
-        {/* Release Details */}
-        {selectedRelease && (
-          <div className="lg:col-span-2 lg:sticky lg:top-4 lg:self-start tablet-card p-6 space-y-6 lg:max-h-[calc(100vh-200px)] lg:overflow-y-auto scrollbar-thin">
-            {/* Details Header */}
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-code bg-lapis-500 text-parchment-100 px-2 py-0.5 rounded">
-                    {selectedRelease.version}
-                  </span>
-                  <h2 className="text-xl font-inscription text-lapis-600">
-                    {selectedRelease.title}
-                  </h2>
+          {/* Release Details */}
+          {selectedRelease && (
+            <div className="lg:col-span-2 lg:sticky lg:top-4 lg:self-start tablet-card p-6 space-y-6 lg:max-h-[calc(100vh-200px)] lg:overflow-y-auto scrollbar-thin">
+              {/* Details Header */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-code bg-lapis-500 text-parchment-100 px-2 py-0.5 rounded">
+                      {selectedRelease.version}
+                    </span>
+                    <h2 className="text-xl font-inscription text-lapis-600">
+                      {selectedRelease.title}
+                    </h2>
+                  </div>
+                  {selectedRelease.description && (
+                    <div className="mt-2 prose-mesopotamian">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedRelease.description}</ReactMarkdown>
+                    </div>
+                  )}
+                  <div className="mt-3 flex items-center gap-4 text-sm text-lapis-500">
+                    {selectedRelease.author && (
+                      <span className="flex items-center gap-1">
+                        <User size={14} />
+                        {selectedRelease.author.fullName || selectedRelease.author.username}
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1">
+                      <Calendar size={14} />
+                      {formatDate(selectedRelease.createdAt)}
+                    </span>
+                  </div>
                 </div>
-                {selectedRelease.description && (
-                  <div className="mt-2 prose-mesopotamian">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedRelease.description}</ReactMarkdown>
+                <button
+                  onClick={() => selectRelease(null)}
+                  className="p-1 rounded hover:bg-parchment-200 text-lapis-500"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Files Section */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-medium text-lapis-600">Files</h3>
+                  <label className="cursor-pointer">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => handleUploadFile(e.target.files)}
+                      disabled={isUploading}
+                    />
+                    <ButtonWithHotkey
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                    >
+                      {isUploading ? (
+                        <Loader2 size={16} className="animate-spin" />
+                      ) : (
+                        <Upload size={16} />
+                      )}
+                      {uploadProgress || 'Upload Files'}
+                    </ButtonWithHotkey>
+                  </label>
+                </div>
+
+                {selectedRelease.files.length === 0 ? (
+                  <div className="text-center py-8 border-2 border-dashed border-parchment-300 rounded-tablet">
+                    <HardDrive className="mx-auto text-lapis-300" size={32} />
+                    <p className="mt-2 text-sm text-lapis-500">
+                      No files yet. Upload your artifacts!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {selectedRelease.files.map(file => (
+                      <FileRow
+                        key={file.id}
+                        file={file}
+                        releaseId={selectedRelease.id}
+                        formatSize={formatSize}
+                      />
+                    ))}
                   </div>
                 )}
-                <div className="mt-3 flex items-center gap-4 text-sm text-lapis-500">
-                  {selectedRelease.author && (
-                    <span className="flex items-center gap-1">
-                      <User size={14} />
-                      {selectedRelease.author.fullName || selectedRelease.author.username}
-                    </span>
+              </div>
+
+              {/* Danger Zone */}
+              <div className="pt-4 border-t border-parchment-300">
+                <button
+                  onClick={() => handleDeleteRelease(selectedRelease)}
+                  disabled={deleteReleaseMutation.isPending}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-tablet transition-colors disabled:opacity-50"
+                >
+                  {deleteReleaseMutation.isPending ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Trash2 size={16} />
                   )}
-                  <span className="flex items-center gap-1">
-                    <Calendar size={14} />
-                    {formatDate(selectedRelease.createdAt)}
-                  </span>
-                </div>
+                  Delete release
+                </button>
               </div>
-              <button
-                onClick={() => selectRelease(null)}
-                className="p-1 rounded hover:bg-parchment-200 text-lapis-500"
-              >
-                <X size={20} />
-              </button>
             </div>
-
-            {/* Files Section */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium text-lapis-600">Files</h3>
-                <label className="cursor-pointer">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    className="hidden"
-                    onChange={(e) => handleUploadFile(e.target.files)}
-                    disabled={isUploading}
-                  />
-                  <ButtonWithHotkey
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                  >
-                    {isUploading ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <Upload size={16} />
-                    )}
-                    {uploadProgress || 'Upload Files'}
-                  </ButtonWithHotkey>
-                </label>
-              </div>
-
-              {selectedRelease.files.length === 0 ? (
-                <div className="text-center py-8 border-2 border-dashed border-parchment-300 rounded-tablet">
-                  <HardDrive className="mx-auto text-lapis-300" size={32} />
-                  <p className="mt-2 text-sm text-lapis-500">
-                    No files yet. Upload your artifacts!
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {selectedRelease.files.map(file => (
-                    <FileRow
-                      key={file.id}
-                      file={file}
-                      releaseId={selectedRelease.id}
-                      formatSize={formatSize}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Danger Zone */}
-            <div className="pt-4 border-t border-parchment-300">
-              <button
-                onClick={() => handleDeleteRelease(selectedRelease)}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-tablet transition-colors"
-              >
-                <Trash2 size={16} />
-                Delete release
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
     </div>
 

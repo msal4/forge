@@ -14,9 +14,8 @@ import {
   User,
   AlertCircle,
 } from 'lucide-react';
-import { issuesApi, IssueStatus, type Issue } from '../api/issues';
-import { releasesApi, type Release } from '../api/releases';
-import { docsApi, type Doc } from '../api/docs';
+import { useIssues, useReleases, useDocs } from '../hooks/useApi';
+import { IssueStatus, type Issue } from '../api/issues';
 import { useAuth } from '../context/AuthContext';
 
 // ============================================
@@ -25,41 +24,11 @@ import { useAuth } from '../context/AuthContext';
 
 export function HomePage() {
   const { user } = useAuth();
-  const [issues, setIssues] = React.useState<Issue[]>([]);
-  const [releases, setReleases] = React.useState<Release[]>([]);
-  const [docs, setDocs] = React.useState<Doc[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-
-  // Load dashboard data
-  React.useEffect(() => {
-    const controller = new AbortController();
-    
-    async function loadData() {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        const [issuesData, releasesData, docsData] = await Promise.all([
-          issuesApi.list({ signal: controller.signal }),
-          releasesApi.list({ signal: controller.signal }),
-          docsApi.list({ signal: controller.signal }),
-        ]);
-        
-        setIssues(issuesData);
-        setReleases(releasesData);
-        setDocs(docsData);
-      } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') return;
-        setError(err instanceof Error ? err.message : 'Failed to load data');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    
-    loadData();
-    return () => controller.abort();
-  }, []);
+  
+  // React Query hooks
+  const { data: issues = [], isLoading: issuesLoading, isError: issuesError } = useIssues();
+  const { data: releases = [], isLoading: releasesLoading } = useReleases();
+  const { data: docs = [], isLoading: docsLoading } = useDocs();
 
   // Calculate stats
   const stats = React.useMemo(() => {
@@ -103,10 +72,10 @@ export function HomePage() {
       </div>
 
       {/* Error message */}
-      {error && (
+      {issuesError && (
         <div className="p-4 bg-clay-50 border border-clay-200 rounded-tablet text-clay-700 flex items-center gap-3">
           <AlertCircle size={20} />
-          <span>{error}</span>
+          <span>Failed to load some data. Please refresh the page.</span>
         </div>
       )}
 
@@ -117,28 +86,28 @@ export function HomePage() {
           label="To Inscribe"
           value={stats.toInscribe}
           color="parchment"
-          loading={isLoading}
+          loading={issuesLoading}
         />
         <StatCard
           icon={<Hammer size={18} />}
           label="Carving"
           value={stats.carving}
           color="clay"
-          loading={isLoading}
+          loading={issuesLoading}
         />
         <StatCard
           icon={<CheckCircle2 size={18} />}
           label="Baked"
           value={stats.baked}
           color="gold"
-          loading={isLoading}
+          loading={issuesLoading}
         />
         <StatCard
           icon={<User size={18} />}
           label="Assigned to Me"
           value={stats.myIssues}
           color="lapis"
-          loading={isLoading}
+          loading={issuesLoading}
         />
       </div>
       
@@ -186,7 +155,7 @@ export function HomePage() {
             </Link>
           </div>
           
-          {isLoading ? (
+          {issuesLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="animate-spin text-lapis-400" size={24} />
             </div>
@@ -220,7 +189,7 @@ export function HomePage() {
               </Link>
             </div>
             
-            {isLoading ? (
+            {releasesLoading ? (
               <div className="flex items-center justify-center py-4">
                 <Loader2 className="animate-spin text-lapis-400" size={20} />
               </div>
@@ -270,7 +239,7 @@ export function HomePage() {
               </Link>
             </div>
             
-            {isLoading ? (
+            {docsLoading ? (
               <div className="flex items-center justify-center py-4">
                 <Loader2 className="animate-spin text-lapis-400" size={20} />
               </div>

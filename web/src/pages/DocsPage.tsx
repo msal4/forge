@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useQueryClient } from '@tanstack/react-query';
 import { 
   Plus, 
   FolderOpen, 
@@ -20,7 +21,8 @@ import {
 } from 'lucide-react';
 import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
 import { useKeyboardShortcuts } from '../hooks/useKeyboard';
-import { docsApi, type Doc, type CreateDocRequest, type UpdateDocRequest } from '../api/docs';
+import { useDocs, useDoc, useCreateDoc, useUpdateDoc, useDeleteDoc, queryKeys } from '../hooks/useApi';
+import type { Doc, CreateDocRequest, UpdateDocRequest } from '../api/docs';
 
 // ============================================
 // Docs Page - The Library (Documentation)
@@ -32,12 +34,17 @@ type PageMode = 'list' | 'view' | 'edit' | 'create';
 export function DocsPage() {
   const { docId } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
-  // Data state
-  const [docs, setDocs] = React.useState<Doc[]>([]);
+  // React Query hooks
+  const { data: docs = [], isLoading, isError, error } = useDocs();
+  const { data: selectedDocData } = useDoc(docId ? Number(docId) : undefined);
+  const createDocMutation = useCreateDoc();
+  const updateDocMutation = useUpdateDoc();
+  const deleteDocMutation = useDeleteDoc();
+  
+  // Local state for selected doc (synced from query)
   const [selectedDoc, setSelectedDoc] = React.useState<Doc | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
   
   // Page mode: list, view, edit, or create
   const [mode, setMode] = React.useState<PageMode>('list');
@@ -46,69 +53,30 @@ export function DocsPage() {
   const [editTitle, setEditTitle] = React.useState('');
   const [editContent, setEditContent] = React.useState('');
   const [editParentId, setEditParentId] = React.useState<number | ''>('');
-  const [isSaving, setIsSaving] = React.useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false);
   
   const titleInputRef = React.useRef<HTMLInputElement>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
-  // Helper to select doc and update URL
-  const selectDoc = React.useCallback((doc: Doc | null) => {
-    if (doc) {
-      navigate(`/docs/${doc.id}`);
-    } else {
-      navigate('/docs');
-    }
-  }, [navigate]);
-
-  // Load docs
-  const loadDocs = React.useCallback(async (signal?: AbortSignal) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await docsApi.list({ signal });
-      setDocs(data);
-      return data;
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return [];
-      }
-      setError(err instanceof Error ? err.message : 'Failed to load documents');
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Load data on mount
+  // Sync selected doc from query
   React.useEffect(() => {
-    const controller = new AbortController();
-    loadDocs(controller.signal);
-    return () => controller.abort();
-  }, [loadDocs]);
-
-  // Handle URL param changes for doc selection
-  React.useEffect(() => {
-    if (docId && docs.length > 0) {
-      const doc = docs.find(d => d.id === Number(docId));
-      if (doc) {
-        // Fetch full doc content
-        docsApi.get(doc.id).then(fullDoc => {
-          setSelectedDoc(fullDoc);
-          if (mode !== 'edit') {
-            setMode('view');
-          }
-        }).catch(err => {
-          setError(err instanceof Error ? err.message : 'Failed to load document');
-        });
+    if (selectedDocData) {
+      setSelectedDoc(selectedDocData);
+      if (mode !== 'edit') {
+        setMode('view');
       }
-    } else if (!docId) {
+    }
+  }, [selectedDocData]);
+
+  // Handle URL param changes
+  React.useEffect(() => {
+    if (!docId) {
       setSelectedDoc(null);
       if (mode !== 'create') {
         setMode('list');
       }
     }
-  }, [docId, docs]);
+  }, [docId]);
 
   // Track unsaved changes
   React.useEffect(() => {
@@ -124,6 +92,15 @@ export function DocsPage() {
     }
   }, [mode, editTitle, editContent, editParentId, selectedDoc]);
 
+  // Helper to select doc and update URL
+  const selectDoc = React.useCallback((doc: Doc | null) => {
+    if (doc) {
+      navigate(`/docs/${doc.id}`);
+    } else {
+      navigate('/docs');
+    }
+  }, [navigate]);
+
   // Enter edit mode
   const enterEditMode = React.useCallback((doc?: Doc) => {
     const docToEdit = doc || selectedDoc;
@@ -132,7 +109,6 @@ export function DocsPage() {
       setEditContent(docToEdit.content || '');
       setEditParentId(docToEdit.parentId || '');
       setMode('edit');
-      // Focus textarea after transition
       setTimeout(() => textareaRef.current?.focus(), 100);
     }
   }, [selectedDoc]);
@@ -144,7 +120,6 @@ export function DocsPage() {
     setEditParentId('');
     setSelectedDoc(null);
     setMode('create');
-    // Focus title input after transition
     setTimeout(() => titleInputRef.current?.focus(), 100);
   }, []);
 
@@ -167,55 +142,41 @@ export function DocsPage() {
   // Save document
   const saveDocument = React.useCallback(async () => {
     if (!editTitle.trim()) {
-      setError('Title is required');
       titleInputRef.current?.focus();
       return;
     }
-
-    setIsSaving(true);
-    setError(null);
     
-    try {
-      const data: CreateDocRequest | UpdateDocRequest = {
-        title: editTitle.trim(),
-        content: editContent || undefined,
-        parentId: editParentId || undefined,
-      };
-      
-      if (mode === 'edit' && selectedDoc) {
-        const updated = await docsApi.update(selectedDoc.id, data as UpdateDocRequest);
-        setDocs(prev => prev.map(d => d.id === updated.id ? updated : d));
-        setSelectedDoc(updated);
-        setMode('view');
-      } else if (mode === 'create') {
-        const created = await docsApi.create(data as CreateDocRequest);
-        setDocs(prev => [...prev, created]);
-        setSelectedDoc(created);
-        navigate(`/docs/${created.id}`);
-        setMode('view');
-      }
-      setHasUnsavedChanges(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save document');
-    } finally {
-      setIsSaving(false);
+    const data: CreateDocRequest | UpdateDocRequest = {
+      title: editTitle.trim(),
+      content: editContent || undefined,
+      parentId: editParentId || undefined,
+    };
+    
+    if (mode === 'edit' && selectedDoc) {
+      const updated = await updateDocMutation.mutateAsync({ 
+        id: selectedDoc.id, 
+        data: data as UpdateDocRequest 
+      });
+      setSelectedDoc(updated);
+      setMode('view');
+    } else if (mode === 'create') {
+      const created = await createDocMutation.mutateAsync(data as CreateDocRequest);
+      setSelectedDoc(created);
+      navigate(`/docs/${created.id}`);
+      setMode('view');
     }
-  }, [editTitle, editContent, editParentId, mode, selectedDoc, navigate]);
+    setHasUnsavedChanges(false);
+  }, [editTitle, editContent, editParentId, mode, selectedDoc, navigate, updateDocMutation, createDocMutation]);
 
   // Delete document
   const handleDeleteDoc = async (doc: Doc) => {
     if (!confirm(`Delete "${doc.title}"? This cannot be undone.`)) return;
     
-    try {
-      await docsApi.delete(doc.id);
-      setDocs(prev => prev.filter(d => d.id !== doc.id));
-      if (selectedDoc?.id === doc.id) {
-        setSelectedDoc(null);
-        setMode('list');
-        navigate('/docs');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete document');
+    await deleteDocMutation.mutateAsync(doc.id);
+    if (selectedDoc?.id === doc.id) {
+      setSelectedDoc(null);
+      setMode('list');
+      navigate('/docs');
     }
   };
 
@@ -251,7 +212,7 @@ export function DocsPage() {
       description: 'Refresh documents',
       handler: () => {
         if (mode === 'list') {
-          loadDocs();
+          queryClient.invalidateQueries({ queryKey: queryKeys.docs.all });
         }
       },
       category: 'actions',
@@ -298,6 +259,8 @@ export function DocsPage() {
   }, [docs, selectedDoc]);
 
   const isEditing = mode === 'edit' || mode === 'create';
+  const isSaving = createDocMutation.isPending || updateDocMutation.isPending;
+  const hasLoaded = docs.length > 0 || !isLoading;
 
   return (
     <div className="space-y-6">
@@ -357,7 +320,7 @@ export function DocsPage() {
               <ButtonWithHotkey
                 variant="secondary"
                 hotkey="r"
-                onClick={() => loadDocs()}
+                onClick={() => queryClient.invalidateQueries({ queryKey: queryKeys.docs.all })}
                 disabled={isLoading}
               >
                 {isLoading ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
@@ -423,11 +386,14 @@ export function DocsPage() {
       </div>
 
       {/* Error message */}
-      {error && (
+      {isError && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-tablet text-red-600">
-          {error}
-          <button onClick={() => setError(null)} className="ml-2 underline">
-            Dismiss
+          {error instanceof Error ? error.message : 'Failed to load documents'}
+          <button 
+            onClick={() => queryClient.invalidateQueries({ queryKey: queryKeys.docs.all })} 
+            className="ml-2 underline"
+          >
+            Retry
           </button>
         </div>
       )}
@@ -528,7 +494,7 @@ export function DocsPage() {
       )}
 
       {/* Document List */}
-      {mode === 'list' && !isLoading && (
+      {mode === 'list' && hasLoaded && (
         <>
           {docs.length === 0 ? (
             <div className="tablet-card p-8 text-center">
@@ -552,11 +518,6 @@ export function DocsPage() {
                   onClick={() => handleViewDoc(doc)}
                   onEdit={() => {
                     selectDoc(doc);
-                    // Wait for doc to load then enter edit mode
-                    docsApi.get(doc.id).then(fullDoc => {
-                      setSelectedDoc(fullDoc);
-                      enterEditMode(fullDoc);
-                    });
                   }}
                   onDelete={() => handleDeleteDoc(doc)}
                 />
@@ -567,7 +528,7 @@ export function DocsPage() {
       )}
 
       {/* Features hint (only shown when no docs) */}
-      {mode === 'list' && docs.length === 0 && !isLoading && (
+      {mode === 'list' && docs.length === 0 && hasLoaded && (
         <div className="bg-lapis-500/5 border border-lapis-200 rounded-tablet p-4">
           <h3 className="font-medium text-lapis-600 mb-2">Documentation Features</h3>
           <ul className="text-sm text-lapis-500 space-y-1">
