@@ -8,6 +8,7 @@ import type { User as UserType } from '../../api/users';
 
 // ============================================
 // Issue Modal - Create/Edit issues
+// Modern Mesopotamian clay tablet aesthetic
 // ============================================
 
 interface IssueModalProps {
@@ -18,6 +19,14 @@ interface IssueModalProps {
   users: UserType[];
   isLoading?: boolean;
 }
+
+// Priority options with visual indicators
+const priorityOptions = [
+  { value: Priority.LOW, label: 'Low', icon: '▽', color: 'text-lapis-500' },
+  { value: Priority.MEDIUM, label: 'Medium', icon: '●', color: 'text-gold-600' },
+  { value: Priority.HIGH, label: 'High', icon: '▲', color: 'text-clay-600' },
+  { value: Priority.CRITICAL, label: 'Critical', icon: '🔺', color: 'text-red-600' },
+];
 
 export function IssueModal({ 
   isOpen, 
@@ -89,6 +98,7 @@ export function IssueModal({
     
     if (!title.trim()) {
       setError('Title is required');
+      titleInputRef.current?.focus();
       return;
     }
 
@@ -124,40 +134,59 @@ export function IssueModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-lapis-900/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-lapis-900/60 backdrop-blur-sm"
         onClick={onClose}
       />
       
       {/* Modal */}
-      <div className="relative w-full max-w-lg max-h-[90vh] overflow-auto bg-parchment-50 rounded-tablet shadow-tablet border border-parchment-300 m-4">
+      <div className="
+        relative w-full max-w-lg max-h-[90vh] overflow-hidden
+        bg-gradient-to-b from-parchment-50 to-parchment-100
+        rounded-xl shadow-2xl 
+        border border-parchment-300
+        animate-scale-in
+        flex flex-col
+      ">
+        {/* Decorative top border */}
+        <div className="h-1 bg-gradient-to-r from-clay-400 via-gold-400 to-lapis-400" />
+        
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-parchment-300">
-          <h2 className="text-lg font-inscription text-lapis-600">
-            {isEditing ? 'Edit Issue' : 'New Inscription'}
-          </h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-parchment-300 bg-parchment-100/50">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl opacity-60">𒁹</span>
+            <div>
+              <h2 className="text-lg font-inscription text-lapis-600">
+                {isEditing ? 'Edit Inscription' : 'New Inscription'}
+              </h2>
+              <p className="text-xs text-lapis-500">
+                {isEditing ? 'Modify the clay tablet' : 'Carve your task into the tablet'}
+              </p>
+            </div>
+          </div>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-parchment-200 text-lapis-500"
+            className="p-2 rounded-lg hover:bg-parchment-200 text-lapis-500 transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
           {/* Error */}
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-tablet text-red-600 text-sm">
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex items-center gap-2">
+              <AlertCircle size={16} />
               {error}
             </div>
           )}
 
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-lapis-600 mb-1">
+            <label className="block text-sm font-semibold text-lapis-600 mb-2">
               Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -166,27 +195,35 @@ export function IssueModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="What needs to be inscribed?"
-              className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
-                         bg-parchment-100 text-lapis-700
-                         focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
-                         placeholder:text-lapis-400"
+              className="
+                w-full px-4 py-3 rounded-lg 
+                border-2 border-parchment-300 
+                bg-parchment-50 text-lapis-700
+                focus:border-lapis-400 focus:ring-2 focus:ring-lapis-400/20 focus:outline-none
+                placeholder:text-lapis-400
+                transition-all duration-200
+              "
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-lapis-600 mb-1">
+            <label className="block text-sm font-semibold text-lapis-600 mb-2">
               Description
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Additional details..."
+              placeholder="Additional details for the inscription..."
               rows={3}
-              className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
-                         bg-parchment-100 text-lapis-700 resize-none
-                         focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
-                         placeholder:text-lapis-400"
+              className="
+                w-full px-4 py-3 rounded-lg 
+                border-2 border-parchment-300 
+                bg-parchment-50 text-lapis-700 resize-none
+                focus:border-lapis-400 focus:ring-2 focus:ring-lapis-400/20 focus:outline-none
+                placeholder:text-lapis-400
+                transition-all duration-200
+              "
             />
           </div>
 
@@ -194,36 +231,49 @@ export function IssueModal({
           <div className="grid grid-cols-2 gap-4">
             {/* Priority */}
             <div>
-              <label className="block text-sm font-medium text-lapis-600 mb-1">
-                <AlertCircle size={14} className="inline mr-1" />
+              <label className="block text-sm font-semibold text-lapis-600 mb-2">
+                <AlertCircle size={14} className="inline mr-1.5 opacity-70" />
                 Priority
               </label>
-              <select
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as PriorityType)}
-                className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
-                           bg-parchment-100 text-lapis-700
-                           focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none"
-              >
-                <option value={Priority.LOW}>Low</option>
-                <option value={Priority.MEDIUM}>Medium</option>
-                <option value={Priority.HIGH}>High</option>
-                <option value={Priority.CRITICAL}>Critical</option>
-              </select>
+              <div className="grid grid-cols-2 gap-2">
+                {priorityOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setPriority(opt.value)}
+                    className={`
+                      px-3 py-2 rounded-lg text-sm font-medium
+                      border-2 transition-all duration-150
+                      flex items-center justify-center gap-1.5
+                      ${priority === opt.value 
+                        ? 'border-lapis-400 bg-lapis-50 text-lapis-700' 
+                        : 'border-parchment-300 bg-parchment-50 text-lapis-600 hover:border-parchment-400'
+                      }
+                    `}
+                  >
+                    <span className={opt.color}>{opt.icon}</span>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Assignee */}
             <div>
-              <label className="block text-sm font-medium text-lapis-600 mb-1">
-                <User size={14} className="inline mr-1" />
+              <label className="block text-sm font-semibold text-lapis-600 mb-2">
+                <User size={14} className="inline mr-1.5 opacity-70" />
                 Assignee
               </label>
               <select
                 value={assigneeId}
                 onChange={(e) => setAssigneeId(e.target.value ? Number(e.target.value) : '')}
-                className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
-                           bg-parchment-100 text-lapis-700
-                           focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none"
+                className="
+                  w-full px-4 py-3 rounded-lg 
+                  border-2 border-parchment-300 
+                  bg-parchment-50 text-lapis-700
+                  focus:border-lapis-400 focus:ring-2 focus:ring-lapis-400/20 focus:outline-none
+                  transition-all duration-200
+                "
               >
                 <option value="">Unassigned</option>
                 {users.map((user) => (
@@ -237,44 +287,58 @@ export function IssueModal({
 
           {/* Due Date */}
           <div>
-            <label className="block text-sm font-medium text-lapis-600 mb-1">
-              <Calendar size={14} className="inline mr-1" />
+            <label className="block text-sm font-semibold text-lapis-600 mb-2">
+              <Calendar size={14} className="inline mr-1.5 opacity-70" />
               Due Date
             </label>
             <input
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
-                         bg-parchment-100 text-lapis-700
-                         focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none"
+              className="
+                w-full px-4 py-3 rounded-lg 
+                border-2 border-parchment-300 
+                bg-parchment-50 text-lapis-700
+                focus:border-lapis-400 focus:ring-2 focus:ring-lapis-400/20 focus:outline-none
+                transition-all duration-200
+              "
             />
           </div>
 
           {/* Labels */}
           <div>
-            <label className="block text-sm font-medium text-lapis-600 mb-1">
-              <Tag size={14} className="inline mr-1" />
+            <label className="block text-sm font-semibold text-lapis-600 mb-2">
+              <Tag size={14} className="inline mr-1.5 opacity-70" />
               Labels
             </label>
-            <div className="flex gap-2 mb-2 flex-wrap">
-              {labels.map((label) => (
-                <span 
-                  key={label}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 
-                             bg-parchment-200 text-lapis-600 text-sm rounded border border-parchment-300"
-                >
-                  {label}
-                  <button
-                    type="button"
-                    onClick={() => removeLabel(label)}
-                    className="hover:text-red-500"
+            
+            {/* Existing labels */}
+            {labels.length > 0 && (
+              <div className="flex gap-2 mb-3 flex-wrap">
+                {labels.map((label) => (
+                  <span 
+                    key={label}
+                    className="
+                      inline-flex items-center gap-1.5 px-2.5 py-1 
+                      bg-lapis-100 text-lapis-700 text-sm rounded-lg 
+                      border border-lapis-200
+                      font-medium
+                    "
                   >
-                    <X size={12} />
-                  </button>
-                </span>
-              ))}
-            </div>
+                    {label}
+                    <button
+                      type="button"
+                      onClick={() => removeLabel(label)}
+                      className="hover:text-red-500 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            
+            {/* Add label input */}
             <div className="flex gap-2">
               <input
                 type="text"
@@ -286,43 +350,62 @@ export function IssueModal({
                     addLabel();
                   }
                 }}
-                placeholder="Add label..."
-                className="flex-1 px-3 py-2 rounded-tablet border border-parchment-300 
-                           bg-parchment-100 text-lapis-700 text-sm
-                           focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
-                           placeholder:text-lapis-400"
+                placeholder="Add a label..."
+                className="
+                  flex-1 px-4 py-2 rounded-lg 
+                  border-2 border-parchment-300 
+                  bg-parchment-50 text-lapis-700 text-sm
+                  focus:border-lapis-400 focus:ring-2 focus:ring-lapis-400/20 focus:outline-none
+                  placeholder:text-lapis-400
+                  transition-all duration-200
+                "
               />
-              <ButtonWithHotkey
+              <button
                 type="button"
-                variant="secondary"
-                size="sm"
                 onClick={addLabel}
+                disabled={!labelInput.trim()}
+                className="
+                  px-4 py-2 rounded-lg
+                  bg-parchment-200 text-lapis-600 text-sm font-medium
+                  border-2 border-parchment-300
+                  hover:bg-parchment-300 hover:border-parchment-400
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  transition-all duration-150
+                "
               >
                 Add
-              </ButtonWithHotkey>
+              </button>
             </div>
           </div>
         </form>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-parchment-300 bg-parchment-100">
-          <ButtonWithHotkey
-            type="button"
-            variant="ghost"
-            onClick={onClose}
-            hotkey="Escape"
-          >
-            Cancel
-          </ButtonWithHotkey>
-          <ButtonWithHotkey
-            type="submit"
-            variant="primary"
-            onClick={handleSubmit}
-            disabled={isLoading}
-            hotkey="Ctrl+Enter"
-          >
-            {isLoading ? 'Saving...' : (isEditing ? 'Save Changes' : 'Create Issue')}
-          </ButtonWithHotkey>
+        <div className="
+          flex items-center justify-between gap-3 
+          px-6 py-4 
+          border-t border-parchment-300 
+          bg-parchment-100
+        ">
+          <p className="text-xs text-lapis-400">
+            Press <kbd className="px-1.5 py-0.5 bg-parchment-200 rounded text-[10px]">Ctrl+Enter</kbd> to save
+          </p>
+          <div className="flex items-center gap-3">
+            <ButtonWithHotkey
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+            >
+              Cancel
+            </ButtonWithHotkey>
+            <ButtonWithHotkey
+              type="submit"
+              variant="primary"
+              onClick={handleSubmit}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Inscribing...' : (isEditing ? 'Save Changes' : 'Create Inscription')}
+            </ButtonWithHotkey>
+          </div>
         </div>
       </div>
     </div>

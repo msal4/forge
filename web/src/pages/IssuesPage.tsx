@@ -20,9 +20,33 @@ import { usersApi, type User } from '../api/users';
 
 // Kanban column configuration (Mesopotamian theme)
 const COLUMNS = [
-  { id: IssueStatus.TO_INSCRIBE, title: 'To Inscribe', subtitle: 'Todo', color: 'border-t-parchment-400' },
-  { id: IssueStatus.CARVING, title: 'Carving', subtitle: 'In Progress', color: 'border-t-clay-400' },
-  { id: IssueStatus.BAKED, title: 'Baked', subtitle: 'Done', color: 'border-t-gold-500' },
+  { 
+    id: IssueStatus.TO_INSCRIBE, 
+    title: 'To Inscribe', 
+    subtitle: 'Awaiting the chisel',
+    icon: '𒀭',
+    borderColor: 'border-t-parchment-500',
+    headerBg: 'bg-parchment-200',
+    dropBg: 'bg-parchment-100',
+  },
+  { 
+    id: IssueStatus.CARVING, 
+    title: 'Carving', 
+    subtitle: 'Work in progress',
+    icon: '𒁹',
+    borderColor: 'border-t-clay-500',
+    headerBg: 'bg-clay-100',
+    dropBg: 'bg-clay-50',
+  },
+  { 
+    id: IssueStatus.BAKED, 
+    title: 'Baked', 
+    subtitle: 'Fired and complete',
+    icon: '𒂗',
+    borderColor: 'border-t-gold-500',
+    headerBg: 'bg-gold-100',
+    dropBg: 'bg-gold-50',
+  },
 ] as const;
 
 export function IssuesPage() {
@@ -108,7 +132,7 @@ export function IssuesPage() {
         setIssues(prev => prev.map(i => i.id === updated.id ? updated : i));
       } else {
         const created = await issuesApi.create(data as CreateIssueRequest);
-        setIssues(prev => [...prev, created]);
+        setIssues(prev => [created, ...prev]);
       }
     } finally {
       setIsSaving(false);
@@ -128,36 +152,64 @@ export function IssuesPage() {
   };
 
   // Drag and drop handlers
-  const handleDragStart = (issue: Issue) => {
+  const handleDragStart = (e: React.DragEvent, issue: Issue) => {
     setDraggedIssue(issue);
+    e.dataTransfer.effectAllowed = 'move';
+    // Add a slight delay for the drag image
+    const target = e.currentTarget as HTMLElement;
+    target.style.opacity = '0.5';
   };
 
-  const handleDragEnd = () => {
+  const handleDragEnd = (e: React.DragEvent) => {
+    const target = e.currentTarget as HTMLElement;
+    target.style.opacity = '1';
     setDraggedIssue(null);
     setDragOverColumn(null);
   };
 
   const handleDragOver = (e: React.DragEvent, status: IssueStatusType) => {
     e.preventDefault();
-    setDragOverColumn(status);
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverColumn !== status) {
+      setDragOverColumn(status);
+    }
   };
 
-  const handleDrop = async (status: IssueStatusType) => {
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear if we're leaving the column entirely
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    if (
+      e.clientX < rect.left ||
+      e.clientX > rect.right ||
+      e.clientY < rect.top ||
+      e.clientY > rect.bottom
+    ) {
+      setDragOverColumn(null);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent, status: IssueStatusType) => {
+    e.preventDefault();
+    
     if (!draggedIssue || draggedIssue.status === status) {
-      handleDragEnd();
+      setDraggedIssue(null);
+      setDragOverColumn(null);
       return;
     }
 
-    // Optimistic update
+    const originalIssue = draggedIssue;
     const updatedIssue = { ...draggedIssue, status };
+    
+    // Optimistic update
     setIssues(prev => prev.map(i => i.id === draggedIssue.id ? updatedIssue : i));
-    handleDragEnd();
+    setDraggedIssue(null);
+    setDragOverColumn(null);
 
     try {
-      await issuesApi.updateStatus(draggedIssue.id, status);
+      await issuesApi.updateStatus(originalIssue.id, status);
     } catch (err) {
       // Revert on error
-      setIssues(prev => prev.map(i => i.id === draggedIssue.id ? draggedIssue : i));
+      setIssues(prev => prev.map(i => i.id === originalIssue.id ? originalIssue : i));
       setError(err instanceof Error ? err.message : 'Failed to update status');
     }
   };
@@ -168,16 +220,24 @@ export function IssuesPage() {
     setIsModalOpen(true);
   };
 
+  // Stats
+  const totalIssues = issues.length;
+  const completedIssues = issuesByStatus[IssueStatus.BAKED].length;
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-inscription text-lapis-600">
+          <h1 className="text-2xl font-inscription text-lapis-600 flex items-center gap-2">
+            <span className="text-3xl">𒋰</span>
             The Tablet
           </h1>
-          <p className="text-lapis-500 text-sm">
-            Track your inscriptions through the ages
+          <p className="text-lapis-500 text-sm mt-1">
+            {totalIssues === 0 
+              ? 'No inscriptions yet — begin your record'
+              : `${completedIssues} of ${totalIssues} inscriptions complete`
+            }
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -199,16 +259,16 @@ export function IssuesPage() {
             }}
           >
             <Plus size={18} />
-            New Issue
+            New Inscription
           </ButtonWithHotkey>
         </div>
       </div>
 
       {/* Error message */}
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-tablet text-red-600">
-          {error}
-          <button onClick={() => setError(null)} className="ml-2 underline">
+        <div className="p-4 bg-red-50 border border-red-200 rounded-tablet text-red-600 flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="text-sm underline hover:no-underline">
             Dismiss
           </button>
         </div>
@@ -216,10 +276,12 @@ export function IssuesPage() {
 
       {/* Loading state */}
       {isLoading && issues.length === 0 && (
-        <div className="flex items-center justify-center py-12">
+        <div className="flex items-center justify-center py-16">
           <div className="text-center">
-            <Loader2 size={32} className="animate-spin text-lapis-500 mx-auto mb-2" />
-            <p className="text-lapis-500">Loading tablets...</p>
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-lapis-100 mb-4">
+              <span className="text-3xl animate-pulse">𒀭</span>
+            </div>
+            <p className="text-lapis-500 font-inscription">Unearthing the tablets...</p>
           </div>
         </div>
       )}
@@ -230,19 +292,21 @@ export function IssuesPage() {
           {COLUMNS.map(column => (
             <KanbanColumn
               key={column.id}
-              id={column.id}
-              title={column.title}
-              subtitle={column.subtitle}
-              color={column.color}
+              column={column}
               issues={issuesByStatus[column.id]}
               onEditIssue={handleEditIssue}
               onDeleteIssue={handleDeleteIssue}
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
               onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               isDragOver={dragOverColumn === column.id}
               draggedIssueId={draggedIssue?.id}
+              onCreateIssue={() => {
+                setEditingIssue(null);
+                setIsModalOpen(true);
+              }}
             />
           ))}
         </div>
@@ -268,57 +332,74 @@ export function IssuesPage() {
 // Kanban Column Component
 // ============================================
 
-interface KanbanColumnProps {
+interface ColumnConfig {
   id: IssueStatusType;
   title: string;
   subtitle: string;
-  color: string;
+  icon: string;
+  borderColor: string;
+  headerBg: string;
+  dropBg: string;
+}
+
+interface KanbanColumnProps {
+  column: ColumnConfig;
   issues: Issue[];
   onEditIssue: (issue: Issue) => void;
   onDeleteIssue: (issue: Issue) => void;
-  onDragStart: (issue: Issue) => void;
-  onDragEnd: () => void;
+  onDragStart: (e: React.DragEvent, issue: Issue) => void;
+  onDragEnd: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent, status: IssueStatusType) => void;
-  onDrop: (status: IssueStatusType) => void;
+  onDragLeave: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent, status: IssueStatusType) => void;
   isDragOver: boolean;
   draggedIssueId?: number;
+  onCreateIssue: () => void;
 }
 
 function KanbanColumn({
-  id,
-  title,
-  subtitle,
-  color,
+  column,
   issues,
   onEditIssue,
   onDeleteIssue,
   onDragStart,
   onDragEnd,
   onDragOver,
+  onDragLeave,
   onDrop,
   isDragOver,
   draggedIssueId,
+  onCreateIssue,
 }: KanbanColumnProps) {
   return (
     <div
       className={`
-        tablet-card overflow-hidden
-        border-t-4 ${color}
-        transition-all duration-150
-        ${isDragOver ? 'ring-2 ring-lapis-400 ring-offset-2' : ''}
+        flex flex-col
+        bg-parchment-50 rounded-tablet 
+        border border-parchment-300
+        border-t-4 ${column.borderColor}
+        shadow-tablet
+        transition-all duration-200
+        ${isDragOver ? 'ring-2 ring-lapis-400 ring-offset-2 scale-[1.01]' : ''}
       `}
-      onDragOver={(e) => onDragOver(e, id)}
-      onDragLeave={() => {}}
-      onDrop={() => onDrop(id)}
+      onDragOver={(e) => onDragOver(e, column.id)}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => onDrop(e, column.id)}
     >
       {/* Column Header */}
-      <div className="px-4 py-3 bg-parchment-100 border-b border-parchment-200">
+      <div className={`px-4 py-3 ${column.headerBg} border-b border-parchment-200 rounded-t-tablet`}>
         <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-inscription text-lapis-600">{title}</h3>
-            <p className="text-xs text-lapis-500">{subtitle}</p>
+          <div className="flex items-center gap-2">
+            <span className="text-xl opacity-60">{column.icon}</span>
+            <div>
+              <h3 className="font-inscription text-lapis-600 text-lg">{column.title}</h3>
+              <p className="text-xs text-lapis-500">{column.subtitle}</p>
+            </div>
           </div>
-          <span className="text-sm font-medium text-lapis-500 bg-parchment-200 px-2 py-0.5 rounded-full">
+          <span className={`
+            text-sm font-medium px-2.5 py-1 rounded-full
+            ${issues.length > 0 ? 'bg-lapis-500 text-parchment-100' : 'bg-parchment-300 text-lapis-500'}
+          `}>
             {issues.length}
           </span>
         </div>
@@ -327,22 +408,25 @@ function KanbanColumn({
       {/* Column Content */}
       <div 
         className={`
-          p-3 min-h-[200px] space-y-3
-          ${isDragOver ? 'bg-lapis-50' : ''}
+          flex-1 p-3 space-y-3 min-h-[300px]
+          transition-colors duration-200
+          ${isDragOver ? column.dropBg : ''}
         `}
       >
         {issues.length === 0 ? (
-          <div className="text-center py-8 text-lapis-400 text-sm">
-            <p>No issues here yet</p>
-            <p className="text-xs mt-1">Drag issues here or create new ones</p>
-          </div>
+          <EmptyColumnState 
+            columnId={column.id} 
+            isDragOver={isDragOver}
+            onCreateIssue={onCreateIssue}
+          />
         ) : (
           issues.map(issue => (
             <div
               key={issue.id}
               draggable
-              onDragStart={() => onDragStart(issue)}
+              onDragStart={(e) => onDragStart(e, issue)}
               onDragEnd={onDragEnd}
+              className="transform transition-transform duration-150"
             >
               <IssueCard
                 issue={issue}
@@ -354,6 +438,71 @@ function KanbanColumn({
           ))
         )}
       </div>
+    </div>
+  );
+}
+
+// ============================================
+// Empty Column State
+// ============================================
+
+interface EmptyColumnStateProps {
+  columnId: IssueStatusType;
+  isDragOver: boolean;
+  onCreateIssue: () => void;
+}
+
+function EmptyColumnState({ columnId, isDragOver, onCreateIssue }: EmptyColumnStateProps) {
+  const messages: Record<IssueStatusType, { icon: string; title: string; subtitle: string }> = {
+    [IssueStatus.TO_INSCRIBE]: {
+      icon: '𒀭',
+      title: 'Ready for inscriptions',
+      subtitle: 'Create a new task to begin',
+    },
+    [IssueStatus.CARVING]: {
+      icon: '𒁹',
+      title: 'No work in progress',
+      subtitle: 'Drag tasks here to start carving',
+    },
+    [IssueStatus.BAKED]: {
+      icon: '𒂗',
+      title: 'Nothing completed yet',
+      subtitle: 'Finished tasks will appear here',
+    },
+  };
+
+  const message = messages[columnId];
+
+  return (
+    <div 
+      className={`
+        flex flex-col items-center justify-center 
+        py-12 px-4 text-center
+        border-2 border-dashed rounded-tablet
+        transition-all duration-200
+        ${isDragOver 
+          ? 'border-lapis-400 bg-lapis-50' 
+          : 'border-parchment-300'
+        }
+      `}
+    >
+      <span className={`text-4xl mb-3 ${isDragOver ? 'animate-bounce' : 'opacity-40'}`}>
+        {message.icon}
+      </span>
+      <p className={`text-sm font-medium ${isDragOver ? 'text-lapis-600' : 'text-lapis-500'}`}>
+        {isDragOver ? 'Drop here!' : message.title}
+      </p>
+      <p className="text-xs text-lapis-400 mt-1">
+        {isDragOver ? 'Release to move the inscription' : message.subtitle}
+      </p>
+      {columnId === IssueStatus.TO_INSCRIBE && !isDragOver && (
+        <button
+          onClick={onCreateIssue}
+          className="mt-4 text-xs text-lapis-500 hover:text-lapis-600 underline"
+        >
+          + Create new inscription
+        </button>
+      )}
     </div>
   );
 }
