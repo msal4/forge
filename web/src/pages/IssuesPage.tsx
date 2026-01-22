@@ -1,5 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Plus, RefreshCw, Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
@@ -33,8 +34,8 @@ import {
 const COLUMNS = [
   { 
     id: IssueStatus.TO_INSCRIBE, 
-    title: 'To Inscribe', 
-    subtitle: 'Awaiting the chisel',
+    titleKey: 'issues.columns.toInscribe.title',
+    subtitleKey: 'issues.columns.toInscribe.subtitle',
     icon: '𒀭',
     borderColor: 'border-t-parchment-500',
     headerBg: 'bg-parchment-200',
@@ -42,8 +43,8 @@ const COLUMNS = [
   },
   { 
     id: IssueStatus.CARVING, 
-    title: 'Carving', 
-    subtitle: 'Work in progress',
+    titleKey: 'issues.columns.carving.title',
+    subtitleKey: 'issues.columns.carving.subtitle',
     icon: '𒁹',
     borderColor: 'border-t-clay-500',
     headerBg: 'bg-clay-100',
@@ -51,8 +52,8 @@ const COLUMNS = [
   },
   { 
     id: IssueStatus.BAKED, 
-    title: 'Baked', 
-    subtitle: 'Fired and complete',
+    titleKey: 'issues.columns.baked.title',
+    subtitleKey: 'issues.columns.baked.subtitle',
     icon: '𒂗',
     borderColor: 'border-t-gold-500',
     headerBg: 'bg-gold-100',
@@ -64,6 +65,7 @@ export function IssuesPage() {
   const { issueId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   
   // React Query hooks
   const { data: issues = [], isLoading, isError, error } = useIssues();
@@ -274,14 +276,14 @@ export function IssuesPage() {
         <div>
           <h1 className="text-2xl font-inscription text-lapis-600 flex items-center gap-2">
             <span className="text-3xl">𒋰</span>
-            The Tablet
+            {t('issues.title')}
           </h1>
           <p className="text-lapis-500 text-sm mt-1">
             {totalIssues === 0 
-              ? 'No inscriptions yet — begin your record'
+              ? t('issues.noInscriptions')
               : hasActiveFilters
-                ? `${completedIssues} of ${filteredTotal} filtered inscriptions complete`
-                : `${completedIssues} of ${totalIssues} inscriptions complete`
+                ? t('issues.completionStatusFiltered', { completed: completedIssues, filtered: filteredTotal })
+                : t('issues.completionStatus', { completed: completedIssues, total: totalIssues })
             }
           </p>
         </div>
@@ -293,7 +295,7 @@ export function IssuesPage() {
             disabled={isLoading}
           >
             {isLoading ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
-            Refresh
+            {t('common.refresh')}
           </ButtonWithHotkey>
           <ButtonWithHotkey
             variant="primary"
@@ -305,7 +307,7 @@ export function IssuesPage() {
             }}
           >
             <Plus size={18} />
-            New Inscription
+            {t('issues.newInscription')}
           </ButtonWithHotkey>
         </div>
       </div>
@@ -335,7 +337,7 @@ export function IssuesPage() {
             onClick={() => queryClient.invalidateQueries({ queryKey: queryKeys.issues.all })} 
             className="text-sm underline hover:no-underline"
           >
-            Retry
+            {t('common.retry')}
           </button>
         </div>
       )}
@@ -347,7 +349,7 @@ export function IssuesPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-lapis-100 mb-4">
               <span className="text-3xl animate-pulse">𒀭</span>
             </div>
-            <p className="text-lapis-500 font-inscription">Unearthing the tablets...</p>
+            <p className="text-lapis-500 font-inscription">{t('issues.unearthing')}</p>
           </div>
         </div>
       )}
@@ -405,8 +407,8 @@ export function IssuesPage() {
 
 interface ColumnConfig {
   id: IssueStatusType;
-  title: string;
-  subtitle: string;
+  titleKey: string;
+  subtitleKey: string;
   icon: string;
   borderColor: string;
   headerBg: string;
@@ -446,6 +448,8 @@ function KanbanColumn({
   onCreateIssue,
   isFiltering = false,
 }: KanbanColumnProps) {
+  const { t } = useTranslation();
+  
   return (
     <div
       className={`
@@ -467,8 +471,8 @@ function KanbanColumn({
           <div className="flex items-center gap-2">
             <span className="text-xl opacity-60">{column.icon}</span>
             <div>
-              <h3 className="font-inscription text-lapis-600 text-lg">{column.title}</h3>
-              <p className="text-xs text-lapis-500">{column.subtitle}</p>
+              <h3 className="font-inscription text-lapis-600 text-lg">{t(column.titleKey)}</h3>
+              <p className="text-xs text-lapis-500">{t(column.subtitleKey)}</p>
             </div>
           </div>
           <span className={`
@@ -531,21 +535,23 @@ interface EmptyColumnStateProps {
 }
 
 function EmptyColumnState({ columnId, isDragOver, onCreateIssue, isFiltering = false }: EmptyColumnStateProps) {
-  const messages: Record<IssueStatusType, { icon: string; title: string; subtitle: string }> = {
+  const { t } = useTranslation();
+  
+  const messages: Record<IssueStatusType, { icon: string; titleKey: string; subtitleKey: string }> = {
     [IssueStatus.TO_INSCRIBE]: {
       icon: '𒀭',
-      title: isFiltering ? 'No matches found' : 'Ready for inscriptions',
-      subtitle: isFiltering ? 'Try adjusting your filters' : 'Create a new task to begin',
+      titleKey: isFiltering ? 'issues.empty.noMatches' : 'issues.empty.toInscribe.title',
+      subtitleKey: isFiltering ? 'issues.empty.adjustFilters' : 'issues.empty.toInscribe.subtitle',
     },
     [IssueStatus.CARVING]: {
       icon: '𒁹',
-      title: isFiltering ? 'No matches found' : 'No work in progress',
-      subtitle: isFiltering ? 'Try adjusting your filters' : 'Drag tasks here to start carving',
+      titleKey: isFiltering ? 'issues.empty.noMatches' : 'issues.empty.carving.title',
+      subtitleKey: isFiltering ? 'issues.empty.adjustFilters' : 'issues.empty.carving.subtitle',
     },
     [IssueStatus.BAKED]: {
       icon: '𒂗',
-      title: isFiltering ? 'No matches found' : 'Nothing completed yet',
-      subtitle: isFiltering ? 'Try adjusting your filters' : 'Finished tasks will appear here',
+      titleKey: isFiltering ? 'issues.empty.noMatches' : 'issues.empty.baked.title',
+      subtitleKey: isFiltering ? 'issues.empty.adjustFilters' : 'issues.empty.baked.subtitle',
     },
   };
 
@@ -568,17 +574,17 @@ function EmptyColumnState({ columnId, isDragOver, onCreateIssue, isFiltering = f
         {message.icon}
       </span>
       <p className={`text-sm font-medium ${isDragOver ? 'text-lapis-600' : 'text-lapis-500'}`}>
-        {isDragOver ? 'Drop here!' : message.title}
+        {isDragOver ? t('issues.dropHere') : t(message.titleKey)}
       </p>
       <p className="text-xs text-lapis-400 mt-1">
-        {isDragOver ? 'Release to move the inscription' : message.subtitle}
+        {isDragOver ? t('issues.releaseToMove') : t(message.subtitleKey)}
       </p>
       {columnId === IssueStatus.TO_INSCRIBE && !isDragOver && !isFiltering && (
         <button
           onClick={onCreateIssue}
           className="mt-4 text-xs text-lapis-500 hover:text-lapis-600 underline"
         >
-          + Create new inscription
+          {t('issues.createNew')}
         </button>
       )}
     </div>

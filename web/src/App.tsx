@@ -1,9 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider, useIsFetching } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { AuthProvider, ProtectedRoute } from './context/AuthContext';
 import { KeyboardProvider } from './context/KeyboardContext';
 import { CommandMenu } from './components/ui/CommandMenu';
 import { Layout } from './components/layout/Layout';
+
+// i18n
+import './i18n';
 
 // Pages
 import { HomePage } from './pages/HomePage';
@@ -11,6 +15,7 @@ import { LoginPage } from './pages/LoginPage';
 import { IssuesPage } from './pages/IssuesPage';
 import { DocsPage } from './pages/DocsPage';
 import { ReleasesPage } from './pages/ReleasesPage';
+import { SettingsPage } from './pages/SettingsPage';
 
 // ============================================
 // Sarray Forge - Main Application
@@ -29,13 +34,14 @@ const queryClient = new QueryClient({
 // Global loading indicator
 function GlobalLoadingIndicator() {
   const isFetching = useIsFetching();
+  const { t } = useTranslation();
   
   if (!isFetching) return null;
   
   return (
-    <div className="fixed top-4 right-4 z-50 flex items-center gap-2 px-3 py-2 bg-parchment-50 border border-parchment-300 rounded-tablet shadow-tablet">
+    <div className="fixed top-4 ltr:right-4 rtl:left-4 z-50 flex items-center gap-2 px-3 py-2 bg-parchment-50 border border-parchment-300 rounded-tablet shadow-tablet">
       <span className="text-lg animate-pulse">𒀭</span>
-      <span className="text-sm text-lapis-600 font-inscription">Loading...</span>
+      <span className="text-sm text-lapis-600 font-inscription">{t('common.loading')}</span>
     </div>
   );
 }
@@ -59,6 +65,7 @@ function AppRoutes() {
         <Route path="/docs/:docId" element={<DocsPage />} />
         <Route path="/releases" element={<ReleasesPage />} />
         <Route path="/releases/:releaseId" element={<ReleasesPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
       </Route>
       
       {/* Fallback */}

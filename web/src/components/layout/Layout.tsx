@@ -1,5 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   Home, 
   FileText, 
@@ -24,6 +25,7 @@ export function Layout() {
   const [sidebarOpen, setSidebarOpen] = React.useState(true);
   const { openCommandPalette } = useKeyboard();
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
   
   const handleLogout = async () => {
     await logout();
@@ -34,10 +36,10 @@ export function Layout() {
       {/* Sidebar */}
       <aside 
         className={`
-          fixed inset-y-0 left-0 z-40
-          w-64 bg-parchment-50 border-r border-parchment-300
+          fixed inset-y-0 ltr:left-0 rtl:right-0 z-40
+          w-64 bg-parchment-50 ltr:border-r rtl:border-l border-parchment-300
           transform transition-transform duration-200 ease-in-out
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          ${sidebarOpen ? 'translate-x-0' : 'ltr:-translate-x-full rtl:translate-x-full'}
           lg:relative lg:translate-x-0 lg:flex-shrink-0
         `}
       >
@@ -46,9 +48,9 @@ export function Layout() {
           <div className="p-4 border-b border-parchment-300">
             <h1 className="font-inscription text-xl text-lapis-600 flex items-center gap-2">
               <span className="text-2xl">𒀭</span>
-              Sarray Forge
+              {t('app.name')}
             </h1>
-            <p className="text-xs text-lapis-500 mt-1">The Ancient Workshop</p>
+            <p className="text-xs text-lapis-500 mt-1">{t('app.tagline')}</p>
           </div>
           
           {/* Command Palette Trigger */}
@@ -60,20 +62,20 @@ export function Layout() {
                          hover:bg-parchment-300 transition-colors"
             >
               <Command size={16} />
-              <span className="flex-1 text-left">Command Palette</span>
+              <span className="flex-1 ltr:text-left rtl:text-right">{t('nav.commandPalette')}</span>
               <HotkeyBadge keys="Ctrl+k" size="sm" />
             </button>
           </div>
           
           {/* Navigation */}
           <nav className="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-thin">
-            <NavItem to="/" icon={<Home size={18} />} label="Home" shortcut="g+h" end />
-            <NavItem to="/issues" icon={<FileText size={18} />} label="The Tablet" subtitle="Issues" shortcut="g+i" />
-            <NavItem to="/docs" icon={<BookOpen size={18} />} label="The Library" subtitle="Docs" shortcut="g+d" />
-            <NavItem to="/releases" icon={<Package size={18} />} label="The Granary" subtitle="Releases" shortcut="g+r" />
+            <NavItem to="/" icon={<Home size={18} />} label={t('nav.home')} shortcut="g+h" end />
+            <NavItem to="/issues" icon={<FileText size={18} />} label={t('nav.issues')} subtitle={t('nav.issuesSubtitle')} shortcut="g+i" />
+            <NavItem to="/docs" icon={<BookOpen size={18} />} label={t('nav.docs')} subtitle={t('nav.docsSubtitle')} shortcut="g+d" />
+            <NavItem to="/releases" icon={<Package size={18} />} label={t('nav.releases')} subtitle={t('nav.releasesSubtitle')} shortcut="g+r" />
             
             <div className="pt-4 mt-4 border-t border-parchment-300">
-              <NavItem to="/settings" icon={<Settings size={18} />} label="Settings" shortcut="g+s" />
+              <NavItem to="/settings" icon={<Settings size={18} />} label={t('nav.settings')} shortcut="g+s" />
             </div>
           </nav>
           
@@ -107,7 +109,7 @@ export function Layout() {
                          text-lapis-600 hover:bg-clay-100 hover:text-clay-700 transition-colors"
             >
               <LogOut size={18} />
-              <span className="text-sm font-medium">Logout</span>
+              <span className="text-sm font-medium">{t('nav.logout')}</span>
             </button>
           </div>
         </div>
@@ -116,7 +118,7 @@ export function Layout() {
       {/* Mobile sidebar toggle */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-tablet
+        className="lg:hidden fixed top-4 ltr:left-4 rtl:right-4 z-50 p-2 rounded-tablet
                    bg-parchment-50 border border-parchment-300 shadow-tablet"
         aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
       >

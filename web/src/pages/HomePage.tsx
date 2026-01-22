@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   FileText, 
   BookOpen, 
@@ -24,6 +25,7 @@ import { useAuth } from '../context/AuthContext';
 
 export function HomePage() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   
   // React Query hooks
   const { data: issues = [], isLoading: issuesLoading, isError: issuesError } = useIssues();
@@ -59,15 +61,37 @@ export function HomePage() {
       .slice(0, 3);
   }, [docs]);
 
+  // Format relative time
+  const formatRelativeTime = (dateString: string): string => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffSecs < 60) return t('dates.justNow');
+    if (diffMins < 60) return t('dates.minutesAgo', { count: diffMins });
+    if (diffHours < 24) return t('dates.hoursAgo', { count: diffHours });
+    if (diffDays < 7) return t('dates.daysAgo', { count: diffDays });
+    
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+    });
+  };
+
   return (
     <div className="space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-inscription text-lapis-600">
-          Welcome back, {user?.fullName?.split(' ')[0] || user?.username}
+          {t('home.welcome', { name: user?.fullName?.split(' ')[0] || user?.username })}
         </h1>
         <p className="mt-2 text-lapis-500">
-          Where ancient wisdom meets modern development.
+          {t('home.tagline')}
         </p>
       </div>
 
@@ -83,28 +107,28 @@ export function HomePage() {
       <div className="grid gap-4 md:grid-cols-4">
         <StatCard
           icon={<Circle size={18} />}
-          label="To Inscribe"
+          label={t('home.toInscribe')}
           value={stats.toInscribe}
           color="parchment"
           loading={issuesLoading}
         />
         <StatCard
           icon={<Hammer size={18} />}
-          label="Carving"
+          label={t('home.carving')}
           value={stats.carving}
           color="clay"
           loading={issuesLoading}
         />
         <StatCard
           icon={<CheckCircle2 size={18} />}
-          label="Baked"
+          label={t('home.baked')}
           value={stats.baked}
           color="gold"
           loading={issuesLoading}
         />
         <StatCard
           icon={<User size={18} />}
-          label="Assigned to Me"
+          label={t('home.assignedToMe')}
           value={stats.myIssues}
           color="lapis"
           loading={issuesLoading}
@@ -116,24 +140,24 @@ export function HomePage() {
         <QuickActionCard
           to="/issues"
           icon={<FileText size={24} />}
-          title="The Tablet"
-          description="Inscribe and track your tasks on clay tablets"
+          title={t('home.tablet.title')}
+          description={t('home.tablet.description')}
           color="clay"
           shortcut="g+i"
         />
         <QuickActionCard
           to="/docs"
           icon={<BookOpen size={24} />}
-          title="The Library"
-          description="Store your knowledge in the great library"
+          title={t('home.library.title')}
+          description={t('home.library.description')}
           color="lapis"
           shortcut="g+d"
         />
         <QuickActionCard
           to="/releases"
           icon={<Package size={24} />}
-          title="The Granary"
-          description="Store and distribute your harvest"
+          title={t('home.granary.title')}
+          description={t('home.granary.description')}
           color="gold"
           shortcut="g+r"
         />
@@ -145,13 +169,13 @@ export function HomePage() {
         <div className="lg:col-span-2 tablet-card p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-inscription text-lapis-600">
-              Recent Inscriptions
+              {t('home.recentInscriptions')}
             </h2>
             <Link 
               to="/issues" 
               className="text-sm text-lapis-500 hover:text-lapis-600 flex items-center gap-1"
             >
-              View all <ArrowRight size={14} />
+              {t('home.viewAll')} <ArrowRight size={14} />
             </Link>
           </div>
           
@@ -161,13 +185,13 @@ export function HomePage() {
             </div>
           ) : recentIssues.length === 0 ? (
             <EmptyState 
-              message="No inscriptions yet"
-              hint="Press C to create your first issue"
+              message={t('home.noInscriptions')}
+              hint={t('home.createFirstIssue')}
             />
           ) : (
             <div className="space-y-3">
               {recentIssues.map(issue => (
-                <IssueRow key={issue.id} issue={issue} />
+                <IssueRow key={issue.id} issue={issue} formatRelativeTime={formatRelativeTime} />
               ))}
             </div>
           )}
@@ -179,13 +203,13 @@ export function HomePage() {
           <div className="tablet-card p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-inscription text-lapis-600">
-                Latest Release
+                {t('home.latestRelease')}
               </h2>
               <Link 
                 to="/releases" 
                 className="text-sm text-lapis-500 hover:text-lapis-600"
               >
-                All releases
+                {t('home.allReleases')}
               </Link>
             </div>
             
@@ -219,7 +243,7 @@ export function HomePage() {
               </Link>
             ) : (
               <EmptyState 
-                message="No releases yet"
+                message={t('home.noReleases')}
                 small
               />
             )}
@@ -229,13 +253,13 @@ export function HomePage() {
           <div className="tablet-card p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-inscription text-lapis-600">
-                Recent Documents
+                {t('home.recentDocuments')}
               </h2>
               <Link 
                 to="/docs" 
                 className="text-sm text-lapis-500 hover:text-lapis-600"
               >
-                Library
+                {t('home.libraryLink')}
               </Link>
             </div>
             
@@ -245,7 +269,7 @@ export function HomePage() {
               </div>
             ) : recentDocs.length === 0 ? (
               <EmptyState 
-                message="No documents yet"
+                message={t('home.noDocuments')}
                 small
               />
             ) : (
@@ -262,7 +286,7 @@ export function HomePage() {
                         {doc.title}
                       </span>
                     </div>
-                    <p className="text-xs text-lapis-400 mt-0.5 ml-6">
+                    <p className="text-xs text-lapis-400 mt-0.5 ltr:ml-6 rtl:mr-6">
                       {formatRelativeTime(doc.updatedAt)}
                     </p>
                   </Link>
@@ -275,12 +299,9 @@ export function HomePage() {
       
       {/* Keyboard Shortcuts Hint */}
       <div className="bg-lapis-500/5 border border-lapis-200 rounded-tablet p-4">
-        <h3 className="font-medium text-lapis-600 mb-2">Keyboard Navigation</h3>
+        <h3 className="font-medium text-lapis-600 mb-2">{t('home.keyboardNav')}</h3>
         <p className="text-sm text-lapis-500">
-          Press <kbd className="px-1.5 py-0.5 bg-parchment-200 rounded text-xs mx-1">Ctrl+K</kbd> 
-          to open the command palette, or use 
-          <kbd className="px-1.5 py-0.5 bg-parchment-200 rounded text-xs mx-1">?</kbd> 
-          to see all shortcuts.
+          {t('home.keyboardHint')}
         </p>
       </div>
     </div>
@@ -337,9 +358,10 @@ function StatCard({ icon, label, value, color, loading }: StatCardProps) {
 
 interface IssueRowProps {
   issue: Issue;
+  formatRelativeTime: (date: string) => string;
 }
 
-function IssueRow({ issue }: IssueRowProps) {
+function IssueRow({ issue, formatRelativeTime }: IssueRowProps) {
   const statusConfig = {
     [IssueStatus.TO_INSCRIBE]: { 
       icon: <Circle size={14} />, 
@@ -414,7 +436,7 @@ function IssueRow({ issue }: IssueRowProps) {
         </div>
       )}
 
-      <ArrowRight size={14} className="text-lapis-300 group-hover:text-lapis-500 flex-shrink-0" />
+      <ArrowRight size={14} className="text-lapis-300 group-hover:text-lapis-500 flex-shrink-0 rtl:rotate-180" />
     </Link>
   );
 }
@@ -465,7 +487,7 @@ function QuickActionCard({ to, icon, title, description, color, shortcut }: Quic
       </p>
       <div className="flex items-center justify-between">
         <span className="text-sm text-lapis-400 group-hover:text-lapis-600 transition-colors flex items-center gap-1">
-          Enter <ArrowRight size={14} />
+          Enter <ArrowRight size={14} className="rtl:rotate-180" />
         </span>
         <kbd className="px-1.5 py-0.5 bg-parchment-200 rounded text-xs text-lapis-600">
           {shortcut}
@@ -491,34 +513,9 @@ function EmptyState({ message, hint, small }: EmptyStateProps) {
       <p className={small ? 'text-sm' : ''}>{message}</p>
       {hint && (
         <p className="text-sm mt-2 text-lapis-400">
-          Press <kbd className="px-1.5 py-0.5 bg-parchment-200 rounded text-xs">{hint.includes('C') ? 'C' : hint}</kbd> {hint.replace('Press C to', 'to')}
+          {hint}
         </p>
       )}
     </div>
   );
-}
-
-// ============================================
-// Utility Functions
-// ============================================
-
-function formatRelativeTime(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffSecs = Math.floor(diffMs / 1000);
-  const diffMins = Math.floor(diffSecs / 60);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffSecs < 60) return 'just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  
-  return date.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric',
-    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-  });
 }
