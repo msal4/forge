@@ -47,6 +47,12 @@ const INITIAL_DELAY = 1000;   // 1 second
 const MAX_DELAY = 30000;      // 30 seconds
 const BACKOFF_MULTIPLIER = 2;
 
+// Helper to get cookie value by name
+function getCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
 interface WebSocketProviderProps {
   children: React.ReactNode;
 }
@@ -141,10 +147,18 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     // Determine WebSocket URL
     // In development (Vite on port 3000), connect directly to backend on port 8080
     // In production, use same host
-    const isDev = import.meta.env.DEV;
+    const isDev = window.location.port === '3000';
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = isDev ? 'localhost:8080' : window.location.host;
-    const wsUrl = `${protocol}//${host}/api/ws`;
+    
+    // Get session token from cookie for cross-origin auth in development
+    let wsUrl = `${protocol}//${host}/api/ws`;
+    if (isDev) {
+      const token = getCookie('sarray_session');
+      if (token) {
+        wsUrl += `?token=${encodeURIComponent(token)}`;
+      }
+    }
 
     console.log('[WS] Connecting to', wsUrl);
 

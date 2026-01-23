@@ -209,6 +209,16 @@ func (h *Handler) ValidateSession(token string) (*models.Session, error) {
 	return &session, nil
 }
 
+// ValidateSessionAndGetUserID validates a session token and returns the user ID
+// This is used by WebSocket handler for token-based auth
+func (h *Handler) ValidateSessionAndGetUserID(token string) (int64, error) {
+	session, err := h.ValidateSession(token)
+	if err != nil {
+		return 0, err
+	}
+	return session.UserID, nil
+}
+
 // GetUserByID retrieves a user by their ID
 func (h *Handler) GetUserByID(userID int64) (*models.User, error) {
 	var user models.User
