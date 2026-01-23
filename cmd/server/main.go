@@ -35,11 +35,9 @@ func main() {
 	hub := websocket.NewHub()
 	go hub.Run()
 
-	// Create auth handler first (needed by both handlers and middleware)
-	authHandler := auth.NewHandler(database)
-
 	// Create handler dependencies
-	h := handlers.New(database, hub, authHandler)
+	h := handlers.New(database, hub)
+	authHandler := auth.NewHandler(database)
 
 	// Create the main router using Go 1.22 http.NewServeMux
 	mux := http.NewServeMux()
@@ -66,8 +64,7 @@ func main() {
 	mux.Handle("GET /api/search", requireAuth(http.HandlerFunc(h.GlobalSearch)))
 
 	// WebSocket endpoint for real-time updates
-	// Note: Auth is handled internally to support both cookie and token auth
-	mux.HandleFunc("GET /api/ws", h.HandleWebSocket)
+	mux.Handle("GET /api/ws", requireAuth(http.HandlerFunc(h.HandleWebSocket)))
 
 	// Issues (The "Tablet") routes
 	mux.Handle("GET /api/issues", requireAuth(http.HandlerFunc(h.ListIssues)))

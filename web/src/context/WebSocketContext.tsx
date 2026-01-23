@@ -52,7 +52,7 @@ interface WebSocketProviderProps {
 }
 
 export function WebSocketProvider({ children }: WebSocketProviderProps) {
-  const { isAuthenticated, user, sessionToken } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const queryClient = useQueryClient();
   
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
@@ -138,18 +138,9 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
 
     setStatus('connecting');
 
-    // Determine WebSocket URL
-    // In development (Vite on port 3000), connect directly to backend on port 8080
-    // In production, use same host
-    const isDev = window.location.port === '3000';
+    // Determine WebSocket URL - always use same host (Vite proxy handles dev)
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = isDev ? 'localhost:8080' : window.location.host;
-    
-    // Build WebSocket URL with token for cross-origin auth in development
-    let wsUrl = `${protocol}//${host}/api/ws`;
-    if (isDev && sessionToken) {
-      wsUrl += `?token=${encodeURIComponent(sessionToken)}`;
-    }
+    const wsUrl = `${protocol}//${window.location.host}/api/ws`;
 
     console.log('[WS] Connecting to', wsUrl);
 
@@ -191,7 +182,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
         connect();
       }, delay);
     };
-  }, [isAuthenticated, handleMessage, sessionToken]);
+  }, [isAuthenticated, handleMessage]);
 
   // Effect to manage WebSocket connection lifecycle
   useEffect(() => {

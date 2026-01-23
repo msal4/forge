@@ -15,19 +15,13 @@ import (
 
 // Handlers holds all HTTP handler dependencies
 type Handlers struct {
-	db   *db.DB
-	hub  *websocket.Hub
-	auth AuthValidator
-}
-
-// AuthValidator interface for validating session tokens
-type AuthValidator interface {
-	ValidateSessionAndGetUserID(token string) (userID int64, err error)
+	db  *db.DB
+	hub *websocket.Hub
 }
 
 // New creates a new Handlers instance
-func New(database *db.DB, hub *websocket.Hub, auth AuthValidator) *Handlers {
-	return &Handlers{db: database, hub: hub, auth: auth}
+func New(database *db.DB, hub *websocket.Hub) *Handlers {
+	return &Handlers{db: database, hub: hub}
 }
 
 // WebSocket upgrader
@@ -41,28 +35,9 @@ var upgrader = gorillaws.Upgrader{
 }
 
 // HandleWebSocket handles WebSocket connections at GET /api/ws
-// Accepts authentication via:
-// 1. Context (from auth middleware with cookie)
-// 2. Query parameter ?token=xxx (for cross-origin connections in development)
 func (h *Handlers) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
-	var userID int64
-	var ok bool
-
-	// Try to get user from context first (auth middleware with cookie)
-	userID, _, ok = middleware.GetUserFromContext(r.Context())
-
-	// If not in context, try query parameter (for cross-origin WebSocket)
-	if !ok {
-		token := r.URL.Query().Get("token")
-		if token != "" && h.auth != nil {
-			var err error
-			userID, err = h.auth.ValidateSessionAndGetUserID(token)
-			if err == nil {
-				ok = true
-			}
-		}
-	}
-
+	// Get user from context (set by auth middleware)
+	userID, _, ok := middleware.GetUserFromContext(r.Context())
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
