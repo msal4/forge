@@ -281,7 +281,10 @@ export function IssueModal({
 					overflow-hidden
 					animate-scale-in
 				"
-				onClick={(e) => e.stopPropagation()}
+				onClick={(e) => {
+					e.stopPropagation();
+					closeAllDropdowns();
+				}}
 			>
 				{/* Priority color bar */}
 				<div className={`h-1.5 transition-colors duration-200 ${priority === 'critical' ? 'bg-red-500' :
