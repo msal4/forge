@@ -7,6 +7,7 @@ import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
 import { IssueCard } from '../components/issues/IssueCard';
 import { IssueModal } from '../components/issues/IssueModal';
 import { FilterBar } from '../components/issues/FilterBar';
+import { useConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useKeyboardShortcuts } from '../hooks/useKeyboard';
 import { useIssueFilters } from '../hooks/useIssueFilters';
 import { 
@@ -101,20 +102,27 @@ export function IssuesPage() {
     focusSearch,
   } = useIssueFilters(issues);
 
+  // Confirm dialog
+  const { confirm, DialogComponent: ConfirmDialogComponent } = useConfirmDialog();
+
   // Handle URL param changes for issue selection
+  // Only sync when issueId or issues change, NOT when modalMode changes
   React.useEffect(() => {
     if (issueId && issues.length > 0) {
       const issue = issues.find(i => i.id === Number(issueId));
       if (issue) {
-        setSelectedIssue(issue);
-        setModalMode('view');
+        // Only update if selecting a different issue
+        if (selectedIssue?.id !== issue.id) {
+          setSelectedIssue(issue);
+          setModalMode('view');
+        }
         setIsModalOpen(true);
       }
     } else if (!issueId && modalMode !== 'create') {
       setIsModalOpen(false);
       setSelectedIssue(null);
     }
-  }, [issueId, issues, modalMode]);
+  }, [issueId, issues]); // Removed modalMode from dependencies
 
   // Group filtered issues by status
   const issuesByStatus = React.useMemo(() => {
@@ -133,12 +141,14 @@ export function IssuesPage() {
     return grouped;
   }, [filteredIssues]);
 
-  // Keyboard shortcuts
-  useKeyboardShortcuts([
+  // Keyboard shortcuts - disable single-key shortcuts when modal is open in edit/create mode
+  const shortcutsEnabled = !isModalOpen || modalMode === 'view';
+  useKeyboardShortcuts(shortcutsEnabled ? [
     {
       keys: 'c',
       description: 'Create new issue',
       handler: () => {
+        if (isModalOpen) return; // Don't create while viewing
         setSelectedIssue(null);
         setModalMode('create');
         setIsModalOpen(true);
@@ -148,16 +158,32 @@ export function IssuesPage() {
     {
       keys: 'r',
       description: 'Refresh issues',
-      handler: () => queryClient.invalidateQueries({ queryKey: queryKeys.issues.all }),
+      handler: () => {
+        if (isModalOpen) return;
+        queryClient.invalidateQueries({ queryKey: queryKeys.issues.all });
+      },
       category: 'actions',
     },
     {
       keys: 'f',
       description: 'Focus filter search',
-      handler: focusSearch,
+      handler: () => {
+        if (isModalOpen) return;
+        focusSearch();
+      },
       category: 'actions',
     },
-  ]);
+    {
+      keys: 'e',
+      description: 'Edit issue',
+      handler: () => {
+        if (isModalOpen && modalMode === 'view' && selectedIssue) {
+          setModalMode('edit');
+        }
+      },
+      category: 'actions',
+    },
+  ] : []);
 
   // Create or update issue
   const handleSaveIssue = async (data: CreateIssueRequest | UpdateIssueRequest) => {
@@ -174,7 +200,13 @@ export function IssuesPage() {
 
   // Delete issue
   const handleDeleteIssue = async (issue: Issue) => {
-    if (!confirm(`Delete "${issue.title}"?`)) return;
+    const confirmed = await confirm({
+      title: t('common.delete'),
+      message: t('issues.deleteConfirm', { title: issue.title }),
+      confirmLabel: t('common.delete'),
+      variant: 'danger',
+    });
+    if (!confirmed) return;
     await deleteIssueMutation.mutateAsync(issue.id);
   };
 
@@ -397,6 +429,9 @@ export function IssuesPage() {
         onModeChange={handleModeChange}
         isLoading={isSaving}
       />
+
+      {/* Confirm Dialog */}
+      {ConfirmDialogComponent}
     </>
   );
 }

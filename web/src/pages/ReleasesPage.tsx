@@ -1,5 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useQueryClient } from '@tanstack/react-query';
@@ -17,6 +18,7 @@ import {
   HardDrive
 } from 'lucide-react';
 import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
+import { useConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useKeyboardShortcuts } from '../hooks/useKeyboard';
 import { useReleases, useCreateRelease, useDeleteRelease, useUploadReleaseFile, queryKeys } from '../hooks/useApi';
 import { releasesApi, type Release, type ReleaseFile, type CreateReleaseRequest } from '../api/releases';
@@ -26,6 +28,7 @@ import { releasesApi, type Release, type ReleaseFile, type CreateReleaseRequest 
 // ============================================
 
 export function ReleasesPage() {
+  const { t } = useTranslation();
   const { releaseId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -41,6 +44,9 @@ export function ReleasesPage() {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [uploadProgress, setUploadProgress] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  
+  // Confirm dialog
+  const { confirm, DialogComponent: ConfirmDialogComponent } = useConfirmDialog();
 
   // Helper to select release and update URL
   const selectRelease = React.useCallback((release: Release | null) => {
@@ -94,7 +100,13 @@ export function ReleasesPage() {
 
   // Delete release
   const handleDeleteRelease = async (release: Release) => {
-    if (!confirm(`Delete release "${release.version}"? This will also delete all associated files.`)) return;
+    const confirmed = await confirm({
+      title: t('common.delete'),
+      message: t('releases.deleteConfirm', { version: release.version }),
+      confirmLabel: t('common.delete'),
+      variant: 'danger',
+    });
+    if (!confirmed) return;
     
     await deleteReleaseMutation.mutateAsync(release.id);
     if (selectedRelease?.id === release.id) {
@@ -108,7 +120,7 @@ export function ReleasesPage() {
     
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      setUploadProgress(`Uploading ${file.name}... (${i + 1}/${files.length})`);
+      setUploadProgress(t('releases.uploading', { name: file.name, current: i + 1, total: files.length }));
       
       await uploadFileMutation.mutateAsync({ releaseId: selectedRelease.id, file });
     }
@@ -161,10 +173,10 @@ export function ReleasesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-inscription text-lapis-600">
-            The Granary
+            {t('releases.title')}
           </h1>
           <p className="text-lapis-500 text-sm">
-            Store and distribute your harvest
+            {t('releases.tagline')}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -175,7 +187,7 @@ export function ReleasesPage() {
             disabled={isLoading}
           >
             {isLoading ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
-            Refresh
+            {t('common.refresh')}
           </ButtonWithHotkey>
           <ButtonWithHotkey
             variant="primary"
@@ -183,7 +195,7 @@ export function ReleasesPage() {
             onClick={() => setIsModalOpen(true)}
           >
             <Plus size={18} />
-            New Release
+            {t('releases.newRelease')}
           </ButtonWithHotkey>
         </div>
       </div>
@@ -199,7 +211,7 @@ export function ReleasesPage() {
             onClick={() => queryClient.invalidateQueries({ queryKey: queryKeys.releases.all })} 
             className="ml-2 underline"
           >
-            Retry
+            {t('common.retry')}
           </button>
         </div>
       )}
@@ -211,7 +223,7 @@ export function ReleasesPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-lapis-100 mb-4">
               <span className="text-3xl animate-pulse">𒀭</span>
             </div>
-            <p className="text-lapis-500 font-inscription">Opening the granary...</p>
+            <p className="text-lapis-500 font-inscription">{t('releases.opening')}</p>
           </div>
         </div>
       )}
@@ -231,10 +243,10 @@ export function ReleasesPage() {
               <div className="tablet-card p-8 text-center">
                 <Package className="mx-auto text-lapis-300" size={48} />
                 <h3 className="mt-4 font-inscription text-lg text-lapis-600">
-                  The Granary is empty
+                  {t('releases.emptyGranary')}
                 </h3>
                 <p className="mt-2 text-lapis-500 text-sm">
-                  Create your first release to start distributing artifacts.
+                  {t('releases.emptyGranaryHint')}
                 </p>
               </div>
             )}
@@ -294,7 +306,7 @@ export function ReleasesPage() {
               {/* Files Section */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-medium text-lapis-600">Files</h3>
+                  <h3 className="font-medium text-lapis-600">{t('releases.files')}</h3>
                   <label className="cursor-pointer">
                     <input
                       ref={fileInputRef}
@@ -315,7 +327,7 @@ export function ReleasesPage() {
                       ) : (
                         <Upload size={16} />
                       )}
-                      {uploadProgress || 'Upload Files'}
+                      {uploadProgress || t('releases.uploadFiles')}
                     </ButtonWithHotkey>
                   </label>
                 </div>
@@ -324,7 +336,7 @@ export function ReleasesPage() {
                   <div className="text-center py-8 border-2 border-dashed border-parchment-300 rounded-tablet">
                     <HardDrive className="mx-auto text-lapis-300" size={32} />
                     <p className="mt-2 text-sm text-lapis-500">
-                      No files yet. Upload your artifacts!
+                      {t('releases.noFiles')}
                     </p>
                   </div>
                 ) : (
@@ -353,7 +365,7 @@ export function ReleasesPage() {
                   ) : (
                     <Trash2 size={16} />
                   )}
-                  Delete release
+                  {t('releases.deleteRelease')}
                 </button>
               </div>
             </div>
@@ -370,6 +382,9 @@ export function ReleasesPage() {
         onSave={handleCreateRelease}
         isLoading={isSaving}
       />
+
+      {/* Confirm Dialog */}
+      {ConfirmDialogComponent}
     </>
   );
 }
@@ -443,6 +458,7 @@ interface FileRowProps {
 }
 
 function FileRow({ file, releaseId, formatSize }: FileRowProps) {
+  const { t } = useTranslation();
   const downloadUrl = releasesApi.getDownloadUrl(releaseId, file.filename);
   
   // Get file icon based on mime type
@@ -469,7 +485,7 @@ function FileRow({ file, releaseId, formatSize }: FileRowProps) {
         className="flex items-center gap-1 px-3 py-1.5 rounded-tablet bg-lapis-500 text-parchment-100 text-sm font-medium hover:bg-lapis-600 transition-colors"
       >
         <Download size={14} />
-        Download
+        {t('releases.download')}
       </a>
     </div>
   );
@@ -487,6 +503,7 @@ interface CreateReleaseModalProps {
 }
 
 function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleaseModalProps) {
+  const { t } = useTranslation();
   const [version, setVersion] = React.useState('');
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
@@ -509,11 +526,11 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
     e?.preventDefault();
     
     if (!version.trim()) {
-      setError('Version is required');
+      setError(t('releases.modal.versionRequired'));
       return;
     }
     if (!title.trim()) {
-      setError('Title is required');
+      setError(t('releases.modal.titleRequired'));
       return;
     }
 
@@ -540,7 +557,7 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
       <div className="relative w-full max-w-md bg-parchment-50 rounded-tablet shadow-tablet border border-parchment-300 m-4">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-parchment-300">
-          <h2 className="text-lg font-inscription text-lapis-600">New Release</h2>
+          <h2 className="text-lg font-inscription text-lapis-600">{t('releases.modal.title')}</h2>
           <button onClick={onClose} className="p-1 rounded hover:bg-parchment-200 text-lapis-500">
             <X size={20} />
           </button>
@@ -556,14 +573,14 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
 
           <div>
             <label className="block text-sm font-medium text-lapis-600 mb-1">
-              Version <span className="text-red-500">*</span>
+              {t('releases.modal.version')} <span className="text-red-500">*</span>
             </label>
             <input
               ref={versionInputRef}
               type="text"
               value={version}
               onChange={(e) => setVersion(e.target.value)}
-              placeholder="e.g., v1.0.0"
+              placeholder={t('releases.modal.versionPlaceholder')}
               className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
                          bg-parchment-100 text-lapis-700 font-code
                          focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
@@ -573,13 +590,13 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
 
           <div>
             <label className="block text-sm font-medium text-lapis-600 mb-1">
-              Title <span className="text-red-500">*</span>
+              {t('releases.modal.releaseTitle')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Release title..."
+              placeholder={t('releases.modal.titlePlaceholder')}
               className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
                          bg-parchment-100 text-lapis-700
                          focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
@@ -589,12 +606,12 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
 
           <div>
             <label className="block text-sm font-medium text-lapis-600 mb-1">
-              Description
+              {t('releases.modal.description')}
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Release notes, changelog..."
+              placeholder={t('releases.modal.descriptionPlaceholder')}
               rows={3}
               className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
                          bg-parchment-100 text-lapis-700 resize-none
@@ -607,14 +624,14 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-parchment-300 bg-parchment-100">
           <ButtonWithHotkey variant="ghost" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </ButtonWithHotkey>
           <ButtonWithHotkey
             variant="primary"
             onClick={handleSubmit}
             disabled={isLoading}
           >
-            {isLoading ? 'Creating...' : 'Create Release'}
+            {isLoading ? t('releases.modal.creating') : t('releases.modal.create')}
           </ButtonWithHotkey>
         </div>
       </div>

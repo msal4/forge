@@ -1,5 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useQueryClient } from '@tanstack/react-query';
@@ -20,6 +21,7 @@ import {
   Eye
 } from 'lucide-react';
 import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
+import { useConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useKeyboardShortcuts } from '../hooks/useKeyboard';
 import { useDocs, useDoc, useCreateDoc, useUpdateDoc, useDeleteDoc, queryKeys } from '../hooks/useApi';
 import type { Doc, CreateDocRequest, UpdateDocRequest } from '../api/docs';
@@ -32,6 +34,7 @@ import type { Doc, CreateDocRequest, UpdateDocRequest } from '../api/docs';
 type PageMode = 'list' | 'view' | 'edit' | 'create';
 
 export function DocsPage() {
+  const { t } = useTranslation();
   const { docId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -57,6 +60,9 @@ export function DocsPage() {
   
   const titleInputRef = React.useRef<HTMLInputElement>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  
+  // Confirm dialog
+  const { confirm, DialogComponent: ConfirmDialogComponent } = useConfirmDialog();
 
   // Sync selected doc from query
   React.useEffect(() => {
@@ -124,11 +130,16 @@ export function DocsPage() {
   }, []);
 
   // Cancel editing
-  const cancelEdit = React.useCallback(() => {
+  const cancelEdit = React.useCallback(async () => {
     if (hasUnsavedChanges) {
-      if (!confirm('You have unsaved changes. Discard them?')) {
-        return;
-      }
+      const confirmed = await confirm({
+        title: t('common.confirm'),
+        message: t('docs.discardChanges'),
+        confirmLabel: t('common.yes'),
+        cancelLabel: t('common.no'),
+        variant: 'warning',
+      });
+      if (!confirmed) return;
     }
     if (mode === 'create') {
       setMode('list');
@@ -137,7 +148,7 @@ export function DocsPage() {
       setMode('view');
     }
     setHasUnsavedChanges(false);
-  }, [mode, hasUnsavedChanges, navigate]);
+  }, [mode, hasUnsavedChanges, navigate, confirm, t]);
 
   // Save document
   const saveDocument = React.useCallback(async () => {
@@ -170,7 +181,13 @@ export function DocsPage() {
 
   // Delete document
   const handleDeleteDoc = async (doc: Doc) => {
-    if (!confirm(`Delete "${doc.title}"? This cannot be undone.`)) return;
+    const confirmed = await confirm({
+      title: t('common.delete'),
+      message: t('docs.deleteConfirm', { title: doc.title }),
+      confirmLabel: t('common.delete'),
+      variant: 'danger',
+    });
+    if (!confirmed) return;
     
     await deleteDocMutation.mutateAsync(doc.id);
     if (selectedDoc?.id === doc.id) {
@@ -269,11 +286,16 @@ export function DocsPage() {
         <div className="flex items-center gap-4">
           {(mode === 'view' || mode === 'edit') && (
             <button
-              onClick={() => {
+              onClick={async () => {
                 if (isEditing && hasUnsavedChanges) {
-                  if (!confirm('You have unsaved changes. Discard them?')) {
-                    return;
-                  }
+                  const confirmed = await confirm({
+                    title: t('common.confirm'),
+                    message: t('docs.discardChanges'),
+                    confirmLabel: t('common.yes'),
+                    cancelLabel: t('common.no'),
+                    variant: 'warning',
+                  });
+                  if (!confirmed) return;
                 }
                 selectDoc(null);
                 setMode('list');
@@ -294,21 +316,21 @@ export function DocsPage() {
           <div>
             <h1 className="text-2xl font-inscription text-lapis-600">
               {mode === 'create' 
-                ? 'New Scroll'
+                ? t('docs.newScroll')
                 : mode === 'edit' 
-                  ? 'Editing Scroll'
+                  ? t('docs.editingScroll')
                   : selectedDoc 
                     ? selectedDoc.title 
-                    : 'The Library'}
+                    : t('docs.title')}
             </h1>
             <p className="text-lapis-500 text-sm">
               {mode === 'create'
-                ? 'Create a new document'
+                ? t('docs.createNew')
                 : mode === 'edit'
-                  ? hasUnsavedChanges ? 'Unsaved changes' : 'No changes'
+                  ? hasUnsavedChanges ? t('docs.unsavedChanges') : t('docs.noChanges')
                   : selectedDoc 
-                    ? `Last updated ${formatDate(selectedDoc.updatedAt)}`
-                    : 'Scrolls of knowledge, preserved for eternity'}
+                    ? t('docs.lastUpdated', { date: formatDate(selectedDoc.updatedAt) })
+                    : t('docs.tagline')}
             </p>
           </div>
         </div>
@@ -324,7 +346,7 @@ export function DocsPage() {
                 disabled={isLoading}
               >
                 {isLoading ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
-                Refresh
+                {t('common.refresh')}
               </ButtonWithHotkey>
               <ButtonWithHotkey
                 variant="primary"
@@ -332,7 +354,7 @@ export function DocsPage() {
                 onClick={enterCreateMode}
               >
                 <Plus size={18} />
-                New Document
+                {t('docs.newDocument')}
               </ButtonWithHotkey>
             </>
           )}
@@ -345,7 +367,7 @@ export function DocsPage() {
                 hotkey="e"
               >
                 <Edit3 size={18} />
-                Edit
+                {t('common.edit')}
               </ButtonWithHotkey>
               <ButtonWithHotkey
                 variant="ghost"
@@ -365,7 +387,7 @@ export function DocsPage() {
                 hotkey="Escape"
               >
                 <X size={18} />
-                Cancel
+                {t('common.cancel')}
               </ButtonWithHotkey>
               <ButtonWithHotkey
                 variant="primary"
@@ -378,7 +400,7 @@ export function DocsPage() {
                 ) : (
                   <Check size={18} />
                 )}
-                {isSaving ? 'Saving...' : 'Save'}
+                {isSaving ? t('issueModal.saving') : t('common.save')}
               </ButtonWithHotkey>
             </>
           )}
@@ -388,12 +410,12 @@ export function DocsPage() {
       {/* Error message */}
       {isError && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-tablet text-red-600">
-          {error instanceof Error ? error.message : 'Failed to load documents'}
+          {error instanceof Error ? error.message : t('common.noResults')}
           <button 
             onClick={() => queryClient.invalidateQueries({ queryKey: queryKeys.docs.all })} 
             className="ml-2 underline"
           >
-            Retry
+            {t('common.retry')}
           </button>
         </div>
       )}
@@ -405,7 +427,7 @@ export function DocsPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-lapis-100 mb-4">
               <span className="text-3xl animate-pulse">𒀭</span>
             </div>
-            <p className="text-lapis-500 font-inscription">Retrieving scrolls...</p>
+            <p className="text-lapis-500 font-inscription">{t('docs.retrieving')}</p>
           </div>
         </div>
       )}
@@ -417,7 +439,7 @@ export function DocsPage() {
             {selectedDoc.content ? (
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedDoc.content}</ReactMarkdown>
             ) : (
-              <p className="text-lapis-400 italic">This scroll is empty.</p>
+              <p className="text-lapis-400 italic">{t('docs.noContent')}</p>
             )}
           </div>
           
@@ -431,7 +453,7 @@ export function DocsPage() {
             )}
             <div className="flex items-center gap-1">
               <Clock size={14} />
-              <span>Created {formatDate(selectedDoc.createdAt)}</span>
+              <span>{t('docs.created', { date: formatDate(selectedDoc.createdAt) })}</span>
             </div>
           </div>
         </div>
@@ -445,14 +467,14 @@ export function DocsPage() {
             {/* Title */}
             <div>
               <label className="block text-sm font-medium text-lapis-600 mb-1">
-                Title <span className="text-red-500">*</span>
+                {t('docs.titleLabel')} <span className="text-red-500">*</span>
               </label>
               <input
                 ref={titleInputRef}
                 type="text"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                placeholder="Document title..."
+                placeholder={t('docs.titlePlaceholder')}
                 className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
                            bg-parchment-100 text-lapis-700 text-lg font-medium
                            focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
@@ -464,7 +486,7 @@ export function DocsPage() {
             {availableParents.length > 0 && (
               <div>
                 <label className="block text-sm font-medium text-lapis-600 mb-1">
-                  Parent Document
+                  {t('docs.parentDocument')}
                 </label>
                 <select
                   value={editParentId}
@@ -474,7 +496,7 @@ export function DocsPage() {
                              focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
                              transition-colors"
                 >
-                  <option value="">None (root level)</option>
+                  <option value="">{t('docs.parentNone')}</option>
                   {availableParents.map((d) => (
                     <option key={d.id} value={d.id}>
                       {d.title}
@@ -490,7 +512,7 @@ export function DocsPage() {
             value={editContent}
             onChange={setEditContent}
             textareaRef={textareaRef}
-            placeholder="Write your scroll content in Markdown..."
+            placeholder={t('docs.contentPlaceholder')}
           />
         </div>
       )}
@@ -502,13 +524,13 @@ export function DocsPage() {
             <div className="tablet-card p-8 text-center">
               <FolderOpen className="mx-auto text-lapis-300" size={48} />
               <h3 className="mt-4 font-inscription text-lg text-lapis-600">
-                The Library awaits your scrolls
+                {t('docs.emptyLibrary')}
               </h3>
               <p className="mt-2 text-lapis-500 text-sm">
-                Create your first document to begin building your knowledge base.
+                {t('docs.emptyLibraryHint')}
               </p>
               <p className="mt-4 text-xs text-lapis-400">
-                Supports Markdown with live preview
+                {t('docs.markdownSupport')}
               </p>
             </div>
           ) : (
@@ -532,15 +554,18 @@ export function DocsPage() {
       {/* Features hint (only shown when no docs) */}
       {mode === 'list' && docs.length === 0 && hasLoaded && (
         <div className="bg-lapis-500/5 border border-lapis-200 rounded-tablet p-4">
-          <h3 className="font-medium text-lapis-600 mb-2">Documentation Features</h3>
+          <h3 className="font-medium text-lapis-600 mb-2">{t('docs.features.title')}</h3>
           <ul className="text-sm text-lapis-500 space-y-1">
-            <li>Full Markdown support with live preview</li>
-            <li>Inline editing without interruptions</li>
-            <li>Hierarchical organization with folders</li>
-            <li>Keyboard shortcuts for power users</li>
+            <li>{t('docs.features.markdown')}</li>
+            <li>{t('docs.features.inline')}</li>
+            <li>{t('docs.features.hierarchy')}</li>
+            <li>{t('docs.features.keyboard')}</li>
           </ul>
         </div>
       )}
+
+      {/* Confirm Dialog */}
+      {ConfirmDialogComponent}
     </div>
   );
 }
@@ -562,8 +587,9 @@ function InlineMarkdownEditor({
   value, 
   onChange, 
   textareaRef,
-  placeholder = 'Write your content in Markdown...'
+  placeholder
 }: InlineMarkdownEditorProps) {
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = React.useState<EditorViewMode>('split');
 
   // Handle keyboard shortcuts for editor
@@ -605,7 +631,7 @@ function InlineMarkdownEditor({
             `}
           >
             <Edit3 size={14} />
-            Edit
+            {t('docs.editor.edit')}
           </button>
           <button
             type="button"
@@ -618,7 +644,7 @@ function InlineMarkdownEditor({
                 : 'text-lapis-500 hover:text-lapis-600'}
             `}
           >
-            Split
+            {t('docs.editor.split')}
           </button>
           <button
             type="button"
@@ -632,13 +658,13 @@ function InlineMarkdownEditor({
             `}
           >
             <Eye size={14} />
-            Preview
+            {t('docs.editor.preview')}
           </button>
         </div>
 
         {/* Hints */}
         <div className="text-xs text-lapis-400">
-          Ctrl+E toggle edit | Ctrl+Shift+P preview
+          {t('docs.editor.hint')}
         </div>
       </div>
 
@@ -672,7 +698,7 @@ function InlineMarkdownEditor({
               {value ? (
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
               ) : (
-                <p className="text-lapis-400 italic">Preview will appear here...</p>
+                <p className="text-lapis-400 italic">{t('docs.editor.previewPlaceholder')}</p>
               )}
             </div>
           </div>

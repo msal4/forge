@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Command } from 'cmdk';
 import {
   Search,
@@ -9,6 +10,7 @@ import {
   Home,
   Plus,
   Loader2,
+  Settings,
 } from 'lucide-react';
 import { useKeyboard } from '../../context/KeyboardContext';
 import { searchApi, type SearchResult } from '../../api';
@@ -24,6 +26,7 @@ export function CommandMenu() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Debounced search effect
   useEffect(() => {
@@ -80,9 +83,9 @@ export function CommandMenu() {
   // Get status display text
   const getStatusDisplay = (status?: string) => {
     switch (status) {
-      case 'to_inscribe': return 'To Inscribe';
-      case 'carving': return 'Carving';
-      case 'baked': return 'Baked';
+      case 'to_inscribe': return t('issueModal.statuses.to_inscribe');
+      case 'carving': return t('issueModal.statuses.carving');
+      case 'baked': return t('issueModal.statuses.baked');
       default: return '';
     }
   };
@@ -128,7 +131,7 @@ export function CommandMenu() {
             <Command.Input
               value={query}
               onValueChange={setQuery}
-              placeholder="Type a command or search..."
+              placeholder={t('commandPalette.placeholder')}
               className="
                 w-full bg-transparent px-3 py-4
                 text-lapis-700 placeholder-lapis-400
@@ -153,7 +156,7 @@ export function CommandMenu() {
           {/* Results List */}
           <Command.List className="max-h-80 overflow-y-auto p-2">
             <Command.Empty className="px-4 py-8 text-center text-lapis-500">
-              {query.trim() ? `No results for "${query}"` : 'Start typing to search...'}
+              {query.trim() ? t('commandPalette.noResults') : t('commandPalette.placeholder')}
             </Command.Empty>
 
             {/* Navigation Section - shown when no query */}
@@ -161,7 +164,7 @@ export function CommandMenu() {
               <Command.Group
                 heading={
                   <span className="font-inscription text-sm text-lapis-600 uppercase tracking-wider">
-                    Navigation
+                    {t('commandPalette.sections.navigation')}
                   </span>
                 }
                 className="mb-2"
@@ -172,7 +175,7 @@ export function CommandMenu() {
                   className="command-item"
                 >
                   <Home size={18} className="text-lapis-400" />
-                  <span className="flex-1">Go to Home</span>
+                  <span className="flex-1">{t('commandPalette.commands.goHome')}</span>
                   <kbd className="shortcut-badge">g h</kbd>
                 </Command.Item>
 
@@ -183,8 +186,8 @@ export function CommandMenu() {
                 >
                   <FileText size={18} className="text-lapis-400" />
                   <div className="flex-1">
-                    <span>Go to Issues</span>
-                    <span className="ml-2 text-lapis-500 text-sm">The Tablet</span>
+                    <span>{t('commandPalette.commands.goIssues')}</span>
+                    <span className="ltr:ml-2 rtl:mr-2 text-lapis-500 text-sm">{t('nav.issues')}</span>
                   </div>
                   <kbd className="shortcut-badge">g i</kbd>
                 </Command.Item>
@@ -196,8 +199,8 @@ export function CommandMenu() {
                 >
                   <BookOpen size={18} className="text-lapis-400" />
                   <div className="flex-1">
-                    <span>Go to Docs</span>
-                    <span className="ml-2 text-lapis-500 text-sm">The Library</span>
+                    <span>{t('commandPalette.commands.goDocs')}</span>
+                    <span className="ltr:ml-2 rtl:mr-2 text-lapis-500 text-sm">{t('nav.docs')}</span>
                   </div>
                   <kbd className="shortcut-badge">g d</kbd>
                 </Command.Item>
@@ -209,10 +212,20 @@ export function CommandMenu() {
                 >
                   <Package size={18} className="text-lapis-400" />
                   <div className="flex-1">
-                    <span>Go to Releases</span>
-                    <span className="ml-2 text-lapis-500 text-sm">The Granary</span>
+                    <span>{t('commandPalette.commands.goReleases')}</span>
+                    <span className="ltr:ml-2 rtl:mr-2 text-lapis-500 text-sm">{t('nav.releases')}</span>
                   </div>
                   <kbd className="shortcut-badge">g r</kbd>
+                </Command.Item>
+
+                <Command.Item
+                  value="settings"
+                  onSelect={() => goTo('/settings')}
+                  className="command-item"
+                >
+                  <Settings size={18} className="text-lapis-400" />
+                  <span className="flex-1">{t('commandPalette.commands.goSettings')}</span>
+                  <kbd className="shortcut-badge">g s</kbd>
                 </Command.Item>
               </Command.Group>
             )}
@@ -222,7 +235,7 @@ export function CommandMenu() {
               <Command.Group
                 heading={
                   <span className="font-inscription text-sm text-lapis-600 uppercase tracking-wider">
-                    Actions
+                    {t('commandPalette.sections.actions')}
                   </span>
                 }
                 className="mb-2"
@@ -233,7 +246,7 @@ export function CommandMenu() {
                   className="command-item"
                 >
                   <Plus size={18} className="text-clay-500" />
-                  <span className="flex-1">Create New Issue</span>
+                  <span className="flex-1">{t('commandPalette.commands.newIssue')}</span>
                   <kbd className="shortcut-badge">c</kbd>
                 </Command.Item>
 
@@ -243,7 +256,7 @@ export function CommandMenu() {
                   className="command-item"
                 >
                   <Plus size={18} className="text-clay-500" />
-                  <span className="flex-1">Create New Document</span>
+                  <span className="flex-1">{t('commandPalette.commands.newDoc')}</span>
                 </Command.Item>
 
                 <Command.Item
@@ -252,7 +265,7 @@ export function CommandMenu() {
                   className="command-item"
                 >
                   <Plus size={18} className="text-clay-500" />
-                  <span className="flex-1">Create New Release</span>
+                  <span className="flex-1">{t('commandPalette.commands.newRelease')}</span>
                 </Command.Item>
               </Command.Group>
             )}
@@ -262,7 +275,7 @@ export function CommandMenu() {
               <Command.Group
                 heading={
                   <span className="font-inscription text-sm text-lapis-600 uppercase tracking-wider">
-                    Results
+                    {t('commandPalette.sections.recent')}
                   </span>
                 }
               >
@@ -281,9 +294,9 @@ export function CommandMenu() {
                     <div className="flex-1 min-w-0">
                       <div className="truncate">{result.title}</div>
                       <div className="text-xs text-lapis-500">
-                        {result.type === 'issue' ? 'Issue' : 'Document'}
+                        {result.type === 'issue' ? t('nav.issuesSubtitle') : t('nav.docsSubtitle')}
                         {result.status && (
-                          <span className="ml-2 text-clay-600">
+                          <span className="ltr:ml-2 rtl:mr-2 text-clay-600">
                             {getStatusDisplay(result.status)}
                           </span>
                         )}
@@ -320,7 +333,7 @@ export function CommandMenu() {
                 <kbd className="px-1.5 py-0.5 bg-parchment-200 border border-parchment-400 rounded text-[10px] font-mono">
                   esc
                 </kbd>
-                close
+                {t('common.close')}
               </span>
             </div>
           </div>

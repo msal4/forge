@@ -74,6 +74,7 @@ export default {
       title: 'The Granary',
       description: 'Store and distribute your harvest',
     },
+    enter: 'Enter',
   },
 
   // Issues Page
@@ -154,6 +155,14 @@ export default {
     createInscription: 'Create Inscription',
     deleteInscription: 'Delete Inscription',
     noDescription: 'No description provided.',
+    noLabels: 'No labels',
+    overdue: 'Overdue',
+    you: 'You',
+    unknown: 'Unknown',
+    now: 'Now',
+    lastUpdated: 'Last updated',
+    pressToEdit: 'Press',
+    toClose: 'to close',
     priorities: {
       low: 'Low',
       medium: 'Medium',

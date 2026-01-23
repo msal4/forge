@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
@@ -36,24 +37,23 @@ interface IssueModalProps {
 	isLoading?: boolean;
 }
 
-// Priority config
-const priorityConfig: Record<PriorityType, {
+// Priority config (labels will be translated in component)
+const priorityStyles: Record<PriorityType, {
 	color: string;
 	bgColor: string;
-	label: string;
 	icon: string;
 }> = {
-	critical: { color: 'text-red-700', bgColor: 'bg-red-100 border-red-300', label: 'Critical', icon: '🔺' },
-	high: { color: 'text-clay-700', bgColor: 'bg-clay-100 border-clay-300', label: 'High', icon: '▲' },
-	medium: { color: 'text-gold-700', bgColor: 'bg-gold-100 border-gold-300', label: 'Medium', icon: '●' },
-	low: { color: 'text-lapis-600', bgColor: 'bg-lapis-100 border-lapis-300', label: 'Low', icon: '▽' },
+	critical: { color: 'text-red-700', bgColor: 'bg-red-100 border-red-300', icon: '🔺' },
+	high: { color: 'text-clay-700', bgColor: 'bg-clay-100 border-clay-300', icon: '▲' },
+	medium: { color: 'text-gold-700', bgColor: 'bg-gold-100 border-gold-300', icon: '●' },
+	low: { color: 'text-lapis-600', bgColor: 'bg-lapis-100 border-lapis-300', icon: '▽' },
 };
 
-// Status config
-const statusConfig: Record<IssueStatusType, { label: string; color: string; icon: string }> = {
-	to_inscribe: { label: 'To Inscribe', color: 'bg-parchment-200 text-lapis-600 border-parchment-300', icon: '𒀭' },
-	carving: { label: 'Carving', color: 'bg-gold-100 text-gold-700 border-gold-300', icon: '𒁹' },
-	baked: { label: 'Baked', color: 'bg-green-100 text-green-700 border-green-300', icon: '𒂗' },
+// Status config (labels will be translated in component)
+const statusStyles: Record<IssueStatusType, { color: string; icon: string }> = {
+	to_inscribe: { color: 'bg-parchment-200 text-lapis-600 border-parchment-300', icon: '𒀭' },
+	carving: { color: 'bg-gold-100 text-gold-700 border-gold-300', icon: '𒁹' },
+	baked: { color: 'bg-green-100 text-green-700 border-green-300', icon: '𒂗' },
 };
 
 export function IssueModal({
@@ -67,6 +67,8 @@ export function IssueModal({
 	onModeChange,
 	isLoading
 }: IssueModalProps) {
+	const { t } = useTranslation();
+	
 	// Form state
 	const [title, setTitle] = React.useState('');
 	const [description, setDescription] = React.useState('');
@@ -150,25 +152,24 @@ export function IssueModal({
 		}
 	};
 
-	// Keyboard shortcuts
-	useKeyboardShortcuts([
+	// Keyboard shortcuts - only active when modal is open
+	useKeyboardShortcuts(isOpen ? [
 		{ keys: 'Escape', description: 'Close/Cancel', handler: handleCancel, global: true },
-		{
-			keys: 'e',
-			description: 'Edit',
-			handler: () => mode === 'view' && onModeChange('edit'),
-		},
 		{
 			keys: 'Ctrl+Enter',
 			description: 'Save',
 			handler: () => isEditing && handleSave(),
 			global: true
 		},
-	]);
+	] : []);
+
+	// Translation helpers for priority and status
+	const getPriorityLabel = (p: PriorityType) => t(`issueModal.priorities.${p}`);
+	const getStatusLabel = (s: IssueStatusType) => t(`issueModal.statuses.${s}`);
 
 	const handleSave = async () => {
 		if (!title.trim()) {
-			setError('Title is required');
+			setError(t('issueModal.titleRequired'));
 			titleInputRef.current?.focus();
 			return;
 		}
@@ -227,8 +228,8 @@ export function IssueModal({
 
 	const isDueOverdue = dueDate && new Date(dueDate) < new Date() && status !== 'baked';
 	const selectedAssignee = users.find(u => u.id === assigneeId);
-	const priorityStyle = priorityConfig[priority];
-	const statusStyle = statusConfig[status];
+	const priorityStyle = priorityStyles[priority];
+	const statusStyle = statusStyles[status];
 
 	if (!isOpen) return null;
 
@@ -276,19 +277,19 @@ export function IssueModal({
                   `}
 								>
 									<span>{statusStyle.icon}</span>
-									{statusStyle.label}
+									{getStatusLabel(status)}
 									{isEditing && !isCreating && <ChevronDown size={14} />}
 								</button>
 								{showStatusDropdown && (
 									<div className="absolute top-full left-0 mt-1 bg-parchment-50 border border-parchment-300 rounded-lg shadow-lg py-1 z-10 min-w-[140px]">
-										{Object.entries(statusConfig).map(([key, cfg]) => (
+										{Object.entries(statusStyles).map(([key, cfg]) => (
 											<button
 												key={key}
 												onClick={() => { setStatus(key as IssueStatusType); setShowStatusDropdown(false); }}
 												className={`w-full px-3 py-2 text-left text-sm hover:bg-parchment-200 flex items-center gap-2
                           ${status === key ? 'bg-parchment-200' : ''}`}
 											>
-												<span>{cfg.icon}</span> {cfg.label}
+												<span>{cfg.icon}</span> {getStatusLabel(key as IssueStatusType)}
 											</button>
 										))}
 									</div>
@@ -308,19 +309,19 @@ export function IssueModal({
                   `}
 								>
 									<span className="text-[10px]">{priorityStyle.icon}</span>
-									{priorityStyle.label}
+									{getPriorityLabel(priority)}
 									{isEditing && <ChevronDown size={12} />}
 								</button>
 								{showPriorityDropdown && (
 									<div className="absolute top-full left-0 mt-1 bg-parchment-50 border border-parchment-300 rounded-lg shadow-lg py-1 z-10 min-w-[120px]">
-										{Object.entries(priorityConfig).map(([key, cfg]) => (
+										{Object.entries(priorityStyles).map(([key, cfg]) => (
 											<button
 												key={key}
 												onClick={() => { setPriority(key as PriorityType); setShowPriorityDropdown(false); }}
 												className={`w-full px-3 py-2 text-left text-sm hover:bg-parchment-200 flex items-center gap-2
                           ${priority === key ? 'bg-parchment-200' : ''}`}
 											>
-												<span className={cfg.color}>{cfg.icon}</span> {cfg.label}
+												<span className={cfg.color}>{cfg.icon}</span> {getPriorityLabel(key as PriorityType)}
 											</button>
 										))}
 									</div>
@@ -336,7 +337,7 @@ export function IssueModal({
 									type="text"
 									value={title}
 									onChange={(e) => setTitle(e.target.value)}
-									placeholder="What needs to be inscribed?"
+									placeholder={t('issueModal.titlePlaceholder')}
 									className="
                     w-full text-xl font-inscription font-normal text-lapis-700
                     bg-transparent
@@ -400,13 +401,13 @@ export function IssueModal({
 					<div>
 						<h3 className="flex items-center gap-2 text-sm font-semibold text-lapis-600 mb-3">
 							<FileText size={16} />
-							Description
+							{t('issueModal.description')}
 						</h3>
 						{isEditing ? (
 							<textarea
 								value={description}
 								onChange={(e) => setDescription(e.target.value)}
-								placeholder="Add a description..."
+								placeholder={t('issueModal.descriptionPlaceholder')}
 								rows={4}
 								className="
                   w-full min-h-[120px] p-4 rounded-lg 
@@ -423,7 +424,7 @@ export function IssueModal({
 							</div>
 						) : (
 							<div className="min-h-[120px] flex items-center justify-center text-lapis-400 italic text-sm bg-parchment-100/30 rounded-lg">
-								No description provided.
+								{t('issueModal.noDescription')}
 							</div>
 						)}
 					</div>
@@ -432,7 +433,7 @@ export function IssueModal({
 					<div>
 						<h3 className="flex items-center gap-2 text-sm font-semibold text-lapis-600 mb-3">
 							<Tag size={16} />
-							Labels
+							{t('issueModal.labels')}
 						</h3>
 						<div className="flex flex-wrap items-center gap-2">
 							{labels.map((label) => (
@@ -453,7 +454,7 @@ export function IssueModal({
 								</span>
 							))}
 							{labels.length === 0 && !isEditing && (
-								<span className="text-lapis-400 italic text-sm">No labels</span>
+								<span className="text-lapis-400 italic text-sm">{t('issueModal.noLabels')}</span>
 							)}
 							{isEditing && (
 								<input
@@ -466,7 +467,7 @@ export function IssueModal({
 											addLabel();
 										}
 									}}
-									placeholder="+ Add label"
+									placeholder={`+ ${t('issueModal.labels')}`}
 									className="
                     px-3 py-1.5 rounded-lg text-sm w-28
                     bg-transparent text-lapis-600
@@ -486,7 +487,7 @@ export function IssueModal({
 						<div>
 							<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 mb-2">
 								<User size={12} />
-								Assignee
+								{t('issueModal.assignee')}
 							</h4>
 							<div className="h-10 flex items-center">
 								{isEditing ? (
@@ -509,7 +510,7 @@ export function IssueModal({
 													<span className="text-sm text-lapis-700 truncate">{selectedAssignee.fullName || selectedAssignee.username}</span>
 												</>
 											) : (
-												<span className="text-sm text-lapis-400">Unassigned</span>
+												<span className="text-sm text-lapis-400">{t('issueModal.unassigned')}</span>
 											)}
 											<ChevronDown size={14} className="ml-auto text-lapis-400 flex-shrink-0" />
 										</button>
@@ -519,7 +520,7 @@ export function IssueModal({
 													onClick={() => { setAssigneeId(null); setShowAssigneeDropdown(false); }}
 													className={`w-full px-3 py-2 text-left text-sm hover:bg-parchment-200 ${!assigneeId ? 'bg-parchment-200' : ''}`}
 												>
-													<span className="text-lapis-400">Unassigned</span>
+													<span className="text-lapis-400">{t('issueModal.unassigned')}</span>
 												</button>
 												{users.map((user) => (
 													<button
@@ -549,7 +550,7 @@ export function IssueModal({
 										<span className="text-sm text-lapis-700 font-medium">{selectedAssignee.fullName || selectedAssignee.username}</span>
 									</div>
 								) : (
-									<span className="text-sm text-lapis-400 italic">Unassigned</span>
+									<span className="text-sm text-lapis-400 italic">{t('issueModal.unassigned')}</span>
 								)}
 							</div>
 						</div>
@@ -558,7 +559,7 @@ export function IssueModal({
 						<div>
 							<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 mb-2">
 								<User size={12} />
-								Reporter
+								{t('issueModal.reporter')}
 							</h4>
 							<div className="h-10 flex items-center">
 								{issue?.reporter ? (
@@ -571,7 +572,7 @@ export function IssueModal({
 										<span className="text-sm text-lapis-700 font-medium">{issue.reporter.fullName || issue.reporter.username}</span>
 									</div>
 								) : (
-									<span className="text-sm text-lapis-400 italic">{isCreating ? 'You' : 'Unknown'}</span>
+									<span className="text-sm text-lapis-400 italic">{isCreating ? t('issueModal.you') : t('issueModal.unknown')}</span>
 								)}
 							</div>
 						</div>
@@ -580,7 +581,7 @@ export function IssueModal({
 						<div>
 							<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 mb-2">
 								<Calendar size={12} />
-								Due Date
+								{t('issueModal.dueDate')}
 							</h4>
 							<div className="h-10 flex items-center">
 								{isEditing ? (
@@ -597,10 +598,10 @@ export function IssueModal({
 								) : dueDate ? (
 									<span className={`text-sm font-medium ${isDueOverdue ? 'text-red-600' : 'text-lapis-700'}`}>
 										{formatDate(dueDate)}
-										{isDueOverdue && <span className="ml-2 text-xs text-red-500">(Overdue)</span>}
+										{isDueOverdue && <span className="ltr:ml-2 rtl:mr-2 text-xs text-red-500">({t('issueModal.overdue')})</span>}
 									</span>
 								) : (
-									<span className="text-sm text-lapis-400 italic">No due date</span>
+									<span className="text-sm text-lapis-400 italic">{t('issueModal.noDueDate')}</span>
 								)}
 							</div>
 						</div>
@@ -609,11 +610,11 @@ export function IssueModal({
 						<div>
 							<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 mb-2">
 								<Clock size={12} />
-								Created
+								{t('issueModal.created')}
 							</h4>
 							<div className="h-10 flex items-center">
 								<span className="text-sm text-lapis-700">
-									{issue?.createdAt ? formatRelativeTime(issue.createdAt) : 'Now'}
+									{issue?.createdAt ? formatRelativeTime(issue.createdAt) : t('issueModal.now')}
 								</span>
 							</div>
 						</div>
@@ -624,7 +625,7 @@ export function IssueModal({
 				<div className="flex items-center justify-between px-6 py-4 border-t border-parchment-200 bg-parchment-100/80">
 					<div className="text-xs text-lapis-400">
 						{issue?.updatedAt && !isCreating && (
-							<span>Last updated: {formatRelativeTime(issue.updatedAt)}</span>
+							<span>{t('issueModal.lastUpdated')}: {formatRelativeTime(issue.updatedAt)}</span>
 						)}
 					</div>
 
@@ -640,7 +641,7 @@ export function IssueModal({
                     flex items-center gap-2
                   "
 								>
-									Cancel
+									{t('common.cancel')}
 									<HotkeyBadge keys="Escape" />
 								</button>
 								<button
@@ -660,15 +661,15 @@ export function IssueModal({
 									) : (
 										<Check size={16} />
 									)}
-									{isCreating ? 'Create Issue' : 'Save Changes'}
+									{isCreating ? t('issueModal.createInscription') : t('issueModal.saveChanges')}
 									<HotkeyBadge keys="Ctrl+Enter" variant="dark" />
 								</button>
 							</>
 						) : (
 							<p className="text-xs text-lapis-400 flex items-center gap-1">
-								Press <HotkeyBadge keys="e" /> to edit
+								{t('issueModal.pressToEdit')} <HotkeyBadge keys="e" />
 								{' '}&bull;{' '}
-								<HotkeyBadge keys="Escape" /> to close
+								<HotkeyBadge keys="Escape" /> {t('issueModal.toClose')}
 							</p>
 						)}
 					</div>

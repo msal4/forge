@@ -455,6 +455,7 @@ interface QuickActionCardProps {
 }
 
 function QuickActionCard({ to, icon, title, description, color, shortcut }: QuickActionCardProps) {
+  const { t } = useTranslation();
   const colorClasses = {
     lapis: 'border-lapis-300 hover:border-lapis-400',
     clay: 'border-clay-300 hover:border-clay-400',
@@ -487,7 +488,7 @@ function QuickActionCard({ to, icon, title, description, color, shortcut }: Quic
       </p>
       <div className="flex items-center justify-between">
         <span className="text-sm text-lapis-400 group-hover:text-lapis-600 transition-colors flex items-center gap-1">
-          Enter <ArrowRight size={14} className="rtl:rotate-180" />
+          {t('home.enter')} <ArrowRight size={14} className="rtl:rotate-180" />
         </span>
         <kbd className="px-1.5 py-0.5 bg-parchment-200 rounded text-xs text-lapis-600">
           {shortcut}

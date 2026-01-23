@@ -74,6 +74,7 @@ export default {
       title: 'المخزن',
       description: 'خزّن ووزّع محصولك',
     },
+    enter: 'دخول',
   },
 
   // Issues Page
@@ -154,6 +155,14 @@ export default {
     createInscription: 'إنشاء النقش',
     deleteInscription: 'حذف النقش',
     noDescription: 'لا يوجد وصف.',
+    noLabels: 'لا توجد تصنيفات',
+    overdue: 'متأخر',
+    you: 'أنت',
+    unknown: 'غير معروف',
+    now: 'الآن',
+    lastUpdated: 'آخر تحديث',
+    pressToEdit: 'اضغط',
+    toClose: 'للإغلاق',
     priorities: {
       low: 'منخفضة',
       medium: 'متوسطة',

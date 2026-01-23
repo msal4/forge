@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, User, Tag, X, ChevronDown, Filter } from 'lucide-react';
 import type { User as UserType } from '../../api/users';
 import type { IssueFilters } from '../../hooks/useIssueFilters';
@@ -36,6 +37,7 @@ export function FilterBar({
   totalCount,
   filteredCount,
 }: FilterBarProps) {
+  const { t } = useTranslation();
   const [showAssigneeDropdown, setShowAssigneeDropdown] = React.useState(false);
   const [showLabelsDropdown, setShowLabelsDropdown] = React.useState(false);
   
@@ -86,7 +88,7 @@ export function FilterBar({
             value={filters.searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             onKeyDown={handleSearchKeyDown}
-            placeholder="Search inscriptions..."
+            placeholder={t('issues.filter.searchPlaceholder')}
             className="
               w-full h-9 pl-9 pr-8 
               bg-parchment-50 text-lapis-700 text-sm
@@ -128,7 +130,7 @@ export function FilterBar({
           >
             <User size={14} />
             <span className="max-w-[100px] truncate">
-              {selectedAssignee ? selectedAssignee.fullName || selectedAssignee.username : 'Assignee'}
+              {selectedAssignee ? selectedAssignee.fullName || selectedAssignee.username : t('issues.filter.assignee')}
             </span>
             <ChevronDown size={14} className={`transition-transform ${showAssigneeDropdown ? 'rotate-180' : ''}`} />
           </button>
@@ -154,7 +156,7 @@ export function FilterBar({
                 <div className="w-6 h-6 rounded-full bg-parchment-300 flex items-center justify-center">
                   <User size={12} className="text-lapis-400" />
                 </div>
-                All assignees
+                {t('issues.filter.allAssignees')}
               </button>
               {users.map(user => (
                 <button
@@ -200,8 +202,8 @@ export function FilterBar({
             <Tag size={14} />
             <span>
               {filters.selectedLabels.length > 0 
-                ? `${filters.selectedLabels.length} label${filters.selectedLabels.length > 1 ? 's' : ''}`
-                : 'Labels'
+                ? `${filters.selectedLabels.length} ${t('issues.filter.labels').toLowerCase()}`
+                : t('issues.filter.labels')
               }
             </span>
             <ChevronDown size={14} className={`transition-transform ${showLabelsDropdown ? 'rotate-180' : ''}`} />
@@ -292,7 +294,7 @@ export function FilterBar({
                 transition-colors
               "
             >
-              Clear all
+              {t('common.clearFilters')}
             </button>
           </div>
         )}
@@ -301,7 +303,7 @@ export function FilterBar({
         {isFiltering && (
           <div className="ml-auto text-xs text-lapis-500">
             <Filter size={12} className="inline mr-1" />
-            Showing {filteredCount} of {totalCount}
+            {t('issues.filter.showing', { filtered: filteredCount, total: totalCount })}
           </div>
         )}
       </div>
