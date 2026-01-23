@@ -138,9 +138,13 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
 
     setStatus('connecting');
 
-    // Determine WebSocket URL (use wss: in production)
+    // Determine WebSocket URL
+    // In development (Vite on port 3000), connect directly to backend on port 8080
+    // In production, use same host
+    const isDev = import.meta.env.DEV;
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/api/ws`;
+    const host = isDev ? 'localhost:8080' : window.location.host;
+    const wsUrl = `${protocol}//${host}/api/ws`;
 
     console.log('[WS] Connecting to', wsUrl);
 
