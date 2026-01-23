@@ -1,8 +1,9 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Plus, RefreshCw, Loader2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useWebSocket } from '../context/WebSocketContext';
 import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
 import { IssueCard } from '../components/issues/IssueCard';
 import { IssueModal } from '../components/issues/IssueModal';
@@ -104,6 +105,9 @@ export function IssuesPage() {
 
   // Confirm dialog
   const { confirm, DialogComponent: ConfirmDialogComponent } = useConfirmDialog();
+  
+  // WebSocket for conflict detection
+  const { setEditingItem } = useWebSocket();
 
   // Handle URL param changes for issue selection
   // Only sync when issueId or issues change, NOT when modalMode changes
@@ -156,15 +160,6 @@ export function IssuesPage() {
         setSelectedIssue(null);
         setModalMode('create');
         setIsModalOpen(true);
-      },
-      category: 'actions',
-    },
-    {
-      keys: 'r',
-      description: 'Refresh issues',
-      handler: () => {
-        if (isModalOpen) return;
-        queryClient.invalidateQueries({ queryKey: queryKeys.issues.all });
       },
       category: 'actions',
     },
@@ -279,10 +274,19 @@ export function IssuesPage() {
   // Handle mode change within modal
   const handleModeChange = (mode: 'view' | 'edit') => {
     setModalMode(mode);
+    // Track editing state for conflict detection
+    if (mode === 'edit' && selectedIssue) {
+      setEditingItem('issue', selectedIssue.id);
+    } else {
+      setEditingItem(null, null);
+    }
   };
 
   // Close modal
   const handleCloseModal = () => {
+    // Clear editing state
+    setEditingItem(null, null);
+    
     if (modalMode === 'create') {
       setIsModalOpen(false);
       setModalMode('view');
@@ -324,15 +328,6 @@ export function IssuesPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <ButtonWithHotkey
-            variant="secondary"
-            hotkey="r"
-            onClick={() => queryClient.invalidateQueries({ queryKey: queryKeys.issues.all })}
-            disabled={isLoading}
-          >
-            {isLoading ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
-            {t('common.refresh')}
-          </ButtonWithHotkey>
           <ButtonWithHotkey
             variant="primary"
             hotkey="c"

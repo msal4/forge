@@ -16,6 +16,7 @@ import {
 import { useKeyboard } from '../../context/KeyboardContext';
 import { useAuth } from '../../context/AuthContext';
 import { HotkeyBadge } from '../ui/HotkeyBadge';
+import { ConnectionStatus } from '../ui/ConnectionStatus';
 
 // ============================================
 // Main Layout - Sidebar + Content
@@ -81,6 +82,11 @@ export function Layout() {
           
           {/* User Info & Logout */}
           <div className="p-3 border-t border-parchment-300 space-y-2">
+            {/* Connection Status */}
+            <div className="flex items-center justify-center">
+              <ConnectionStatus />
+            </div>
+            
             {/* Current User */}
             {user && (
               <div className="flex items-center gap-3 px-3 py-2">

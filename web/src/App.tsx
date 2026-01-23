@@ -3,8 +3,10 @@ import { QueryClient, QueryClientProvider, useIsFetching } from '@tanstack/react
 import { useTranslation } from 'react-i18next';
 import { AuthProvider, ProtectedRoute } from './context/AuthContext';
 import { KeyboardProvider } from './context/KeyboardContext';
+import { WebSocketProvider } from './context/WebSocketContext';
 import { CommandMenu } from './components/ui/CommandMenu';
 import { Layout } from './components/layout/Layout';
+import { ConflictWarning } from './components/ui/ConflictWarning';
 
 // i18n
 import './i18n';
@@ -79,11 +81,14 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <KeyboardProvider>
-            <GlobalLoadingIndicator />
-            <CommandMenu />
-            <AppRoutes />
-          </KeyboardProvider>
+          <WebSocketProvider>
+            <KeyboardProvider>
+              <GlobalLoadingIndicator />
+              <CommandMenu />
+              <ConflictWarning />
+              <AppRoutes />
+            </KeyboardProvider>
+          </WebSocketProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

@@ -13,6 +13,7 @@ import (
 
 	"sarray-forge/internal/middleware"
 	"sarray-forge/internal/models"
+	"sarray-forge/internal/websocket"
 )
 
 const (
@@ -121,6 +122,14 @@ func (h *Handlers) CreateRelease(w http.ResponseWriter, r *http.Request) {
 	releaseDir := filepath.Join(ReleasesDir, fmt.Sprintf("v%d", releaseID))
 	os.MkdirAll(releaseDir, 0755)
 
+	// Broadcast WebSocket event
+	h.hub.Broadcast(websocket.Event{
+		Type:     websocket.EventReleaseCreated,
+		Resource: websocket.ResourceRelease,
+		ID:       releaseID,
+		UserID:   userID,
+	})
+
 	h.getReleaseByID(w, releaseID)
 }
 
@@ -138,6 +147,8 @@ func (h *Handlers) GetRelease(w http.ResponseWriter, r *http.Request) {
 
 // DeleteRelease handles DELETE /api/releases/{id}
 func (h *Handlers) DeleteRelease(w http.ResponseWriter, r *http.Request) {
+	userID, _, _ := middleware.GetUserFromContext(r.Context())
+
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -161,6 +172,14 @@ func (h *Handlers) DeleteRelease(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "not_found", "Release not found")
 		return
 	}
+
+	// Broadcast WebSocket event
+	h.hub.Broadcast(websocket.Event{
+		Type:     websocket.EventReleaseDeleted,
+		Resource: websocket.ResourceRelease,
+		ID:       id,
+		UserID:   userID,
+	})
 
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Release deleted"})
 }
@@ -238,6 +257,9 @@ func (h *Handlers) UploadReleaseFile(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Get user ID for broadcast
+	userID, _, _ := middleware.GetUserFromContext(r.Context())
+
 	// Save to database
 	result, err := h.db.Exec(`
 		INSERT INTO release_files (release_id, filename, original_filename, file_path, file_size, mime_type)
@@ -251,6 +273,14 @@ func (h *Handlers) UploadReleaseFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fileID, _ := result.LastInsertId()
+
+	// Broadcast WebSocket event (file upload is a release update)
+	h.hub.Broadcast(websocket.Event{
+		Type:     websocket.EventReleaseUpdated,
+		Resource: websocket.ResourceRelease,
+		ID:       releaseID,
+		UserID:   userID,
+	})
 
 	writeJSON(w, http.StatusCreated, models.ReleaseFile{
 		ID:        fileID,

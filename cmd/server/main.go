@@ -9,6 +9,7 @@ import (
 	"sarray-forge/internal/db"
 	"sarray-forge/internal/handlers"
 	"sarray-forge/internal/middleware"
+	"sarray-forge/internal/websocket"
 )
 
 func main() {
@@ -30,8 +31,12 @@ func main() {
 	}
 	defer database.Close()
 
+	// Initialize WebSocket hub
+	hub := websocket.NewHub()
+	go hub.Run()
+
 	// Create handler dependencies
-	h := handlers.New(database)
+	h := handlers.New(database, hub)
 	authHandler := auth.NewHandler(database)
 
 	// Create the main router using Go 1.22 http.NewServeMux
@@ -57,6 +62,9 @@ func main() {
 
 	// Global search
 	mux.Handle("GET /api/search", requireAuth(http.HandlerFunc(h.GlobalSearch)))
+
+	// WebSocket endpoint for real-time updates
+	mux.Handle("GET /api/ws", requireAuth(http.HandlerFunc(h.HandleWebSocket)))
 
 	// Issues (The "Tablet") routes
 	mux.Handle("GET /api/issues", requireAuth(http.HandlerFunc(h.ListIssues)))

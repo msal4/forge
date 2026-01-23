@@ -336,4 +336,22 @@ export default {
 			days: '{{days}} days',
 		},
 	},
+
+	// WebSocket / Real-time
+	ws: {
+		connected: 'Live',
+		connecting: 'Connecting...',
+		reconnecting: 'Reconnecting...',
+		disconnected: 'Offline',
+	},
+
+	// Conflict warnings
+	conflict: {
+		title: 'Item Updated',
+		deletedTitle: 'Item Deleted',
+		message: 'Another user has modified this item. Reload to see the latest changes, or keep editing to overwrite.',
+		deletedMessage: 'This item has been deleted by another user. Your changes cannot be saved.',
+		reload: 'Reload',
+		keepEditing: 'Keep Editing',
+	},
 };

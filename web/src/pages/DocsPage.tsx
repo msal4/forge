@@ -14,13 +14,13 @@ import {
   Edit3,
   Trash2,
   Loader2,
-  RefreshCw,
   User,
   Clock,
   X,
   Check,
   Eye
 } from 'lucide-react';
+import { useWebSocket } from '../context/WebSocketContext';
 import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
 import { useConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useKeyboardShortcuts } from '../hooks/useKeyboard';
@@ -64,6 +64,9 @@ export function DocsPage() {
   
   // Confirm dialog
   const { confirm, DialogComponent: ConfirmDialogComponent } = useConfirmDialog();
+  
+  // WebSocket for conflict detection
+  const { setEditingItem } = useWebSocket();
 
   // Sync selected doc from query
   React.useEffect(() => {
@@ -116,9 +119,10 @@ export function DocsPage() {
       setEditContent(docToEdit.content || '');
       setEditParentId(docToEdit.parentId || '');
       setMode('edit');
+      setEditingItem('doc', docToEdit.id);
       setTimeout(() => textareaRef.current?.focus(), 100);
     }
-  }, [selectedDoc]);
+  }, [selectedDoc, setEditingItem]);
 
   // Enter create mode
   const enterCreateMode = React.useCallback(() => {
@@ -127,8 +131,9 @@ export function DocsPage() {
     setEditParentId('');
     setSelectedDoc(null);
     setMode('create');
+    setEditingItem(null, null);
     setTimeout(() => titleInputRef.current?.focus(), 100);
-  }, []);
+  }, [setEditingItem]);
 
   // Cancel editing
   const cancelEdit = React.useCallback(async () => {
@@ -142,6 +147,7 @@ export function DocsPage() {
       });
       if (!confirmed) return;
     }
+    setEditingItem(null, null);
     if (mode === 'create') {
       setMode('list');
       navigate('/docs');
@@ -149,7 +155,7 @@ export function DocsPage() {
       setMode('view');
     }
     setHasUnsavedChanges(false);
-  }, [mode, hasUnsavedChanges, navigate, confirm, t]);
+  }, [mode, hasUnsavedChanges, navigate, confirm, t, setEditingItem]);
 
   // Save document
   const saveDocument = React.useCallback(async () => {
@@ -171,6 +177,7 @@ export function DocsPage() {
       });
       setSelectedDoc(updated);
       setMode('view');
+      setEditingItem(null, null);
     } else if (mode === 'create') {
       const created = await createDocMutation.mutateAsync(data as CreateDocRequest);
       setSelectedDoc(created);
@@ -178,7 +185,7 @@ export function DocsPage() {
       setMode('view');
     }
     setHasUnsavedChanges(false);
-  }, [editTitle, editContent, editParentId, mode, selectedDoc, navigate, updateDocMutation, createDocMutation]);
+  }, [editTitle, editContent, editParentId, mode, selectedDoc, navigate, updateDocMutation, createDocMutation, setEditingItem]);
 
   // Delete document
   const handleDeleteDoc = async (doc: Doc) => {
@@ -221,16 +228,6 @@ export function DocsPage() {
       handler: () => {
         if (mode === 'view' && selectedDoc) {
           enterEditMode();
-        }
-      },
-      category: 'actions',
-    },
-    {
-      keys: 'r',
-      description: 'Refresh documents',
-      handler: () => {
-        if (mode === 'list') {
-          queryClient.invalidateQueries({ queryKey: queryKeys.docs.all });
         }
       },
       category: 'actions',
@@ -289,22 +286,22 @@ export function DocsPage() {
           {(mode === 'view' || mode === 'edit') && (
             <button
               onClick={async () => {
-                if (isEditing && hasUnsavedChanges) {
-                  const confirmed = await confirm({
+                if (mode === 'edit' && hasUnsavedChanges) {
+                  const shouldDiscard = await confirm({
                     title: t('common.confirm'),
                     message: t('docs.discardChanges'),
                     confirmLabel: t('common.yes'),
                     cancelLabel: t('common.no'),
                     variant: 'warning',
                   });
-                  if (!confirmed) return;
+                  if (!shouldDiscard) return;
                 }
                 selectDoc(null);
                 setMode('list');
               }}
               className="p-2 rounded-tablet hover:bg-parchment-200 text-lapis-500 transition-colors"
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={20} className="rtl:rotate-180" />
             </button>
           )}
           {mode === 'create' && (
@@ -312,7 +309,7 @@ export function DocsPage() {
               onClick={cancelEdit}
               className="p-2 rounded-tablet hover:bg-parchment-200 text-lapis-500 transition-colors"
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={20} className="rtl:rotate-180" />
             </button>
           )}
           <div>
@@ -340,25 +337,14 @@ export function DocsPage() {
         {/* Actions */}
         <div className="flex items-center gap-2">
           {mode === 'list' && (
-            <>
-              <ButtonWithHotkey
-                variant="secondary"
-                hotkey="r"
-                onClick={() => queryClient.invalidateQueries({ queryKey: queryKeys.docs.all })}
-                disabled={isLoading}
-              >
-                {isLoading ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
-                {t('common.refresh')}
-              </ButtonWithHotkey>
-              <ButtonWithHotkey
-                variant="primary"
-                hotkey="c"
-                onClick={enterCreateMode}
-              >
-                <Plus size={18} />
-                {t('docs.newDocument')}
-              </ButtonWithHotkey>
-            </>
+            <ButtonWithHotkey
+              variant="primary"
+              hotkey="c"
+              onClick={enterCreateMode}
+            >
+              <Plus size={18} />
+              {t('docs.newDocument')}
+            </ButtonWithHotkey>
           )}
           
           {mode === 'view' && selectedDoc && (
@@ -759,7 +745,7 @@ function DocCard({ doc, onClick, onEdit, onDelete }: DocCardProps) {
         </div>
         <ChevronRight 
           size={18} 
-          className="text-lapis-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" 
+          className="text-lapis-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 rtl:rotate-180" 
         />
       </div>
 

@@ -336,4 +336,22 @@ export default {
 			days: '{{days}} أيام',
 		},
 	},
+
+	// WebSocket / Real-time
+	ws: {
+		connected: 'مباشر',
+		connecting: 'جاري الاتصال...',
+		reconnecting: 'إعادة الاتصال...',
+		disconnected: 'غير متصل',
+	},
+
+	// Conflict warnings
+	conflict: {
+		title: 'تم تحديث العنصر',
+		deletedTitle: 'تم حذف العنصر',
+		message: 'قام مستخدم آخر بتعديل هذا العنصر. أعد التحميل لرؤية آخر التغييرات، أو استمر في التعديل للكتابة فوقها.',
+		deletedMessage: 'تم حذف هذا العنصر بواسطة مستخدم آخر. لا يمكن حفظ تغييراتك.',
+		reload: 'إعادة التحميل',
+		keepEditing: 'استمر في التعديل',
+	},
 };

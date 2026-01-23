@@ -8,16 +8,56 @@ import (
 	"sarray-forge/internal/db"
 	"sarray-forge/internal/middleware"
 	"sarray-forge/internal/models"
+	"sarray-forge/internal/websocket"
+
+	gorillaws "github.com/gorilla/websocket"
 )
 
 // Handlers holds all HTTP handler dependencies
 type Handlers struct {
-	db *db.DB
+	db  *db.DB
+	hub *websocket.Hub
 }
 
 // New creates a new Handlers instance
-func New(database *db.DB) *Handlers {
-	return &Handlers{db: database}
+func New(database *db.DB, hub *websocket.Hub) *Handlers {
+	return &Handlers{db: database, hub: hub}
+}
+
+// WebSocket upgrader
+var upgrader = gorillaws.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		// Allow all origins in development - in production, you'd want to restrict this
+		return true
+	},
+}
+
+// HandleWebSocket handles WebSocket connections at GET /api/ws
+func (h *Handlers) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
+	// Get user from context (auth middleware should have set this)
+	userID, _, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Upgrade HTTP connection to WebSocket
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+
+	// Create new client
+	client := websocket.NewClient(h.hub, conn, userID)
+
+	// Register client with hub
+	h.hub.Register(client)
+
+	// Start client goroutines
+	go client.WritePump()
+	go client.ReadPump()
 }
 
 // ============================================
@@ -225,6 +265,14 @@ func (h *Handlers) CreateIssue(w http.ResponseWriter, r *http.Request) {
 
 	issueID, _ := result.LastInsertId()
 
+	// Broadcast WebSocket event
+	h.hub.Broadcast(websocket.Event{
+		Type:     websocket.EventIssueCreated,
+		Resource: websocket.ResourceIssue,
+		ID:       issueID,
+		UserID:   userID,
+	})
+
 	// Fetch the created issue
 	h.getIssueByID(w, issueID)
 }
@@ -243,6 +291,8 @@ func (h *Handlers) GetIssue(w http.ResponseWriter, r *http.Request) {
 
 // UpdateIssue handles PUT /api/issues/{id}
 func (h *Handlers) UpdateIssue(w http.ResponseWriter, r *http.Request) {
+	userID, _, _ := middleware.GetUserFromContext(r.Context())
+
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -305,11 +355,21 @@ func (h *Handlers) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Broadcast WebSocket event
+	h.hub.Broadcast(websocket.Event{
+		Type:     websocket.EventIssueUpdated,
+		Resource: websocket.ResourceIssue,
+		ID:       id,
+		UserID:   userID,
+	})
+
 	h.getIssueByID(w, id)
 }
 
 // DeleteIssue handles DELETE /api/issues/{id}
 func (h *Handlers) DeleteIssue(w http.ResponseWriter, r *http.Request) {
+	userID, _, _ := middleware.GetUserFromContext(r.Context())
+
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -329,11 +389,21 @@ func (h *Handlers) DeleteIssue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Broadcast WebSocket event
+	h.hub.Broadcast(websocket.Event{
+		Type:     websocket.EventIssueDeleted,
+		Resource: websocket.ResourceIssue,
+		ID:       id,
+		UserID:   userID,
+	})
+
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Issue deleted"})
 }
 
 // UpdateIssueStatus handles PATCH /api/issues/{id}/status
 func (h *Handlers) UpdateIssueStatus(w http.ResponseWriter, r *http.Request) {
+	userID, _, _ := middleware.GetUserFromContext(r.Context())
+
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -370,11 +440,21 @@ func (h *Handlers) UpdateIssueStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Broadcast WebSocket event
+	h.hub.Broadcast(websocket.Event{
+		Type:     websocket.EventIssueUpdated,
+		Resource: websocket.ResourceIssue,
+		ID:       id,
+		UserID:   userID,
+	})
+
 	h.getIssueByID(w, id)
 }
 
 // PatchIssue handles PATCH /api/issues/{id} - partial update (for Kanban column moves)
 func (h *Handlers) PatchIssue(w http.ResponseWriter, r *http.Request) {
+	userID, _, _ := middleware.GetUserFromContext(r.Context())
+
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -449,6 +529,14 @@ func (h *Handlers) PatchIssue(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "not_found", "Issue not found")
 		return
 	}
+
+	// Broadcast WebSocket event
+	h.hub.Broadcast(websocket.Event{
+		Type:     websocket.EventIssueUpdated,
+		Resource: websocket.ResourceIssue,
+		ID:       id,
+		UserID:   userID,
+	})
 
 	h.getIssueByID(w, id)
 }

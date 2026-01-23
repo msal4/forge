@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, X } from 'lucide-react';
+import { HotkeyBadge } from './HotkeyBadge';
 
 // ============================================
 // Confirm Dialog Component
@@ -30,7 +31,7 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const { t } = useTranslation();
 
-  // Handle escape key
+  // Handle keyboard shortcuts (Escape to cancel, Enter to confirm)
   React.useEffect(() => {
     if (!isOpen) return;
     
@@ -39,12 +40,16 @@ export function ConfirmDialog({
         e.preventDefault();
         e.stopPropagation();
         onCancel();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        onConfirm();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown, true);
     return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [isOpen, onCancel]);
+  }, [isOpen, onCancel, onConfirm]);
 
   if (!isOpen) return null;
 
@@ -111,20 +116,22 @@ export function ConfirmDialog({
             className="
               px-4 py-2 rounded-lg text-sm font-medium
               text-lapis-600 hover:bg-parchment-200
-              transition-colors
+              transition-colors inline-flex items-center gap-2
             "
           >
             {cancelLabel || t('common.cancel')}
+            <HotkeyBadge keys="Escape" />
           </button>
           <button
             onClick={onConfirm}
             className={`
               px-4 py-2 rounded-lg text-sm font-medium
               ${styles.confirmBtn}
-              transition-colors
+              transition-colors inline-flex items-center gap-2
             `}
           >
             {confirmLabel || t('common.confirm')}
+            <HotkeyBadge keys="Enter" variant="dark" />
           </button>
         </div>
       </div>

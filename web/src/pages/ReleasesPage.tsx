@@ -12,7 +12,6 @@ import {
   Download, 
   Trash2,
   Loader2,
-  RefreshCw,
   X,
   User,
   Calendar,
@@ -76,12 +75,6 @@ export function ReleasesPage() {
       keys: 'c',
       description: 'Create new release',
       handler: () => setIsModalOpen(true),
-      category: 'actions',
-    },
-    {
-      keys: 'r',
-      description: 'Refresh releases',
-      handler: () => queryClient.invalidateQueries({ queryKey: queryKeys.releases.all }),
       category: 'actions',
     },
     {
@@ -182,15 +175,6 @@ export function ReleasesPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <ButtonWithHotkey
-            variant="secondary"
-            hotkey="r"
-            onClick={() => queryClient.invalidateQueries({ queryKey: queryKeys.releases.all })}
-            disabled={isLoading}
-          >
-            {isLoading ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
-            {t('common.refresh')}
-          </ButtonWithHotkey>
           <ButtonWithHotkey
             variant="primary"
             hotkey="c"

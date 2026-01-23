@@ -191,7 +191,7 @@ export function HomePage() {
               to="/issues" 
               className="text-sm text-lapis-500 hover:text-lapis-600 flex items-center gap-1"
             >
-              {t('home.viewAll')} <ArrowRight size={14} />
+              {t('home.viewAll')} <ArrowRight size={14} className="rtl:rotate-180" />
             </Link>
           </div>
           

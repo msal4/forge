@@ -9,6 +9,7 @@ import (
 
 	"sarray-forge/internal/middleware"
 	"sarray-forge/internal/models"
+	"sarray-forge/internal/websocket"
 )
 
 // ============================================
@@ -110,6 +111,15 @@ func (h *Handlers) CreateDoc(w http.ResponseWriter, r *http.Request) {
 	}
 
 	docID, _ := result.LastInsertId()
+
+	// Broadcast WebSocket event
+	h.hub.Broadcast(websocket.Event{
+		Type:     websocket.EventDocCreated,
+		Resource: websocket.ResourceDoc,
+		ID:       docID,
+		UserID:   userID,
+	})
+
 	h.getDocByID(w, docID)
 }
 
@@ -129,6 +139,8 @@ func (h *Handlers) GetDoc(w http.ResponseWriter, r *http.Request) {
 
 // UpdateDoc handles PUT /api/docs/{id}
 func (h *Handlers) UpdateDoc(w http.ResponseWriter, r *http.Request) {
+	userID, _, _ := middleware.GetUserFromContext(r.Context())
+
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -178,11 +190,21 @@ func (h *Handlers) UpdateDoc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Broadcast WebSocket event
+	h.hub.Broadcast(websocket.Event{
+		Type:     websocket.EventDocUpdated,
+		Resource: websocket.ResourceDoc,
+		ID:       id,
+		UserID:   userID,
+	})
+
 	h.getDocByID(w, id)
 }
 
 // DeleteDoc handles DELETE /api/docs/{id}
 func (h *Handlers) DeleteDoc(w http.ResponseWriter, r *http.Request) {
+	userID, _, _ := middleware.GetUserFromContext(r.Context())
+
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -201,6 +223,14 @@ func (h *Handlers) DeleteDoc(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "not_found", "Doc not found")
 		return
 	}
+
+	// Broadcast WebSocket event
+	h.hub.Broadcast(websocket.Event{
+		Type:     websocket.EventDocDeleted,
+		Resource: websocket.ResourceDoc,
+		ID:       id,
+		UserID:   userID,
+	})
 
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Doc deleted"})
 }
