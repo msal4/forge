@@ -20,8 +20,8 @@ export function HotkeyBadge({ keys, className = '', size = 'sm', variant = 'defa
   const formatted = formatShortcut(keys);
   
   const sizeClasses = {
-    sm: 'text-[10px] px-1 py-0.5 min-w-[18px] h-[18px]',
-    md: 'text-xs px-1.5 py-0.5 min-w-[22px] h-[22px]',
+    sm: 'text-[10px] px-1 min-w-[18px] h-4',
+    md: 'text-xs px-1.5 min-w-[22px] h-5',
   };
   
   const variantClasses = {
@@ -33,7 +33,7 @@ export function HotkeyBadge({ keys, className = '', size = 'sm', variant = 'defa
     <kbd
       className={`
         inline-flex items-center justify-center
-        font-code font-medium
+        font-code font-medium leading-none
         border rounded
         shadow-inner-glow
         self-center shrink-0
