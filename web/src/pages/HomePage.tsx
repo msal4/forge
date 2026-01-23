@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import { 
   FileText, 
   BookOpen, 
@@ -76,7 +77,8 @@ export function HomePage() {
     if (diffHours < 24) return t('dates.hoursAgo', { count: diffHours });
     if (diffDays < 7) return t('dates.daysAgo', { count: diffDays });
     
-    return date.toLocaleDateString('en-US', { 
+    const locale = i18n.language === 'ar' ? 'ar-SA' : 'en-US';
+    return date.toLocaleDateString(locale, { 
       month: 'short', 
       day: 'numeric',
       year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,

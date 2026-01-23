@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 import { 
   Clock, 
   User,
@@ -106,8 +107,9 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
     if (diffDays === 0) return { text: t('issueCard.dueDate.today'), className: 'text-clay-600 bg-clay-50', urgent: true };
     if (diffDays === 1) return { text: t('issueCard.dueDate.tomorrow'), className: 'text-gold-600 bg-gold-50', urgent: false };
     if (diffDays <= 7) return { text: t('issueCard.dueDate.days', { days: diffDays }), className: 'text-lapis-600 bg-lapis-50', urgent: false };
+    const locale = i18n.language === 'ar' ? 'ar-SA' : 'en-US';
     return { 
-      text: date.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }), 
+      text: date.toLocaleDateString(locale, { day: 'numeric', month: 'short' }), 
       className: 'text-lapis-500 bg-parchment-200',
       urgent: false 
     };

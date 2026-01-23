@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
@@ -243,7 +244,8 @@ export function IssueModal({
 	// Helper functions
 	const formatDate = (dateStr?: string) => {
 		if (!dateStr) return null;
-		return new Date(dateStr).toLocaleDateString('en-US', {
+		const locale = i18n.language === 'ar' ? 'ar-SA' : 'en-US';
+		return new Date(dateStr).toLocaleDateString(locale, {
 			weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
 		});
 	};

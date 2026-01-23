@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useQueryClient } from '@tanstack/react-query';
@@ -153,9 +154,10 @@ export function ReleasesPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  // Format date
+  // Format date based on current language
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('de-DE', {
+    const locale = i18n.language === 'ar' ? 'ar-SA' : 'en-US';
+    return new Date(dateStr).toLocaleDateString(locale, {
       day: 'numeric',
       month: 'short',
       year: 'numeric',

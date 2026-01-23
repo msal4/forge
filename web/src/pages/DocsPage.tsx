@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useQueryClient } from '@tanstack/react-query';
@@ -261,8 +262,9 @@ export function DocsPage() {
 
   // Format date
   const formatDate = (dateStr: string) => {
+    const locale = i18n.language === 'ar' ? 'ar-SA' : 'en-US';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('de-DE', {
+    return date.toLocaleDateString(locale, {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
@@ -764,7 +766,7 @@ function DocCard({ doc, onClick, onEdit, onDelete }: DocCardProps) {
       {/* Card footer */}
       <div className="mt-3 pt-3 border-t border-parchment-200 flex items-center justify-between">
         <div className="text-xs text-lapis-400">
-          {new Date(doc.updatedAt).toLocaleDateString('de-DE', {
+          {new Date(doc.updatedAt).toLocaleDateString(i18n.language === 'ar' ? 'ar-SA' : 'en-US', {
             day: 'numeric',
             month: 'short',
           })}
