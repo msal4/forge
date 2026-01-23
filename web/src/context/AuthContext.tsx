@@ -20,6 +20,7 @@ interface AuthContextValue {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  sessionToken: string | null;
   
   // Actions
   login: (username: string, password: string) => Promise<void>;
@@ -62,9 +63,16 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
+// Session token storage key
+const TOKEN_KEY = 'sarray_token';
+
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionToken, setSessionToken] = useState<string | null>(() => {
+    // Initialize from localStorage
+    return localStorage.getItem(TOKEN_KEY);
+  });
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -120,6 +128,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     setUser(data.user);
+    
+    // Store session token for WebSocket auth
+    if (data.token) {
+      setSessionToken(data.token);
+      localStorage.setItem(TOKEN_KEY, data.token);
+    }
 
     // Redirect to the page they tried to visit, or home
     const from = (location.state as { from?: string })?.from || '/';
@@ -138,6 +152,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     setUser(null);
+    setSessionToken(null);
+    localStorage.removeItem(TOKEN_KEY);
     navigate('/login', { replace: true });
   }, [navigate]);
 
@@ -145,10 +161,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     isAuthenticated: !!user,
     isLoading,
+    sessionToken,
     login,
     logout,
     refreshUser,
-  }), [user, isLoading, login, logout, refreshUser]);
+  }), [user, isLoading, sessionToken, login, logout, refreshUser]);
 
   return (
     <AuthContext.Provider value={value}>

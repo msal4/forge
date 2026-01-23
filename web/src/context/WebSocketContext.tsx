@@ -47,18 +47,12 @@ const INITIAL_DELAY = 1000;   // 1 second
 const MAX_DELAY = 30000;      // 30 seconds
 const BACKOFF_MULTIPLIER = 2;
 
-// Helper to get cookie value by name
-function getCookie(name: string): string | null {
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? decodeURIComponent(match[2]) : null;
-}
-
 interface WebSocketProviderProps {
   children: React.ReactNode;
 }
 
 export function WebSocketProvider({ children }: WebSocketProviderProps) {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, sessionToken } = useAuth();
   const queryClient = useQueryClient();
   
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
@@ -151,13 +145,10 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = isDev ? 'localhost:8080' : window.location.host;
     
-    // Get session token from cookie for cross-origin auth in development
+    // Build WebSocket URL with token for cross-origin auth in development
     let wsUrl = `${protocol}//${host}/api/ws`;
-    if (isDev) {
-      const token = getCookie('sarray_session');
-      if (token) {
-        wsUrl += `?token=${encodeURIComponent(token)}`;
-      }
+    if (isDev && sessionToken) {
+      wsUrl += `?token=${encodeURIComponent(sessionToken)}`;
     }
 
     console.log('[WS] Connecting to', wsUrl);
@@ -200,7 +191,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
         connect();
       }, delay);
     };
-  }, [isAuthenticated, handleMessage]);
+  }, [isAuthenticated, handleMessage, sessionToken]);
 
   // Effect to manage WebSocket connection lifecycle
   useEffect(() => {
