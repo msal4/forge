@@ -120,21 +120,50 @@ export function IssueModal({
 		}
 	}, [isEditing, isOpen]);
 
+	// Helper to close all dropdowns
+	const closeAllDropdowns = React.useCallback(() => {
+		setShowStatusDropdown(false);
+		setShowPriorityDropdown(false);
+		setShowAssigneeDropdown(false);
+	}, []);
+
+	// Check if any dropdown is open
+	const hasOpenDropdown = showStatusDropdown || showPriorityDropdown || showAssigneeDropdown;
+
 	// Close dropdowns when clicking outside
 	React.useEffect(() => {
-		const handleClick = () => {
-			setShowStatusDropdown(false);
-			setShowPriorityDropdown(false);
-			setShowAssigneeDropdown(false);
-		};
 		if (isOpen) {
-			document.addEventListener('click', handleClick);
-			return () => document.removeEventListener('click', handleClick);
+			document.addEventListener('click', closeAllDropdowns);
+			return () => document.removeEventListener('click', closeAllDropdowns);
 		}
-	}, [isOpen]);
+	}, [isOpen, closeAllDropdowns]);
+
+	// Handle escape key - close dropdowns first, then cancel
+	React.useEffect(() => {
+		if (!isOpen) return;
+		
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') {
+				if (hasOpenDropdown) {
+					e.preventDefault();
+					e.stopPropagation();
+					closeAllDropdowns();
+				}
+			}
+		};
+		
+		document.addEventListener('keydown', handleKeyDown, true);
+		return () => document.removeEventListener('keydown', handleKeyDown, true);
+	}, [isOpen, hasOpenDropdown, closeAllDropdowns]);
 
 	// Handle cancel/escape - edit mode goes to view, view/create closes
 	const handleCancel = () => {
+		// If dropdowns are open, just close them
+		if (hasOpenDropdown) {
+			closeAllDropdowns();
+			return;
+		}
+		
 		if (mode === 'edit') {
 			// Reset form to original issue values and go back to view
 			if (issue) {
