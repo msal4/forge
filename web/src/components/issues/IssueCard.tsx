@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Clock, 
   User,
@@ -53,34 +54,30 @@ interface IssueCardProps {
 }
 
 // Priority styling with Mesopotamian color palette
-const priorityConfig: Record<PriorityType, { 
+const priorityStyles: Record<PriorityType, { 
   color: string; 
-  label: string;
   icon: string;
 }> = {
   critical: { 
     color: 'text-red-700 bg-red-100 border-red-300', 
-    label: 'Critical',
     icon: '🔺'
   },
   high: { 
     color: 'text-clay-700 bg-clay-100 border-clay-300', 
-    label: 'High',
     icon: '▲'
   },
   medium: { 
     color: 'text-gold-700 bg-gold-100 border-gold-300', 
-    label: 'Medium',
     icon: '●'
   },
   low: { 
     color: 'text-lapis-600 bg-lapis-100 border-lapis-300', 
-    label: 'Low',
     icon: '▽'
   },
 };
 
 export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: IssueCardProps) {
+  const { t } = useTranslation();
   const [showMenu, setShowMenu] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
   
@@ -95,7 +92,8 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const priorityStyle = priorityConfig[issue.priority] || priorityConfig.medium;
+  const priorityStyle = priorityStyles[issue.priority] || priorityStyles.medium;
+  const getPriorityLabel = (p: PriorityType) => t(`issueModal.priorities.${p}`);
   
   // Format due date with relative time
   const formatDueDate = (dateStr?: string) => {
@@ -104,10 +102,10 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
     const now = new Date();
     const diffDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     
-    if (diffDays < 0) return { text: `${Math.abs(diffDays)}d overdue`, className: 'text-red-600 bg-red-50', urgent: true };
-    if (diffDays === 0) return { text: 'Due today', className: 'text-clay-600 bg-clay-50', urgent: true };
-    if (diffDays === 1) return { text: 'Tomorrow', className: 'text-gold-600 bg-gold-50', urgent: false };
-    if (diffDays <= 7) return { text: `${diffDays} days`, className: 'text-lapis-600 bg-lapis-50', urgent: false };
+    if (diffDays < 0) return { text: t('issueCard.dueDate.overdue', { days: Math.abs(diffDays) }), className: 'text-red-600 bg-red-50', urgent: true };
+    if (diffDays === 0) return { text: t('issueCard.dueDate.today'), className: 'text-clay-600 bg-clay-50', urgent: true };
+    if (diffDays === 1) return { text: t('issueCard.dueDate.tomorrow'), className: 'text-gold-600 bg-gold-50', urgent: false };
+    if (diffDays <= 7) return { text: t('issueCard.dueDate.days', { days: diffDays }), className: 'text-lapis-600 bg-lapis-50', urgent: false };
     return { 
       text: date.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }), 
       className: 'text-lapis-500 bg-parchment-200',
@@ -182,7 +180,7 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
             ${priorityStyle.color}
           `}>
             <span className="text-[8px]">{priorityStyle.icon}</span>
-            {priorityStyle.label}
+            {getPriorityLabel(issue.priority)}
           </span>
 
           {/* Labels */}
@@ -229,7 +227,7 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
             ) : (
               <div className="flex items-center gap-1 text-lapis-400">
                 <User size={12} strokeWidth={2.5} />
-                <span className="text-[11px]">Unassigned</span>
+                <span className="text-[11px]">{t('issueModal.unassigned')}</span>
               </div>
             )}
           </div>
@@ -289,7 +287,7 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
               "
             >
               <Edit3 size={14} />
-              Edit inscription
+              {t('issueCard.editInscription')}
             </button>
             <div className="h-px bg-parchment-200 my-1" />
             <button
@@ -305,7 +303,7 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
               "
             >
               <Trash2 size={14} />
-              Delete
+              {t('common.delete')}
             </button>
           </div>
         )}

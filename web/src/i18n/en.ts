@@ -226,6 +226,8 @@ export default {
     emptyGranary: 'The Granary is empty',
     emptyGranaryHint: 'Create your first release to start distributing artifacts.',
     files: 'Files',
+    fileCount: '{{count}} file',
+    fileCount_plural: '{{count}} files',
     uploadFiles: 'Upload Files',
     uploading: 'Uploading {{name}}... ({{current}}/{{total}})',
     noFiles: 'No files yet. Upload your artifacts!',
@@ -295,6 +297,10 @@ export default {
       newDoc: 'Create New Document',
       newRelease: 'Create New Release',
     },
+    tips: {
+      navigate: 'navigate',
+      select: 'select',
+    },
   },
 
   // Dates
@@ -303,5 +309,16 @@ export default {
     minutesAgo: '{{count}}m ago',
     hoursAgo: '{{count}}h ago',
     daysAgo: '{{count}}d ago',
+  },
+
+  // Issue Card
+  issueCard: {
+    editInscription: 'Edit inscription',
+    dueDate: {
+      overdue: '{{days}}d overdue',
+      today: 'Due today',
+      tomorrow: 'Tomorrow',
+      days: '{{days}} days',
+    },
   },
 };

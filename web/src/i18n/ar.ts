@@ -226,6 +226,8 @@ export default {
     emptyGranary: 'المخزن فارغ',
     emptyGranaryHint: 'أنشئ أول إصدار لبدء توزيع الملفات.',
     files: 'الملفات',
+    fileCount: '{{count}} ملف',
+    fileCount_plural: '{{count}} ملفات',
     uploadFiles: 'رفع ملفات',
     uploading: 'جاري رفع {{name}}... ({{current}}/{{total}})',
     noFiles: 'لا توجد ملفات بعد. ارفع ملفاتك!',
@@ -295,6 +297,10 @@ export default {
       newDoc: 'إنشاء وثيقة جديدة',
       newRelease: 'إنشاء إصدار جديد',
     },
+    tips: {
+      navigate: 'تنقل',
+      select: 'اختر',
+    },
   },
 
   // Dates
@@ -303,5 +309,16 @@ export default {
     minutesAgo: 'منذ {{count}} دقيقة',
     hoursAgo: 'منذ {{count}} ساعة',
     daysAgo: 'منذ {{count}} يوم',
+  },
+
+  // Issue Card
+  issueCard: {
+    editInscription: 'تعديل النقش',
+    dueDate: {
+      overdue: 'متأخر {{days}} يوم',
+      today: 'مستحق اليوم',
+      tomorrow: 'غداً',
+      days: '{{days}} أيام',
+    },
   },
 };

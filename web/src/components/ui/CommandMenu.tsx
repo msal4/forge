@@ -321,13 +321,13 @@ export function CommandMenu() {
                 <kbd className="px-1.5 py-0.5 bg-parchment-200 border border-parchment-400 rounded text-[10px] font-mono">
                   &#8593;&#8595;
                 </kbd>
-                navigate
+                {t('commandPalette.tips.navigate')}
               </span>
               <span className="flex items-center gap-1">
                 <kbd className="px-1.5 py-0.5 bg-parchment-200 border border-parchment-400 rounded text-[10px] font-mono">
                   &#8629;
                 </kbd>
-                select
+                {t('commandPalette.tips.select')}
               </span>
               <span className="flex items-center gap-1">
                 <kbd className="px-1.5 py-0.5 bg-parchment-200 border border-parchment-400 rounded text-[10px] font-mono">

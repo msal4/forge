@@ -402,6 +402,7 @@ interface ReleaseCardProps {
 }
 
 function ReleaseCard({ release, isSelected, onClick, formatDate, formatSize }: ReleaseCardProps) {
+  const { t } = useTranslation();
   const totalSize = release.files.reduce((acc, f) => acc + f.size, 0);
   const cardRef = React.useRef<HTMLDivElement>(null);
   
@@ -438,7 +439,7 @@ function ReleaseCard({ release, isSelected, onClick, formatDate, formatSize }: R
           </div>
           <div className="mt-1 flex items-center gap-3 text-xs text-lapis-500">
             <span>{formatDate(release.createdAt)}</span>
-            <span>{release.files.length} file{release.files.length !== 1 ? 's' : ''}</span>
+            <span>{t('releases.fileCount', { count: release.files.length })}</span>
             {totalSize > 0 && <span>{formatSize(totalSize)}</span>}
           </div>
         </div>
