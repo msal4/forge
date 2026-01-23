@@ -300,7 +300,14 @@ export function IssueModal({
 							{/* Status dropdown/badge */}
 							<div className="relative">
 								<button
-									onClick={(e) => { e.stopPropagation(); isEditing && !isCreating && setShowStatusDropdown(!showStatusDropdown); }}
+									onClick={(e) => { 
+										e.stopPropagation(); 
+										if (isEditing && !isCreating) {
+											setShowPriorityDropdown(false);
+											setShowAssigneeDropdown(false);
+											setShowStatusDropdown(!showStatusDropdown);
+										}
+									}}
 									disabled={!isEditing || isCreating}
 									className={`
                     inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg
@@ -332,7 +339,14 @@ export function IssueModal({
 							{/* Priority dropdown/badge */}
 							<div className="relative">
 								<button
-									onClick={(e) => { e.stopPropagation(); isEditing && setShowPriorityDropdown(!showPriorityDropdown); }}
+									onClick={(e) => { 
+										e.stopPropagation(); 
+										if (isEditing) {
+											setShowStatusDropdown(false);
+											setShowAssigneeDropdown(false);
+											setShowPriorityDropdown(!showPriorityDropdown);
+										}
+									}}
 									disabled={!isEditing}
 									className={`
                     inline-flex items-center gap-1 px-2 py-1 rounded-lg
@@ -534,7 +548,12 @@ export function IssueModal({
 								{isEditing ? (
 									<div className="relative w-full">
 										<button
-											onClick={(e) => { e.stopPropagation(); setShowAssigneeDropdown(!showAssigneeDropdown); }}
+											onClick={(e) => { 
+												e.stopPropagation(); 
+												setShowStatusDropdown(false);
+												setShowPriorityDropdown(false);
+												setShowAssigneeDropdown(!showAssigneeDropdown); 
+											}}
 											className="
                         w-full h-10 flex items-center gap-2 px-3 rounded-lg text-left
                         border border-parchment-300 bg-parchment-100/50
