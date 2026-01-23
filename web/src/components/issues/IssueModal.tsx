@@ -389,7 +389,7 @@ export function IssueModal({
 							title={isEditing ? (isCreating ? t('common.close') : t('common.back')) + " (Esc)" : t('common.close') + " (Esc)"}
 						>
 							{isEditing && !isCreating ? (
-								<ArrowLeft size={20} className="rtl:rotate-180" />
+								<ArrowLeft size={20} />
 							) : (
 								<X size={20} />
 							)}
