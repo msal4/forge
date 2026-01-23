@@ -128,8 +128,13 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
   const connect = useCallback(() => {
     if (!isAuthenticated || isUnmountingRef.current) return;
 
-    // Don't create new connection if one exists and is open
-    if (wsRef.current?.readyState === WebSocket.OPEN) return;
+    // Don't create new connection if one exists and is open or connecting
+    if (wsRef.current) {
+      const state = wsRef.current.readyState;
+      if (state === WebSocket.OPEN || state === WebSocket.CONNECTING) {
+        return;
+      }
+    }
 
     setStatus('connecting');
 
@@ -143,6 +148,10 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     wsRef.current = ws;
 
     ws.onopen = () => {
+      if (isUnmountingRef.current) {
+        ws.close(1000, 'Component unmounted during connection');
+        return;
+      }
       console.log('[WS] Connected');
       setStatus('connected');
       reconnectDelayRef.current = INITIAL_DELAY; // Reset delay on successful connection
