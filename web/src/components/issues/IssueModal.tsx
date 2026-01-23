@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
 	X,
+	ArrowLeft,
 	Edit3,
 	Trash2,
 	Check,
@@ -377,13 +378,21 @@ export function IssueModal({
 								<Trash2 size={18} />
 							</button>
 						)}
-						{/* Close/Cancel button - always visible */}
+						{/* Close/Back button - shows back arrow in edit mode to indicate returning to view */}
 						<button 
 							onClick={isEditing ? handleCancel : onClose} 
-							className="p-2 rounded-lg hover:bg-parchment-200 text-lapis-500 transition-colors"
-							title={isEditing ? "Cancel (Esc)" : "Close (Esc)"}
+							className={`p-2 rounded-lg transition-colors ${
+								isEditing && !isCreating
+									? 'hover:bg-lapis-100 text-lapis-600' 
+									: 'hover:bg-parchment-200 text-lapis-500'
+							}`}
+							title={isEditing ? (isCreating ? t('common.close') : t('common.back')) + " (Esc)" : t('common.close') + " (Esc)"}
 						>
-							<X size={20} />
+							{isEditing && !isCreating ? (
+								<ArrowLeft size={20} className="rtl:rotate-180" />
+							) : (
+								<X size={20} />
+							)}
 						</button>
 					</div>
 				</div>
