@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Globe, Palette, User } from 'lucide-react';
+import { Globe, Palette, User, Check, AlertCircle } from 'lucide-react';
+import { usersApi } from '../api/users';
 
 // ============================================
 // Settings Page
@@ -11,9 +12,54 @@ export function SettingsPage() {
   
   const currentLanguage = i18n.language;
 
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLang = e.target.value;
     i18n.changeLanguage(newLang);
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    // Validate passwords match
+    if (newPassword !== confirmPassword) {
+      setPasswordError(t('settings.passwordMismatch'));
+      return;
+    }
+
+    // Validate minimum length
+    if (newPassword.length < 4) {
+      setPasswordError(t('settings.passwordTooShort'));
+      return;
+    }
+
+    setIsChangingPassword(true);
+
+    try {
+      await usersApi.changePassword(currentPassword, newPassword);
+      setPasswordSuccess(t('settings.passwordChanged'));
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      const error = err as { message?: string };
+      if (error.message?.includes('incorrect')) {
+        setPasswordError(t('settings.currentPasswordIncorrect'));
+      } else {
+        setPasswordError(t('settings.passwordChangeFailed'));
+      }
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   return (
@@ -77,19 +123,101 @@ export function SettingsPage() {
           </div>
         </div>
 
-        {/* Account Setting (Coming Soon) */}
-        <div className="tablet-card p-6 opacity-60">
+        {/* Account Setting - Change Password */}
+        <div className="tablet-card p-6">
           <div className="flex items-start gap-4">
             <div className="p-3 rounded-tablet bg-clay-100 text-clay-600">
               <User size={24} />
             </div>
             <div className="flex-1">
               <h2 className="text-lg font-medium text-lapis-700">
-                {t('settings.account')}
+                {t('settings.changePassword')}
               </h2>
               <p className="text-sm text-lapis-500 mt-1">
-                {t('settings.accountDescription')}
+                {t('settings.changePasswordDescription')}
               </p>
+              
+              <form onSubmit={handlePasswordChange} className="mt-4 space-y-4 max-w-sm">
+                {/* Current Password */}
+                <div>
+                  <label className="block text-sm font-medium text-lapis-600 mb-1">
+                    {t('settings.currentPassword')}
+                  </label>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="w-full px-4 py-2 rounded-tablet border border-parchment-300 
+                               bg-parchment-100 text-lapis-700
+                               focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
+                               transition-colors"
+                    required
+                  />
+                </div>
+
+                {/* New Password */}
+                <div>
+                  <label className="block text-sm font-medium text-lapis-600 mb-1">
+                    {t('settings.newPassword')}
+                  </label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-4 py-2 rounded-tablet border border-parchment-300 
+                               bg-parchment-100 text-lapis-700
+                               focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
+                               transition-colors"
+                    required
+                    minLength={4}
+                  />
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label className="block text-sm font-medium text-lapis-600 mb-1">
+                    {t('settings.confirmPassword')}
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full px-4 py-2 rounded-tablet border border-parchment-300 
+                               bg-parchment-100 text-lapis-700
+                               focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
+                               transition-colors"
+                    required
+                    minLength={4}
+                  />
+                </div>
+
+                {/* Error Message */}
+                {passwordError && (
+                  <div className="flex items-center gap-2 text-clay-600 text-sm">
+                    <AlertCircle size={16} />
+                    <span>{passwordError}</span>
+                  </div>
+                )}
+
+                {/* Success Message */}
+                {passwordSuccess && (
+                  <div className="flex items-center gap-2 text-green-600 text-sm">
+                    <Check size={16} />
+                    <span>{passwordSuccess}</span>
+                  </div>
+                )}
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}
+                  className="px-4 py-2 rounded-tablet bg-lapis-600 text-white font-medium
+                             hover:bg-lapis-700 disabled:opacity-50 disabled:cursor-not-allowed
+                             transition-colors"
+                >
+                  {isChangingPassword ? t('settings.changingPassword') : t('settings.changePassword')}
+                </button>
+              </form>
             </div>
           </div>
         </div>

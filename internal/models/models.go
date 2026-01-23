@@ -107,6 +107,12 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
+// ChangePasswordRequest is the request body for changing password
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"currentPassword"`
+	NewPassword     string `json:"newPassword"`
+}
+
 // LoginResponse is the response body for successful login
 type LoginResponse struct {
 	Token string `json:"token"`

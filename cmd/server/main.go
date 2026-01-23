@@ -43,6 +43,7 @@ func main() {
 	mux.HandleFunc("POST /api/auth/login", authHandler.Login)
 	mux.HandleFunc("POST /api/auth/logout", authHandler.Logout)
 	mux.HandleFunc("GET /api/auth/me", authHandler.GetCurrentUser)
+	mux.HandleFunc("POST /api/auth/change-password", authHandler.ChangePassword)
 	mux.HandleFunc("GET /api/health", handlers.HealthCheck)
 
 	// ============================================

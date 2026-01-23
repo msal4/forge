@@ -20,4 +20,8 @@ export const usersApi = {
 
   // Get current user
   me: (options?: RequestOptions) => api.get<User>('/users/me', options),
+
+  // Change password
+  changePassword: (currentPassword: string, newPassword: string, options?: RequestOptions) =>
+    api.post<{ message: string }>('/auth/change-password', { currentPassword, newPassword }, options),
 };

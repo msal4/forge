@@ -238,6 +238,86 @@ func HashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
+// ChangePassword handles POST /api/auth/change-password
+func (h *Handler) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	// Only accept POST
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "method_not_allowed", "Only POST is allowed")
+		return
+	}
+
+	// Get token and validate session
+	token := extractToken(r)
+	if token == "" {
+		writeError(w, http.StatusUnauthorized, "unauthorized", "Not authenticated")
+		return
+	}
+
+	session, err := h.ValidateSession(token)
+	if err != nil {
+		writeError(w, http.StatusUnauthorized, "unauthorized", "Invalid or expired session")
+		return
+	}
+
+	// Parse request body
+	var req models.ChangePasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", "Invalid JSON body")
+		return
+	}
+
+	// Validate required fields
+	if req.CurrentPassword == "" {
+		writeError(w, http.StatusBadRequest, "missing_current_password", "Current password is required")
+		return
+	}
+	if req.NewPassword == "" {
+		writeError(w, http.StatusBadRequest, "missing_new_password", "New password is required")
+		return
+	}
+	if len(req.NewPassword) < 4 {
+		writeError(w, http.StatusBadRequest, "password_too_short", "Password must be at least 4 characters")
+		return
+	}
+
+	// Get current password hash from database
+	var passwordHash string
+	err = h.db.QueryRow(`SELECT password_hash FROM users WHERE id = ?`, session.UserID).Scan(&passwordHash)
+	if err != nil {
+		log.Printf("Failed to get password hash for user %d: %v", session.UserID, err)
+		writeError(w, http.StatusInternalServerError, "database_error", "Failed to verify password")
+		return
+	}
+
+	// Verify current password
+	if err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(req.CurrentPassword)); err != nil {
+		writeError(w, http.StatusUnauthorized, "invalid_password", "Current password is incorrect")
+		return
+	}
+
+	// Hash new password
+	newHash, err := HashPassword(req.NewPassword)
+	if err != nil {
+		log.Printf("Failed to hash new password: %v", err)
+		writeError(w, http.StatusInternalServerError, "hash_error", "Failed to update password")
+		return
+	}
+
+	// Update password in database
+	_, err = h.db.Exec(`UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, newHash, session.UserID)
+	if err != nil {
+		log.Printf("Failed to update password for user %d: %v", session.UserID, err)
+		writeError(w, http.StatusInternalServerError, "database_error", "Failed to update password")
+		return
+	}
+
+	log.Printf("Password changed successfully for user_id=%d", session.UserID)
+
+	writeJSON(w, http.StatusOK, map[string]string{
+		"message": "Password changed successfully",
+	})
+}
+
 // ============================================
 // Private Methods
 // ============================================
