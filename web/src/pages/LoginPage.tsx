@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 
 // ============================================
@@ -8,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 // ============================================
 
 export function LoginPage() {
+  const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -66,7 +68,7 @@ export function LoginPage() {
     const passwordValue = passwordRef.current?.value || password;
     
     if (!usernameValue.trim() || !passwordValue) {
-      setError('Please enter username and password');
+      setError(t('login.requiredFields'));
       return;
     }
     
@@ -106,10 +108,10 @@ export function LoginPage() {
             <span className="text-4xl text-parchment-100 font-inscription">𒀭</span>
           </div>
           <h1 className="font-inscription text-4xl text-lapis-600 tracking-tight">
-            Sarray Forge
+            {t('app.name')}
           </h1>
           <p className="text-lapis-500 mt-2 font-body">
-            Enter the ancient workshop
+            {t('login.subtitle')}
           </p>
         </div>
 
@@ -141,7 +143,7 @@ export function LoginPage() {
                     ${focusedField === 'username' ? 'text-lapis-600' : 'text-lapis-500'}
                   `}
                 >
-                  Username
+                  {t('login.username')}
                 </label>
                 <div className="relative">
                     <input
@@ -185,7 +187,7 @@ export function LoginPage() {
                   </span>
                 </div>
                 <p className="mt-2 text-xs text-lapis-400">
-                  Just enter your username — we'll add the domain
+                  {t('login.usernameHint')}
                 </p>
               </div>
 
@@ -198,7 +200,7 @@ export function LoginPage() {
                     ${focusedField === 'password' ? 'text-lapis-600' : 'text-lapis-500'}
                   `}
                 >
-                  Password
+                  {t('login.password')}
                 </label>
                 <div className="relative">
                   <input
@@ -287,36 +289,18 @@ export function LoginPage() {
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Entering the Forge...</span>
+                    <span>{t('login.signingIn')}</span>
                   </>
                 ) : (
                   <>
-                    <span>Enter the Forge</span>
-                    <kbd className="ml-2 px-1.5 py-0.5 text-xs bg-lapis-400/30 rounded border border-lapis-400/50">
+                    <span>{t('login.signIn')}</span>
+                    <kbd className="ltr:ml-2 rtl:mr-2 px-1.5 py-0.5 text-xs bg-lapis-400/30 rounded border border-lapis-400/50">
                       ↵
                     </kbd>
                   </>
                 )}
               </button>
             </form>
-
-            {/* Demo credentials hint */}
-            <div className="mt-8 pt-6 border-t border-parchment-300">
-              <div className="text-center">
-                <p className="text-xs text-lapis-500 mb-3">Demo Credentials</p>
-                <div className="inline-flex items-center gap-4 px-4 py-2 bg-parchment-200/50 rounded-lg">
-                  <div className="text-left">
-                    <span className="text-xs text-lapis-400 block">Username</span>
-                    <code className="text-sm text-lapis-600 font-code">zahra</code>
-                  </div>
-                  <div className="w-px h-8 bg-parchment-300" />
-                  <div className="text-left">
-                    <span className="text-xs text-lapis-400 block">Password</span>
-                    <code className="text-sm text-lapis-600 font-code">admin</code>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Decorative bottom edge */}

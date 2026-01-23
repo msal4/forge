@@ -266,16 +266,18 @@ export default {
   // Login Page
   login: {
     title: 'Enter the Workshop',
-    subtitle: 'Sign in to access Sarray Forge',
+    subtitle: 'Enter the ancient workshop',
     username: 'Username',
     usernamePlaceholder: 'Enter your username',
+    usernameHint: "Just enter your username — we'll add the domain",
     password: 'Password',
     passwordPlaceholder: 'Enter your password',
     rememberMe: 'Remember me',
-    signIn: 'Sign In',
-    signingIn: 'Signing in...',
+    signIn: 'Enter the Forge',
+    signingIn: 'Entering the Forge...',
     forgotPassword: 'Forgot password?',
     error: 'Invalid username or password',
+    requiredFields: 'Please enter username and password',
   },
 
   // Command Palette

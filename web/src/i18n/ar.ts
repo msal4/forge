@@ -266,16 +266,18 @@ export default {
   // Login Page
   login: {
     title: 'ادخل الورشة',
-    subtitle: 'سجّل دخولك للوصول إلى مصنع سراي',
+    subtitle: 'ادخل الورشة القديمة',
     username: 'اسم المستخدم',
     usernamePlaceholder: 'أدخل اسم المستخدم',
+    usernameHint: 'أدخل اسم المستخدم فقط — سنضيف النطاق تلقائياً',
     password: 'كلمة المرور',
     passwordPlaceholder: 'أدخل كلمة المرور',
     rememberMe: 'تذكرني',
-    signIn: 'تسجيل الدخول',
-    signingIn: 'جاري تسجيل الدخول...',
+    signIn: 'دخول المصنع',
+    signingIn: 'جاري الدخول...',
     forgotPassword: 'نسيت كلمة المرور؟',
     error: 'اسم المستخدم أو كلمة المرور غير صحيحة',
+    requiredFields: 'الرجاء إدخال اسم المستخدم وكلمة المرور',
   },
 
   // Command Palette
