@@ -132,10 +132,29 @@ func main() {
 		middleware.Logger,
 	)
 
-	// Start server
-	log.Printf("Sarray Forge starting on http://localhost:%s", port)
-	log.Printf("The ancient tablets await your commands...")
-	if err := http.ListenAndServe(":"+port, handler); err != nil {
-		log.Fatalf("Server failed: %v", err)
+	// Start server with TLS
+	certFile := os.Getenv("TLS_CERT")
+	keyFile := os.Getenv("TLS_KEY")
+
+	if certFile == "" {
+		certFile = "./certs/cert.pem"
+	}
+	if keyFile == "" {
+		keyFile = "./certs/key.pem"
+	}
+
+	// Check if TLS certs exist
+	if _, err := os.Stat(certFile); err == nil {
+		log.Printf("Sarray Forge starting on https://localhost:%s", port)
+		log.Printf("The ancient tablets await your commands...")
+		if err := http.ListenAndServeTLS(":"+port, certFile, keyFile, handler); err != nil {
+			log.Fatalf("Server failed: %v", err)
+		}
+	} else {
+		log.Printf("Sarray Forge starting on http://localhost:%s (no TLS certs found)", port)
+		log.Printf("The ancient tablets await your commands...")
+		if err := http.ListenAndServe(":"+port, handler); err != nil {
+			log.Fatalf("Server failed: %v", err)
+		}
 	}
 }

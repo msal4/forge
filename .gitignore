@@ -38,3 +38,6 @@ temp/
 # Bun
 web/bun.lockb
 data/
+
+# TLS certificates
+certs/

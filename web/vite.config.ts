@@ -1,26 +1,26 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import fs from 'fs'
+import path from 'path'
+
+// Check if certs exist for HTTPS
+const certsPath = path.resolve(__dirname, '../certs')
+const hasCerts = fs.existsSync(path.join(certsPath, 'cert.pem')) && fs.existsSync(path.join(certsPath, 'key.pem'))
 
 export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
+    https: hasCerts ? {
+      key: fs.readFileSync(path.join(certsPath, 'key.pem')),
+      cert: fs.readFileSync(path.join(certsPath, 'cert.pem')),
+    } : undefined,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'https://localhost:8080',
         changeOrigin: true,
         ws: true,
-        configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('proxy error', err);
-          });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Sending Request:', req.method, req.url);
-          });
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Received Response:', proxyRes.statusCode, req.url);
-          });
-        },
+        secure: false, // Accept self-signed certs
       },
     },
   },
