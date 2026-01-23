@@ -252,9 +252,9 @@ export function IssueModal({
 
 	const formatRelativeTime = (dateStr: string) => {
 		const diffDays = Math.floor((Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24));
-		if (diffDays === 0) return 'Today';
-		if (diffDays === 1) return 'Yesterday';
-		if (diffDays < 7) return `${diffDays} days ago`;
+		if (diffDays === 0) return t('dates.today');
+		if (diffDays === 1) return t('dates.yesterday');
+		if (diffDays < 7) return t('dates.daysAgo', { count: diffDays });
 		return formatDate(dateStr);
 	};
 
@@ -675,7 +675,10 @@ export function IssueModal({
 								{t('issueModal.created')}
 							</h4>
 							<div className="h-10 flex items-center">
-								<span className="text-sm text-lapis-700">
+								<span 
+									className="text-sm text-lapis-700 cursor-default"
+									title={issue?.createdAt ? formatDate(issue.createdAt) || '' : ''}
+								>
 									{issue?.createdAt ? formatRelativeTime(issue.createdAt) : t('issueModal.now')}
 								</span>
 							</div>
@@ -687,7 +690,9 @@ export function IssueModal({
 				<div className="flex items-center justify-between px-6 py-4 border-t border-parchment-200 bg-parchment-100/80">
 					<div className="text-xs text-lapis-400">
 						{issue?.updatedAt && !isCreating && (
-							<span>{t('issueModal.lastUpdated')}: {formatRelativeTime(issue.updatedAt)}</span>
+							<span title={formatDate(issue.updatedAt) || ''}>
+								{t('issueModal.lastUpdated')}: {formatRelativeTime(issue.updatedAt)}
+							</span>
 						)}
 					</div>
 

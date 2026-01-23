@@ -111,10 +111,14 @@ export function IssuesPage() {
     if (issueId && issues.length > 0) {
       const issue = issues.find(i => i.id === Number(issueId));
       if (issue) {
-        // Only update if selecting a different issue
+        // Only update selectedIssue and reset mode if selecting a different issue
         if (selectedIssue?.id !== issue.id) {
           setSelectedIssue(issue);
-          setModalMode('view');
+          // Don't override mode if it's already set (e.g., from handleEditIssue)
+          // Only set to 'view' for fresh navigations
+          if (modalMode !== 'edit') {
+            setModalMode('view');
+          }
         }
         setIsModalOpen(true);
       }

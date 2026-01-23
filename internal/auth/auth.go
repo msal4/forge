@@ -267,31 +267,12 @@ func (h *Handler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate required fields
-	if req.CurrentPassword == "" {
-		writeError(w, http.StatusBadRequest, "missing_current_password", "Current password is required")
-		return
-	}
 	if req.NewPassword == "" {
 		writeError(w, http.StatusBadRequest, "missing_new_password", "New password is required")
 		return
 	}
 	if len(req.NewPassword) < 4 {
 		writeError(w, http.StatusBadRequest, "password_too_short", "Password must be at least 4 characters")
-		return
-	}
-
-	// Get current password hash from database
-	var passwordHash string
-	err = h.db.QueryRow(`SELECT password_hash FROM users WHERE id = ?`, session.UserID).Scan(&passwordHash)
-	if err != nil {
-		log.Printf("Failed to get password hash for user %d: %v", session.UserID, err)
-		writeError(w, http.StatusInternalServerError, "database_error", "Failed to verify password")
-		return
-	}
-
-	// Verify current password
-	if err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(req.CurrentPassword)); err != nil {
-		writeError(w, http.StatusUnauthorized, "invalid_password", "Current password is incorrect")
 		return
 	}
 

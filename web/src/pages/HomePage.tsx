@@ -62,6 +62,19 @@ export function HomePage() {
       .slice(0, 3);
   }, [docs]);
 
+  // Format full date for tooltips
+  const formatFullDate = (dateString: string): string => {
+    const locale = i18n.language === 'ar' ? 'ar-SA' : 'en-US';
+    return new Date(dateString).toLocaleDateString(locale, {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  };
+
   // Format relative time
   const formatRelativeTime = (dateString: string): string => {
     const date = new Date(dateString);
@@ -75,6 +88,7 @@ export function HomePage() {
     if (diffSecs < 60) return t('dates.justNow');
     if (diffMins < 60) return t('dates.minutesAgo', { count: diffMins });
     if (diffHours < 24) return t('dates.hoursAgo', { count: diffHours });
+    if (diffDays === 1) return t('dates.yesterday');
     if (diffDays < 7) return t('dates.daysAgo', { count: diffDays });
     
     const locale = i18n.language === 'ar' ? 'ar-SA' : 'en-US';
@@ -193,7 +207,7 @@ export function HomePage() {
           ) : (
             <div className="space-y-3">
               {recentIssues.map(issue => (
-                <IssueRow key={issue.id} issue={issue} formatRelativeTime={formatRelativeTime} />
+                <IssueRow key={issue.id} issue={issue} formatRelativeTime={formatRelativeTime} formatFullDate={formatFullDate} />
               ))}
             </div>
           )}
@@ -237,7 +251,7 @@ export function HomePage() {
                     <p className="text-sm text-lapis-700 font-medium truncate">
                       {latestRelease.title}
                     </p>
-                    <p className="text-xs text-lapis-400 mt-1">
+                    <p className="text-xs text-lapis-400 mt-1" title={formatFullDate(latestRelease.publishedAt!)}>
                       {formatRelativeTime(latestRelease.publishedAt!)}
                     </p>
                   </div>
@@ -288,7 +302,7 @@ export function HomePage() {
                         {doc.title}
                       </span>
                     </div>
-                    <p className="text-xs text-lapis-400 mt-0.5 ltr:ml-6 rtl:mr-6">
+                    <p className="text-xs text-lapis-400 mt-0.5 ltr:ml-6 rtl:mr-6" title={formatFullDate(doc.updatedAt)}>
                       {formatRelativeTime(doc.updatedAt)}
                     </p>
                   </Link>
@@ -361,9 +375,10 @@ function StatCard({ icon, label, value, color, loading }: StatCardProps) {
 interface IssueRowProps {
   issue: Issue;
   formatRelativeTime: (date: string) => string;
+  formatFullDate: (date: string) => string;
 }
 
-function IssueRow({ issue, formatRelativeTime }: IssueRowProps) {
+function IssueRow({ issue, formatRelativeTime, formatFullDate }: IssueRowProps) {
   const statusConfig = {
     [IssueStatus.TO_INSCRIBE]: { 
       icon: <Circle size={14} />, 
@@ -412,7 +427,7 @@ function IssueRow({ issue, formatRelativeTime }: IssueRowProps) {
           )}
         </div>
         <div className="flex items-center gap-3 mt-0.5 text-xs text-lapis-400">
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1" title={formatFullDate(issue.updatedAt)}>
             <Clock size={10} />
             {formatRelativeTime(issue.updatedAt)}
           </span>

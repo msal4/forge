@@ -37,8 +37,7 @@ sarray-forge/
 │       └── sqlc/                   # Generated sqlc code
 ├── migrations/
 │   ├── 001_initial_schema.sql      # Database schema
-│   ├── 002_seed_data.sql           # Seed data (users, sample issues)
-│   └── 003_arabic_seed_data.sql    # Arabic/English test data (issues, docs, 110 releases)
+│   └── 002_initial_users.sql       # Initial users (salman, maytham, zahra, mujtaba)
 ├── web/
 │   ├── src/
 │   │   ├── api/                    # API client functions
@@ -102,7 +101,7 @@ make build             # Build both backend and frontend
 - Session-based auth with cookies
 - Login: `POST /api/auth/login` with `{ username, password }`
 - Smart login: username `zahra` auto-expands to `zahra@sarray.de`
-- Default credentials: `zahra` / `admin` or `salman` / `admin`
+- Default credentials: Any user (`salman`, `maytham`, `zahra`, `mujtaba`) with password `admin`
 
 ### REST Endpoints
 All endpoints prefixed with `/api/`:

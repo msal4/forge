@@ -58,20 +58,12 @@ clean:
 # Database Commands
 # ============================================
 
-# Initialize database (runs migrations and seeds)
-db-init:
-	@echo "Initializing database..."
-	@mkdir -p data
-	sqlite3 data/sarray-forge.db < migrations/001_initial_schema.sql
-	sqlite3 data/sarray-forge.db < migrations/002_seed_data.sql
-	@echo "Database initialized with seed data!"
-	@echo "Users: zahra@sarray.de, salman@sarray.de (password: admin)"
-
-# Reset database (delete and recreate)
+# Reset database (delete and let Go server recreate with migrations)
 db-reset:
 	@echo "Resetting database..."
 	rm -f data/sarray-forge.db data/sarray-forge.db-wal data/sarray-forge.db-shm
-	@make db-init
+	@echo "Database deleted. Run 'make run' or 'go run ./cmd/server' to recreate."
+	@echo "Users: salman, maytham, zahra, mujtaba @sarray.de (password: admin)"
 
 # Open SQLite shell
 db-shell:

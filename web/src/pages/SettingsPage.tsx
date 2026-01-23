@@ -13,7 +13,6 @@ export function SettingsPage() {
   const currentLanguage = i18n.language;
 
   // Password change state
-  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -45,18 +44,12 @@ export function SettingsPage() {
     setIsChangingPassword(true);
 
     try {
-      await usersApi.changePassword(currentPassword, newPassword);
+      await usersApi.changePassword(newPassword);
       setPasswordSuccess(t('settings.passwordChanged'));
-      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (err) {
-      const error = err as { message?: string };
-      if (error.message?.includes('incorrect')) {
-        setPasswordError(t('settings.currentPasswordIncorrect'));
-      } else {
-        setPasswordError(t('settings.passwordChangeFailed'));
-      }
+    } catch {
+      setPasswordError(t('settings.passwordChangeFailed'));
     } finally {
       setIsChangingPassword(false);
     }
@@ -138,23 +131,6 @@ export function SettingsPage() {
               </p>
               
               <form onSubmit={handlePasswordChange} className="mt-4 space-y-4 max-w-sm">
-                {/* Current Password */}
-                <div>
-                  <label className="block text-sm font-medium text-lapis-600 mb-1">
-                    {t('settings.currentPassword')}
-                  </label>
-                  <input
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full px-4 py-2 rounded-tablet border border-parchment-300 
-                               bg-parchment-100 text-lapis-700
-                               focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
-                               transition-colors"
-                    required
-                  />
-                </div>
-
                 {/* New Password */}
                 <div>
                   <label className="block text-sm font-medium text-lapis-600 mb-1">
@@ -210,7 +186,7 @@ export function SettingsPage() {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}
+                  disabled={isChangingPassword || !newPassword || !confirmPassword}
                   className="px-4 py-2 rounded-tablet bg-lapis-600 text-white font-medium
                              hover:bg-lapis-700 disabled:opacity-50 disabled:cursor-not-allowed
                              transition-colors"
