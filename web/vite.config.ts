@@ -21,6 +21,12 @@ export default defineConfig({
         changeOrigin: true,
         ws: true,
         secure: false, // Accept self-signed certs
+        // Ensure proper protocol for WebSocket
+        configure: (proxy) => {
+          proxy.on('proxyReqWs', (proxyReq, req, socket, options, head) => {
+            console.log('[Proxy WS]', req.url);
+          });
+        },
       },
     },
   },
