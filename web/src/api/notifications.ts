@@ -25,6 +25,8 @@ export interface Notification {
   commentId?: number;
   title: string;
   message: string;
+  messageKey?: string;
+  messageParams?: string; // JSON string
   isRead: boolean;
   readAt?: string;
   createdAt: string;

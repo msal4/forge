@@ -386,6 +386,13 @@ export default {
 		title: 'Notifications',
 		empty: 'No notifications',
 		markAllRead: 'Mark all read',
+		messages: {
+			mentionedYou: '{{actorName}} mentioned you',
+			mentionedYouIn: '{{actorName}} mentioned you in {{entity}}',
+			assignedYou: '{{actorName}} assigned you',
+			commentedOnYour: '{{actorName}} commented on your {{entity}}',
+			commentedOn: '{{actorName}} commented on {{entity}}',
+		},
 		types: {
 			mention: '{{actor}} mentioned you',
 			assigned: '{{actor}} assigned you',

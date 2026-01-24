@@ -386,6 +386,13 @@ export default {
 		title: 'الإشعارات',
 		empty: 'لا توجد إشعارات',
 		markAllRead: 'تعليم الكل كمقروء',
+		messages: {
+			mentionedYou: '{{actorName}} أشار إليك',
+			mentionedYouIn: '{{actorName}} أشار إليك في {{entity}}',
+			assignedYou: '{{actorName}} أسند إليك',
+			commentedOnYour: '{{actorName}} علّق على {{entity}} الخاص بك',
+			commentedOn: '{{actorName}} علّق على {{entity}}',
+		},
 		types: {
 			mention: '{{actor}} أشار إليك',
 			assigned: '{{actor}} أسند إليك',

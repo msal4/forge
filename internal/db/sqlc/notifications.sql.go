@@ -27,21 +27,23 @@ func (q *Queries) CountUnreadNotifications(ctx context.Context, userID int64) (i
 const createNotification = `-- name: CreateNotification :one
 INSERT INTO notifications (
     user_id, actor_id, notification_type, entity_type, entity_id,
-    comment_id, title, message
+    comment_id, title, message, message_key, message_params
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-RETURNING id, user_id, actor_id, notification_type, entity_type, entity_id, comment_id, title, message, is_read, read_at, created_at
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id, user_id, actor_id, notification_type, entity_type, entity_id, comment_id, title, message, is_read, read_at, created_at, message_key, message_params
 `
 
 type CreateNotificationParams struct {
-	UserID           int64         `json:"userId"`
-	ActorID          int64         `json:"actorId"`
-	NotificationType string        `json:"notificationType"`
-	EntityType       string        `json:"entityType"`
-	EntityID         int64         `json:"entityId"`
-	CommentID        sql.NullInt64 `json:"commentId"`
-	Title            string        `json:"title"`
-	Message          string        `json:"message"`
+	UserID           int64          `json:"userId"`
+	ActorID          int64          `json:"actorId"`
+	NotificationType string         `json:"notificationType"`
+	EntityType       string         `json:"entityType"`
+	EntityID         int64          `json:"entityId"`
+	CommentID        sql.NullInt64  `json:"commentId"`
+	Title            string         `json:"title"`
+	Message          string         `json:"message"`
+	MessageKey       sql.NullString `json:"messageKey"`
+	MessageParams    sql.NullString `json:"messageParams"`
 }
 
 func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error) {
@@ -54,6 +56,8 @@ func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotification
 		arg.CommentID,
 		arg.Title,
 		arg.Message,
+		arg.MessageKey,
+		arg.MessageParams,
 	)
 	var i Notification
 	err := row.Scan(
@@ -69,6 +73,8 @@ func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotification
 		&i.IsRead,
 		&i.ReadAt,
 		&i.CreatedAt,
+		&i.MessageKey,
+		&i.MessageParams,
 	)
 	return i, err
 }
@@ -146,7 +152,7 @@ func (q *Queries) GetIssueOwnerAndAssignee(ctx context.Context, id int64) (GetIs
 
 const getNotificationByID = `-- name: GetNotificationByID :one
 SELECT 
-    n.id, n.user_id, n.actor_id, n.notification_type, n.entity_type, n.entity_id, n.comment_id, n.title, n.message, n.is_read, n.read_at, n.created_at,
+    n.id, n.user_id, n.actor_id, n.notification_type, n.entity_type, n.entity_id, n.comment_id, n.title, n.message, n.is_read, n.read_at, n.created_at, n.message_key, n.message_params,
     u.username as actor_username,
     u.full_name as actor_full_name,
     u.avatar_url as actor_avatar
@@ -174,6 +180,8 @@ type GetNotificationByIDRow struct {
 	IsRead           bool           `json:"isRead"`
 	ReadAt           sql.NullTime   `json:"readAt"`
 	CreatedAt        time.Time      `json:"createdAt"`
+	MessageKey       sql.NullString `json:"messageKey"`
+	MessageParams    sql.NullString `json:"messageParams"`
 	ActorUsername    string         `json:"actorUsername"`
 	ActorFullName    string         `json:"actorFullName"`
 	ActorAvatar      sql.NullString `json:"actorAvatar"`
@@ -195,6 +203,8 @@ func (q *Queries) GetNotificationByID(ctx context.Context, arg GetNotificationBy
 		&i.IsRead,
 		&i.ReadAt,
 		&i.CreatedAt,
+		&i.MessageKey,
+		&i.MessageParams,
 		&i.ActorUsername,
 		&i.ActorFullName,
 		&i.ActorAvatar,
@@ -243,7 +253,7 @@ func (q *Queries) GetUserIDByUsername(ctx context.Context, username string) (int
 const listNotificationsByUser = `-- name: ListNotificationsByUser :many
 
 SELECT 
-    n.id, n.user_id, n.actor_id, n.notification_type, n.entity_type, n.entity_id, n.comment_id, n.title, n.message, n.is_read, n.read_at, n.created_at,
+    n.id, n.user_id, n.actor_id, n.notification_type, n.entity_type, n.entity_id, n.comment_id, n.title, n.message, n.is_read, n.read_at, n.created_at, n.message_key, n.message_params,
     u.username as actor_username,
     u.full_name as actor_full_name,
     u.avatar_url as actor_avatar
@@ -272,6 +282,8 @@ type ListNotificationsByUserRow struct {
 	IsRead           bool           `json:"isRead"`
 	ReadAt           sql.NullTime   `json:"readAt"`
 	CreatedAt        time.Time      `json:"createdAt"`
+	MessageKey       sql.NullString `json:"messageKey"`
+	MessageParams    sql.NullString `json:"messageParams"`
 	ActorUsername    string         `json:"actorUsername"`
 	ActorFullName    string         `json:"actorFullName"`
 	ActorAvatar      sql.NullString `json:"actorAvatar"`
@@ -304,6 +316,8 @@ func (q *Queries) ListNotificationsByUser(ctx context.Context, arg ListNotificat
 			&i.IsRead,
 			&i.ReadAt,
 			&i.CreatedAt,
+			&i.MessageKey,
+			&i.MessageParams,
 			&i.ActorUsername,
 			&i.ActorFullName,
 			&i.ActorAvatar,
@@ -339,7 +353,7 @@ const markNotificationRead = `-- name: MarkNotificationRead :one
 UPDATE notifications 
 SET is_read = 1, read_at = CURRENT_TIMESTAMP
 WHERE id = ? AND user_id = ?
-RETURNING id, user_id, actor_id, notification_type, entity_type, entity_id, comment_id, title, message, is_read, read_at, created_at
+RETURNING id, user_id, actor_id, notification_type, entity_type, entity_id, comment_id, title, message, is_read, read_at, created_at, message_key, message_params
 `
 
 type MarkNotificationReadParams struct {
@@ -363,6 +377,8 @@ func (q *Queries) MarkNotificationRead(ctx context.Context, arg MarkNotification
 		&i.IsRead,
 		&i.ReadAt,
 		&i.CreatedAt,
+		&i.MessageKey,
+		&i.MessageParams,
 	)
 	return i, err
 }

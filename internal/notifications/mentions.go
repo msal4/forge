@@ -3,6 +3,7 @@ package notifications
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"regexp"
 
@@ -58,7 +59,9 @@ type CreateParams struct {
 	EntityID         int64
 	CommentID        *int64
 	Title            string
-	Message          string
+	Message          string // Fallback message
+	MessageKey       string
+	MessageParams    map[string]interface{}
 }
 
 // Create creates a notification and broadcasts it via WebSocket
@@ -76,6 +79,12 @@ func (s *Service) Create(ctx context.Context, params CreateParams) error {
 		commentID = sql.NullInt64{Int64: *params.CommentID, Valid: true}
 	}
 
+	// Encode params to JSON
+	paramsJSON, err := json.Marshal(params.MessageParams)
+	if err != nil {
+		return fmt.Errorf("failed to encode message params: %w", err)
+	}
+
 	notification, err := queries.CreateNotification(ctx, db.CreateNotificationParams{
 		UserID:           params.UserID,
 		ActorID:          params.ActorID,
@@ -84,7 +93,9 @@ func (s *Service) Create(ctx context.Context, params CreateParams) error {
 		EntityID:         params.EntityID,
 		CommentID:        commentID,
 		Title:            params.Title,
-		Message:          params.Message,
+		Message:          params.Message, // Store fallback message
+		MessageKey:       sql.NullString{String: params.MessageKey, Valid: params.MessageKey != ""},
+		MessageParams:    sql.NullString{String: string(paramsJSON), Valid: len(paramsJSON) > 0 && params.MessageKey != ""},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create notification: %w", err)
@@ -174,6 +185,8 @@ func (s *Service) CreateForComment(
 			CommentID:        &commentID,
 			Title:            entityTitle,
 			Message:          fmt.Sprintf("%s mentioned you", actorName),
+			MessageKey:       "notifications.messages.mentionedYou",
+			MessageParams:    map[string]interface{}{"actorName": actorName},
 		})
 		if err != nil {
 			// Log but continue
@@ -198,6 +211,8 @@ func (s *Service) CreateForComment(
 			CommentID:        &commentID,
 			Title:            entityTitle,
 			Message:          fmt.Sprintf("%s commented on your %s", actorName, entityTypeLabel),
+			MessageKey:       "notifications.messages.commentedOnYour",
+			MessageParams:    map[string]interface{}{"actorName": actorName, "entity": entityTypeLabel},
 		})
 	}
 
@@ -214,6 +229,8 @@ func (s *Service) CreateForComment(
 			CommentID:        &commentID,
 			Title:            entityTitle,
 			Message:          fmt.Sprintf("%s commented on %s", actorName, entityTitle),
+			MessageKey:       "notifications.messages.commentedOn",
+			MessageParams:    map[string]interface{}{"actorName": actorName, "entity": entityTitle},
 		})
 	}
 
@@ -244,6 +261,8 @@ func (s *Service) CreateForAssignment(
 		EntityID:         issueID,
 		Title:            issue.Title,
 		Message:          fmt.Sprintf("%s assigned you", actorName),
+		MessageKey:       "notifications.messages.assignedYou",
+		MessageParams:    map[string]interface{}{"actorName": actorName},
 	})
 }
 
@@ -294,6 +313,8 @@ func (s *Service) CreateForContentMentions(
 			EntityID:         entityID,
 			Title:            entityTitle,
 			Message:          fmt.Sprintf("%s mentioned you in %s", actorName, entityType),
+			MessageKey:       "notifications.messages.mentionedYouIn",
+			MessageParams:    map[string]interface{}{"actorName": actorName, "entity": entityType},
 		})
 		if err != nil {
 			// Log but continue

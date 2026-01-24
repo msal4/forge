@@ -132,6 +132,8 @@ type Notification struct {
 	CommentID        *int64           `json:"commentId,omitempty"`
 	Title            string           `json:"title"`
 	Message          string           `json:"message"`
+	MessageKey       string           `json:"messageKey,omitempty"`
+	MessageParams    string           `json:"messageParams,omitempty"`
 	IsRead           bool             `json:"isRead"`
 	ReadAt           *time.Time       `json:"readAt,omitempty"`
 	CreatedAt        time.Time        `json:"createdAt"`

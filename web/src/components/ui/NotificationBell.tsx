@@ -291,7 +291,20 @@ interface NotificationItemProps {
 }
 
 function NotificationItem({ notification, onClick, formatRelativeTime }: NotificationItemProps) {
+  const { t } = useTranslation();
   const actorName = notification.actor?.fullName || notification.actor?.username || 'Someone';
+
+  const getMessage = () => {
+    if (notification.messageKey && notification.messageParams) {
+      try {
+        const params = JSON.parse(notification.messageParams);
+        return t(notification.messageKey, params);
+      } catch (e) {
+        // Fallback to default message on parsing error
+      }
+    }
+    return notification.message;
+  };
   
   return (
     <li>
@@ -331,7 +344,7 @@ function NotificationItem({ notification, onClick, formatRelativeTime }: Notific
               size="xs"
             />
             <span className={`text-xs ${notification.isRead ? 'text-lapis-400' : 'text-lapis-500'}`}>
-              {notification.message}
+              {getMessage()}
             </span>
           </div>
         </div>

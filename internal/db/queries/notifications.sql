@@ -35,9 +35,9 @@ LIMIT 1;
 -- name: CreateNotification :one
 INSERT INTO notifications (
     user_id, actor_id, notification_type, entity_type, entity_id,
-    comment_id, title, message
+    comment_id, title, message, message_key, message_params
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 -- name: MarkNotificationRead :one

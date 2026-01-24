@@ -74,18 +74,20 @@ type IssueComment struct {
 }
 
 type Notification struct {
-	ID               int64         `json:"id"`
-	UserID           int64         `json:"userId"`
-	ActorID          int64         `json:"actorId"`
-	NotificationType string        `json:"notificationType"`
-	EntityType       string        `json:"entityType"`
-	EntityID         int64         `json:"entityId"`
-	CommentID        sql.NullInt64 `json:"commentId"`
-	Title            string        `json:"title"`
-	Message          string        `json:"message"`
-	IsRead           bool          `json:"isRead"`
-	ReadAt           sql.NullTime  `json:"readAt"`
-	CreatedAt        time.Time     `json:"createdAt"`
+	ID               int64          `json:"id"`
+	UserID           int64          `json:"userId"`
+	ActorID          int64          `json:"actorId"`
+	NotificationType string         `json:"notificationType"`
+	EntityType       string         `json:"entityType"`
+	EntityID         int64          `json:"entityId"`
+	CommentID        sql.NullInt64  `json:"commentId"`
+	Title            string         `json:"title"`
+	Message          string         `json:"message"`
+	IsRead           bool           `json:"isRead"`
+	ReadAt           sql.NullTime   `json:"readAt"`
+	CreatedAt        time.Time      `json:"createdAt"`
+	MessageKey       sql.NullString `json:"messageKey"`
+	MessageParams    sql.NullString `json:"messageParams"`
 }
 
 type Project struct {

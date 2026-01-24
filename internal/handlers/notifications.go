@@ -63,6 +63,8 @@ func (h *Handlers) ListNotifications(w http.ResponseWriter, r *http.Request) {
 			CommentID:        commentID,
 			Title:            row.Title,
 			Message:          row.Message,
+			MessageKey:       row.MessageKey.String,
+			MessageParams:    row.MessageParams.String,
 			IsRead:           row.IsRead,
 			CreatedAt:        row.CreatedAt,
 			Actor: &models.User{
