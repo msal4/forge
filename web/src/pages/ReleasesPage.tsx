@@ -2,8 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { Markdown } from '../components/ui/Markdown';
 import { useQueryClient } from '@tanstack/react-query';
 import { 
   Plus, 
@@ -63,11 +62,14 @@ export function ReleasesPage() {
       const release = releases.find(r => r.id === Number(releaseId));
       if (release) {
         setSelectedRelease(release);
+      } else {
+        // Release was deleted by another user
+        navigate('/releases');
       }
     } else if (!releaseId) {
       setSelectedRelease(null);
     }
-  }, [releaseId, releases]);
+  }, [releaseId, releases, navigate]);
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
@@ -265,7 +267,7 @@ export function ReleasesPage() {
                   </div>
                   {selectedRelease.description && (
                     <div className="mt-2 prose-mesopotamian">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedRelease.description}</ReactMarkdown>
+                      <Markdown>{selectedRelease.description}</Markdown>
                     </div>
                   )}
                   <div className="mt-3 flex items-center gap-4 text-sm text-lapis-500">

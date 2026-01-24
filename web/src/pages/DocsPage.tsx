@@ -2,8 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { Markdown } from '../components/ui/Markdown';
 import { useQueryClient } from '@tanstack/react-query';
 import { 
   Plus, 
@@ -65,18 +64,74 @@ export function DocsPage() {
   // Confirm dialog
   const { confirm, DialogComponent: ConfirmDialogComponent } = useConfirmDialog();
   
-  // WebSocket for conflict detection
-  const { setEditingItem } = useWebSocket();
+  // WebSocket for conflict detection and sync
+  const { setEditingItem, syncVersion } = useWebSocket();
+  const lastSyncVersionRef = React.useRef(syncVersion);
+  
+  // Track if we're in an edit session (to prevent auto-refresh)
+  const [isEditSession, setIsEditSession] = React.useState(false);
+  const syncRequestedAtRef = React.useRef<string | null>(null);
+
+  // Helper to load doc data into form
+  const loadDocIntoForm = React.useCallback((doc: Doc) => {
+    console.log('[DocsPage] loadDocIntoForm called with:', doc.title);
+    setEditTitle(doc.title);
+    setEditContent(doc.content || '');
+    setEditParentId(doc.parentId || '');
+  }, []);
+
+  // Start edit session when entering edit mode
+  React.useEffect(() => {
+    if (mode === 'edit') {
+      setIsEditSession(true);
+    }
+  }, [mode]);
+
+  // End edit session when leaving edit mode
+  React.useEffect(() => {
+    if (mode !== 'edit') {
+      setIsEditSession(false);
+    }
+  }, [mode]);
+
+  // When syncVersion increases, record the current updatedAt
+  React.useEffect(() => {
+    if (syncVersion > lastSyncVersionRef.current) {
+      console.log('[DocsPage] Sync requested, current updatedAt:', selectedDocData?.updatedAt);
+      lastSyncVersionRef.current = syncVersion;
+      syncRequestedAtRef.current = selectedDocData?.updatedAt || 'pending';
+    }
+  }, [syncVersion, selectedDocData?.updatedAt]);
 
   // Sync selected doc from query
   React.useEffect(() => {
     if (selectedDocData) {
+      // Always update selectedDoc for display
       setSelectedDoc(selectedDocData);
-      if (mode !== 'edit') {
+      
+      // Check if we're waiting for fresh data after a sync request
+      if (syncRequestedAtRef.current !== null) {
+        if (selectedDocData.updatedAt !== syncRequestedAtRef.current) {
+          console.log('[DocsPage] Fresh data arrived (new updatedAt):', selectedDocData.updatedAt);
+          syncRequestedAtRef.current = null;
+          loadDocIntoForm(selectedDocData);
+          return;
+        }
+        // Still waiting
+        return;
+      }
+      
+      // Don't auto-refresh form during edit session
+      if (isEditSession) {
+        return;
+      }
+      
+      // Set mode to view if not editing
+      if (mode !== 'edit' && mode !== 'create') {
         setMode('view');
       }
     }
-  }, [selectedDocData]);
+  }, [selectedDocData, isEditSession, mode, loadDocIntoForm]);
 
   // Handle URL param changes
   React.useEffect(() => {
@@ -87,6 +142,17 @@ export function DocsPage() {
       }
     }
   }, [docId]);
+  
+  // Close view if the selected doc was deleted (no longer in the list)
+  React.useEffect(() => {
+    if (docId && docs.length > 0 && mode !== 'create') {
+      const docExists = docs.some(d => d.id === Number(docId));
+      if (!docExists) {
+        // Doc was deleted by another user
+        navigate('/docs');
+      }
+    }
+  }, [docs, docId, mode, navigate]);
 
   // Track unsaved changes
   React.useEffect(() => {
@@ -425,7 +491,7 @@ export function DocsPage() {
         <div className="tablet-card p-6 transition-all duration-200">
           <div className="prose prose-mesopotamian max-w-none">
             {selectedDoc.content ? (
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedDoc.content}</ReactMarkdown>
+              <Markdown>{selectedDoc.content}</Markdown>
             ) : (
               <p className="text-lapis-400 italic">{t('docs.noContent')}</p>
             )}
@@ -684,7 +750,7 @@ function InlineMarkdownEditor({
           <div className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'} overflow-auto bg-parchment-50`}>
             <div className="p-4 prose prose-mesopotamian max-w-none">
               {value ? (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
+                <Markdown>{value}</Markdown>
               ) : (
                 <p className="text-lapis-400 italic">{t('docs.editor.previewPlaceholder')}</p>
               )}

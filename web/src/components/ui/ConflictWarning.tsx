@@ -1,9 +1,6 @@
-
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, RefreshCw, X } from 'lucide-react';
 import { useWebSocket } from '../../context/WebSocketContext';
-import { useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '../../hooks/useApi';
 
 // ============================================
 // Conflict Warning Modal
@@ -16,25 +13,17 @@ interface ConflictWarningProps {
 
 export function ConflictWarning({ onReload }: ConflictWarningProps) {
   const { t } = useTranslation();
-  const { hasConflict, conflictEvent, dismissConflict } = useWebSocket();
-  const queryClient = useQueryClient();
+  const { hasConflict, conflictEvent, dismissConflict, syncEditingItem } = useWebSocket();
+
+  console.log('[ConflictWarning] Render:', { hasConflict, conflictEvent });
 
   if (!hasConflict || !conflictEvent) return null;
+  
+  console.log('[ConflictWarning] SHOWING WARNING MODAL');
 
   const handleReload = () => {
-    // Refresh the relevant data
-    switch (conflictEvent.resource) {
-      case 'issue':
-        queryClient.invalidateQueries({ queryKey: queryKeys.issues.all });
-        break;
-      case 'doc':
-        queryClient.invalidateQueries({ queryKey: queryKeys.docs.all });
-        break;
-      case 'release':
-        queryClient.invalidateQueries({ queryKey: queryKeys.releases.all });
-        break;
-    }
-    dismissConflict();
+    // Sync the item being edited with latest data from server
+    syncEditingItem();
     onReload?.();
   };
 

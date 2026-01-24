@@ -11,6 +11,7 @@ import { FilterBar } from '../components/issues/FilterBar';
 import { useConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useKeyboardShortcuts } from '../hooks/useKeyboard';
 import { useIssueFilters } from '../hooks/useIssueFilters';
+import { useIssue } from '../hooks/useApi';
 import { 
   useIssues, 
   useUsers, 
@@ -83,7 +84,10 @@ export function IssuesPage() {
   // Modal state
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [modalMode, setModalMode] = React.useState<'view' | 'edit' | 'create'>('view');
-  const [selectedIssue, setSelectedIssue] = React.useState<Issue | null>(null);
+  const [selectedIssueId, setSelectedIssueId] = React.useState<number | null>(null);
+  
+  // Fetch selected issue with real-time updates via React Query
+  const { data: selectedIssue } = useIssue(selectedIssueId ?? undefined);
   
   // Drag and drop state
   const [draggedIssue, setDraggedIssue] = React.useState<Issue | null>(null);
@@ -110,27 +114,34 @@ export function IssuesPage() {
   const { setEditingItem } = useWebSocket();
 
   // Handle URL param changes for issue selection
-  // Only sync when issueId or issues change, NOT when modalMode changes
   React.useEffect(() => {
-    if (issueId && issues.length > 0) {
-      const issue = issues.find(i => i.id === Number(issueId));
-      if (issue) {
-        // Only update selectedIssue and reset mode if selecting a different issue
-        if (selectedIssue?.id !== issue.id) {
-          setSelectedIssue(issue);
-          // Don't override mode if it's already set (e.g., from handleEditIssue)
-          // Only set to 'view' for fresh navigations
-          if (modalMode !== 'edit') {
-            setModalMode('view');
-          }
+    if (issueId) {
+      const id = Number(issueId);
+      // Only update if selecting a different issue
+      if (selectedIssueId !== id) {
+        setSelectedIssueId(id);
+        // Only set to 'view' for fresh navigations (not when already editing)
+        if (modalMode !== 'edit') {
+          setModalMode('view');
         }
-        setIsModalOpen(true);
       }
+      setIsModalOpen(true);
     } else if (!issueId && modalMode !== 'create') {
       setIsModalOpen(false);
-      setSelectedIssue(null);
+      setSelectedIssueId(null);
     }
-  }, [issueId, issues]); // Removed modalMode from dependencies
+  }, [issueId]); // Only depend on issueId
+  
+  // Close modal if the selected issue was deleted (no longer in the list)
+  React.useEffect(() => {
+    if (selectedIssueId && issues.length > 0 && isModalOpen && modalMode !== 'create') {
+      const issueExists = issues.some(i => i.id === selectedIssueId);
+      if (!issueExists) {
+        // Issue was deleted by another user
+        navigate('/issues');
+      }
+    }
+  }, [issues, selectedIssueId, isModalOpen, modalMode, navigate]);
 
   // Group filtered issues by status
   const issuesByStatus = React.useMemo(() => {
@@ -157,7 +168,7 @@ export function IssuesPage() {
       description: 'Create new issue',
       handler: () => {
         if (isModalOpen) return; // Don't create while viewing
-        setSelectedIssue(null);
+        setSelectedIssueId(null);
         setModalMode('create');
         setIsModalOpen(true);
       },
@@ -176,7 +187,7 @@ export function IssuesPage() {
       keys: 'e',
       description: 'Edit issue',
       handler: () => {
-        if (isModalOpen && modalMode === 'view' && selectedIssue) {
+        if (isModalOpen && modalMode === 'view' && selectedIssueId) {
           setModalMode('edit');
         }
       },
@@ -186,12 +197,12 @@ export function IssuesPage() {
 
   // Create or update issue
   const handleSaveIssue = async (data: CreateIssueRequest | UpdateIssueRequest) => {
-    if (selectedIssue) {
-      const updated = await updateIssueMutation.mutateAsync({ 
+    if (selectedIssueId && selectedIssue) {
+      await updateIssueMutation.mutateAsync({ 
         id: selectedIssue.id, 
         data: data as UpdateIssueRequest 
       });
-      setSelectedIssue(updated);
+      // No need to setSelectedIssue - React Query will update it automatically
     } else {
       await createIssueMutation.mutateAsync(data as CreateIssueRequest);
     }
@@ -273,11 +284,14 @@ export function IssuesPage() {
 
   // Handle mode change within modal
   const handleModeChange = (mode: 'view' | 'edit') => {
+    console.log('[IssuesPage] handleModeChange:', mode, 'selectedIssueId:', selectedIssueId);
     setModalMode(mode);
     // Track editing state for conflict detection
-    if (mode === 'edit' && selectedIssue) {
-      setEditingItem('issue', selectedIssue.id);
+    if (mode === 'edit' && selectedIssueId) {
+      console.log('[IssuesPage] Setting editing item to issue:', selectedIssueId);
+      setEditingItem('issue', selectedIssueId);
     } else {
+      console.log('[IssuesPage] Clearing editing item');
       setEditingItem(null, null);
     }
   };
@@ -289,6 +303,7 @@ export function IssuesPage() {
     
     if (modalMode === 'create') {
       setIsModalOpen(false);
+      setSelectedIssueId(null);
       setModalMode('view');
     } else {
       navigate('/issues');
@@ -332,7 +347,7 @@ export function IssuesPage() {
             variant="primary"
             hotkey="c"
             onClick={() => {
-              setSelectedIssue(null);
+              setSelectedIssueId(null);
               setModalMode('create');
               setIsModalOpen(true);
             }}
@@ -404,7 +419,7 @@ export function IssuesPage() {
               isDragOver={dragOverColumn === column.id}
               draggedIssueId={draggedIssue?.id}
               onCreateIssue={() => {
-                setSelectedIssue(null);
+                setSelectedIssueId(null);
                 setModalMode('create');
                 setIsModalOpen(true);
               }}
@@ -419,7 +434,7 @@ export function IssuesPage() {
       {/* Unified Issue Modal */}
       <IssueModal
         isOpen={isModalOpen}
-        issue={selectedIssue}
+        issue={selectedIssue ?? null}
         users={users}
         mode={modalMode}
         onClose={handleCloseModal}

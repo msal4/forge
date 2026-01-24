@@ -8,8 +8,8 @@
 set -e
 
 # Load configuration from .env if present
-if [[ -f .env ]]; then
-    source .env
+if [[ -f deploy/.env ]]; then
+    source deploy/.env
 fi
 
 # Configuration (override these in .env or environment)

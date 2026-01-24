@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -43,11 +44,16 @@ func (h *Handlers) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("[WS] Upgrade request from user %d, Proto: %s, Headers: Connection=%s, Upgrade=%s",
+		userID, r.Proto, r.Header.Get("Connection"), r.Header.Get("Upgrade"))
+
 	// Upgrade HTTP connection to WebSocket
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
+		log.Printf("[WS] Upgrade failed: %v", err)
 		return
 	}
+	log.Printf("[WS] Connection upgraded successfully for user %d", userID)
 
 	// Create new client
 	client := websocket.NewClient(h.hub, conn, userID)
@@ -546,15 +552,25 @@ func (h *Handlers) getIssueByID(w http.ResponseWriter, id int64) {
 	var issue models.Issue
 	var assigneeID *int64
 	var labelsJSON string
+	var assigneeUsername, assigneeFullName string
+	var reporterUsername, reporterFullName string
 
 	err := h.db.QueryRow(`
-		SELECT id, title, description, status, priority, assignee_id, reporter_id, 
-		       labels, due_date, created_at, updated_at
-		FROM issues WHERE id = ?
+		SELECT i.id, i.title, i.description, i.status, i.priority, 
+		       i.assignee_id, i.reporter_id, i.labels, i.due_date, 
+		       i.created_at, i.updated_at,
+		       COALESCE(a.username, ''), COALESCE(a.full_name, ''),
+		       r.username, r.full_name
+		FROM issues i
+		LEFT JOIN users a ON i.assignee_id = a.id
+		JOIN users r ON i.reporter_id = r.id
+		WHERE i.id = ?
 	`, id).Scan(
 		&issue.ID, &issue.Title, &issue.Description, &issue.Status, &issue.Priority,
 		&assigneeID, &issue.ReporterID, &labelsJSON, &issue.DueDate,
 		&issue.CreatedAt, &issue.UpdatedAt,
+		&assigneeUsername, &assigneeFullName,
+		&reporterUsername, &reporterFullName,
 	)
 
 	if err != nil {
@@ -562,10 +578,27 @@ func (h *Handlers) getIssueByID(w http.ResponseWriter, id int64) {
 		return
 	}
 
-	issue.AssigneeID = assigneeID
+	// Parse labels JSON
 	json.Unmarshal([]byte(labelsJSON), &issue.Labels)
 	if issue.Labels == nil {
 		issue.Labels = []string{}
+	}
+
+	// Set assignee if present
+	if assigneeID != nil {
+		issue.AssigneeID = assigneeID
+		issue.Assignee = &models.User{
+			ID:       *assigneeID,
+			Username: assigneeUsername,
+			FullName: assigneeFullName,
+		}
+	}
+
+	// Set reporter
+	issue.Reporter = &models.User{
+		ID:       issue.ReporterID,
+		Username: reporterUsername,
+		FullName: reporterFullName,
 	}
 
 	writeJSON(w, http.StatusOK, issue)

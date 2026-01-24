@@ -1,11 +1,15 @@
 package middleware
 
 import (
+	"bufio"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"os"
 	"runtime/debug"
 	"time"
 )
@@ -65,6 +69,21 @@ type responseWriter struct {
 func (rw *responseWriter) WriteHeader(code int) {
 	rw.statusCode = code
 	rw.ResponseWriter.WriteHeader(code)
+}
+
+// Hijack implements http.Hijacker - required for WebSocket upgrades
+func (rw *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if h, ok := rw.ResponseWriter.(http.Hijacker); ok {
+		return h.Hijack()
+	}
+	return nil, nil, fmt.Errorf("hijacking not supported")
+}
+
+// Flush implements http.Flusher
+func (rw *responseWriter) Flush() {
+	if f, ok := rw.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
 }
 
 // CORS adds Cross-Origin Resource Sharing headers
@@ -134,7 +153,9 @@ func generateRequestID() string {
 }
 
 // SPAHandler wraps a file server to serve index.html for SPA routes
-func SPAHandler(fs http.Handler) http.Handler {
+func SPAHandler(staticDir string) http.Handler {
+	fs := http.FileServer(http.Dir(staticDir))
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// If this is an API route, let it 404 (shouldn't reach here normally)
 		if len(r.URL.Path) >= 4 && r.URL.Path[:4] == "/api" {
@@ -142,7 +163,19 @@ func SPAHandler(fs http.Handler) http.Handler {
 			return
 		}
 
-		// Try to serve the file
+		// Check if the requested file exists
+		path := staticDir + r.URL.Path
+		if r.URL.Path == "/" {
+			fs.ServeHTTP(w, r)
+			return
+		}
+
+		// Try to stat the file
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			// File doesn't exist - serve index.html for SPA routing
+			r.URL.Path = "/"
+		}
+
 		fs.ServeHTTP(w, r)
 	})
 }

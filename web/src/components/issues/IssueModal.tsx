@@ -1,11 +1,10 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { Markdown } from '../ui/Markdown';
 import {
 	X,
-	ArrowLeft,
+	ArrowRight,
 	Edit3,
 	Trash2,
 	Check,
@@ -17,6 +16,7 @@ import {
 	ChevronDown
 } from 'lucide-react';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboard';
+import { useWebSocket } from '../../context/WebSocketContext';
 import { HotkeyBadge } from '../ui/HotkeyBadge';
 import type { Issue, CreateIssueRequest, UpdateIssueRequest, PriorityType, IssueStatusType } from '../../api/issues';
 import { Priority, IssueStatus } from '../../api/issues';
@@ -70,6 +70,7 @@ export function IssueModal({
 	isLoading
 }: IssueModalProps) {
 	const { t } = useTranslation();
+	const { syncVersion } = useWebSocket();
 	
 	// Form state
 	const [title, setTitle] = React.useState('');
@@ -90,17 +91,25 @@ export function IssueModal({
 	const titleInputRef = React.useRef<HTMLInputElement>(null);
 	const isEditing = mode === 'edit' || mode === 'create';
 	const isCreating = mode === 'create';
+	
+	// Track if we're in the middle of an edit session (to prevent auto-refresh)
+	const [isEditSession, setIsEditSession] = React.useState(false);
+	
+	// Track the last sync version and the updatedAt when sync was requested
+	const lastSyncVersionRef = React.useRef(syncVersion);
+	const syncRequestedAtRef = React.useRef<string | null>(null);
 
-	// Populate form from issue
-	React.useEffect(() => {
-		if (issue) {
-			setTitle(issue.title);
-			setDescription(issue.description || '');
-			setPriority(issue.priority);
-			setStatus(issue.status);
-			setAssigneeId(issue.assigneeId || null);
-			setDueDate(issue.dueDate?.split('T')[0] || '');
-			setLabels(issue.labels || []);
+	// Helper to load issue data into form
+	const loadIssueIntoForm = React.useCallback((issueData: Issue | null) => {
+		console.log('[IssueModal] loadIssueIntoForm called with:', issueData?.title, issueData?.updatedAt);
+		if (issueData) {
+			setTitle(issueData.title);
+			setDescription(issueData.description || '');
+			setPriority(issueData.priority);
+			setStatus(issueData.status);
+			setAssigneeId(issueData.assigneeId || null);
+			setDueDate(issueData.dueDate?.split('T')[0] || '');
+			setLabels(issueData.labels || []);
 		} else {
 			setTitle('');
 			setDescription('');
@@ -112,7 +121,56 @@ export function IssueModal({
 		}
 		setError('');
 		setLabelInput('');
-	}, [issue, isOpen]);
+	}, []);
+
+	// Start edit session when entering edit mode
+	React.useEffect(() => {
+		if (isEditing && !isCreating) {
+			setIsEditSession(true);
+		}
+	}, [isEditing, isCreating]);
+
+	// End edit session when modal closes or switching to view mode
+	React.useEffect(() => {
+		if (!isOpen || mode === 'view') {
+			setIsEditSession(false);
+		}
+	}, [isOpen, mode]);
+
+	// When syncVersion increases, record the current updatedAt so we know when new data arrives
+	React.useEffect(() => {
+		if (syncVersion > lastSyncVersionRef.current) {
+			console.log('[IssueModal] Sync requested, current updatedAt:', issue?.updatedAt);
+			lastSyncVersionRef.current = syncVersion;
+			// Store the current updatedAt - we'll load when we see a different one
+			syncRequestedAtRef.current = issue?.updatedAt || 'pending';
+		}
+	}, [syncVersion, issue?.updatedAt]);
+
+	// When issue data changes, check if we should load it
+	React.useEffect(() => {
+		// Check if we're waiting for fresh data after a sync request
+		if (syncRequestedAtRef.current !== null) {
+			// Check if we got NEW data (different updatedAt)
+			if (issue && issue.updatedAt !== syncRequestedAtRef.current) {
+				console.log('[IssueModal] Fresh data arrived (new updatedAt):', issue.updatedAt);
+				syncRequestedAtRef.current = null;
+				loadIssueIntoForm(issue);
+				return;
+			}
+			// Still waiting for fresh data
+			console.log('[IssueModal] Still waiting for fresh data, current:', issue?.updatedAt, 'waiting for change from:', syncRequestedAtRef.current);
+			return;
+		}
+		
+		// Don't auto-refresh during edit session
+		if (isEditSession) {
+			return;
+		}
+		
+		// Load issue data (initial load or view mode updates)
+		loadIssueIntoForm(issue);
+	}, [issue, isOpen, isEditSession, loadIssueIntoForm]);
 
 	// Focus title when entering edit mode
 	React.useEffect(() => {
@@ -437,7 +495,7 @@ export function IssueModal({
 							title={isEditing ? (isCreating ? t('common.close') : t('common.back')) + " (Esc)" : t('common.close') + " (Esc)"}
 						>
 							{isEditing && !isCreating ? (
-								<ArrowLeft size={20} className="rtl:rotate-180" />
+								<ArrowRight size={20} className="rtl:rotate-180" />
 							) : (
 								<X size={20} />
 							)}
@@ -477,7 +535,7 @@ export function IssueModal({
 							/>
 						) : description ? (
 							<div className="min-h-[120px] bg-parchment-100/30 rounded-lg p-4 prose-mesopotamian">
-								<ReactMarkdown remarkPlugins={[remarkGfm]}>{description}</ReactMarkdown>
+								<Markdown>{description}</Markdown>
 							</div>
 						) : (
 							<div className="min-h-[120px] flex items-center justify-center text-lapis-400 italic text-sm bg-parchment-100/30 rounded-lg">

@@ -162,7 +162,7 @@ export function LoginPage() {
                             checkAutofill();
                           }
                         }}
-                        placeholder="zahra"
+                        placeholder=""
                         autoComplete="username"
                         disabled={loading}
                     className={`

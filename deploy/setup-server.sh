@@ -38,7 +38,9 @@ if id "forge" &>/dev/null; then
     warn "User 'forge' already exists"
 else
     log "Creating 'forge' system user..."
-    useradd --system --shell /usr/bin/nologin --home-dir /opt/sarray-forge forge
+    useradd --system --shell /usr/sbin/nologin --home-dir /opt/sarray-forge --create-home forge || {
+        error "Failed to create forge user"
+    }
 fi
 
 # ==============================================

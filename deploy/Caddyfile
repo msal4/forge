@@ -3,6 +3,7 @@
 
 forge.sarray.de {
     # Reverse proxy to Go backend
+    # The Go server handles SPA routing internally
     reverse_proxy localhost:8080
 
     # Enable gzip compression

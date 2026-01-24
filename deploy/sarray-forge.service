@@ -25,20 +25,11 @@ Environment=STATIC_DIR=/opt/sarray-forge/web/dist
 Environment=MIGRATIONS_DIR=/opt/sarray-forge/migrations
 Environment=UPLOADS_DIR=/opt/sarray-forge/data/releases
 
-# Security hardening
+# Security hardening (relaxed for compatibility)
 NoNewPrivileges=yes
-ProtectSystem=strict
+ProtectSystem=full
 ProtectHome=yes
 PrivateTmp=yes
-PrivateDevices=yes
-ProtectKernelTunables=yes
-ProtectKernelModules=yes
-ProtectControlGroups=yes
-RestrictSUIDSGID=yes
-RestrictNamespaces=yes
-
-# Allow write access to data directory
-ReadWritePaths=/opt/sarray-forge/data
 
 # Resource limits
 LimitNOFILE=65535

@@ -61,7 +61,7 @@ export default {
 		noReleases: 'لا توجد إصدارات بعد',
 		noDocuments: 'لا توجد وثائق بعد',
 		keyboardNav: 'التنقل بلوحة المفاتيح',
-		keyboardHint: 'اضغط Ctrl+K لفتح لوحة الأوامر، أو استخدم.',
+		keyboardHint: 'اضغط Ctrl+K لفتح لوحة الأوامر',
 		tablet: {
 			title: 'اللوح',
 			description: 'انقش وتتبع مهامك على ألواح الطين',

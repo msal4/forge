@@ -51,9 +51,13 @@ export function HomePage() {
   }, [issues]);
 
   const latestRelease = React.useMemo(() => {
+    if (releases.length === 0) return null;
     return [...releases]
-      .filter(r => r.publishedAt)
-      .sort((a, b) => new Date(b.publishedAt!).getTime() - new Date(a.publishedAt!).getTime())[0];
+      .sort((a, b) => {
+        const dateA = a.publishedAt || a.createdAt;
+        const dateB = b.publishedAt || b.createdAt;
+        return new Date(dateB).getTime() - new Date(dateA).getTime();
+      })[0];
   }, [releases]);
 
   const recentDocs = React.useMemo(() => {
@@ -251,8 +255,8 @@ export function HomePage() {
                     <p className="text-sm text-lapis-700 font-medium truncate">
                       {latestRelease.title}
                     </p>
-                    <p className="text-xs text-lapis-400 mt-1" title={formatFullDate(latestRelease.publishedAt!)}>
-                      {formatRelativeTime(latestRelease.publishedAt!)}
+                    <p className="text-xs text-lapis-400 mt-1" title={formatFullDate(latestRelease.publishedAt || latestRelease.createdAt)}>
+                      {formatRelativeTime(latestRelease.publishedAt || latestRelease.createdAt)}
                     </p>
                   </div>
                 </div>

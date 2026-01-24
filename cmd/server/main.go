@@ -120,8 +120,7 @@ func main() {
 		})
 	} else {
 		// Serve static files with SPA routing
-		fileServer := http.FileServer(http.Dir(staticDir))
-		mux.Handle("/", middleware.SPAHandler(fileServer))
+		mux.Handle("/", middleware.SPAHandler(staticDir))
 	}
 
 	// ============================================
