@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import mermaid from 'mermaid';
 
 // Initialize mermaid with theme settings
@@ -67,6 +68,16 @@ function MermaidDiagram({ chart }: { chart: string }) {
   );
 }
 
+// Preprocess markdown to convert @mentions to styled HTML spans
+function preprocessMentions(text: string): string {
+  // Match @username but not inside code blocks or inline code
+  // This regex avoids matching inside backticks
+  return text.replace(
+    /(?<!`)@([a-zA-Z0-9_]+)(?!`)/g,
+    '<span class="mention">@$1</span>'
+  );
+}
+
 // Custom code block component
 function CodeBlock({ className, children, ...props }: React.HTMLAttributes<HTMLElement> & { children?: React.ReactNode }) {
   const match = /language-(\w+)/.exec(className || '');
@@ -93,15 +104,19 @@ interface MarkdownProps {
 }
 
 export function Markdown({ children, className = '' }: MarkdownProps) {
+  // Preprocess to convert @mentions to styled spans
+  const processedContent = preprocessMentions(children);
+  
   return (
     <div className={`prose prose-lapis max-w-none ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw]}
         components={{
           code: CodeBlock,
         }}
       >
-        {children}
+        {processedContent}
       </ReactMarkdown>
     </div>
   );

@@ -285,6 +285,11 @@
          focus:ring-lapis-400 focus:ring-offset-0 cursor-default;
 }
 
+/* @mention styling */
+.mention {
+  @apply text-lapis-500 font-semibold;
+}
+
 /* ============================================
    Chrome Autofill Detection
    ============================================ */
