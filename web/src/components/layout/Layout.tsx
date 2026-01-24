@@ -39,7 +39,7 @@ export function Layout() {
       <aside 
         className={`
           fixed inset-y-0 ltr:left-0 rtl:right-0 z-40
-          w-64 bg-parchment-50 ltr:border-r rtl:border-l border-parchment-300
+          w-72 bg-parchment-50 ltr:border-r rtl:border-l border-parchment-300
           transform transition-transform duration-200 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : 'ltr:-translate-x-full rtl:translate-x-full'}
           lg:relative lg:translate-x-0 lg:flex-shrink-0
