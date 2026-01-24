@@ -99,6 +99,8 @@ export function IssueModal({
 	const [activeTab, setActiveTab] = React.useState<TabType>('comments');
 
 	const titleInputRef = React.useRef<HTMLInputElement>(null);
+	const contentRef = React.useRef<HTMLDivElement>(null);
+	const [canScrollDown, setCanScrollDown] = React.useState(false);
 	const isEditing = mode === 'edit' || mode === 'create';
 	const isCreating = mode === 'create';
 	
@@ -188,6 +190,32 @@ export function IssueModal({
 			setTimeout(() => titleInputRef.current?.focus(), 100);
 		}
 	}, [isEditing, isOpen]);
+
+	// Check if content is scrollable and update fade indicator
+	const checkScrollable = React.useCallback(() => {
+		const el = contentRef.current;
+		if (el) {
+			const hasMoreContent = el.scrollHeight > el.clientHeight;
+			const isNotAtBottom = el.scrollTop + el.clientHeight < el.scrollHeight - 10;
+			setCanScrollDown(hasMoreContent && isNotAtBottom);
+		}
+	}, []);
+
+	// Check scrollable state on mount, resize, and content changes
+	React.useEffect(() => {
+		if (!isOpen) return;
+		
+		// Initial check with slight delay to ensure content is rendered
+		const timeoutId = setTimeout(checkScrollable, 100);
+		
+		// Re-check on window resize
+		window.addEventListener('resize', checkScrollable);
+		
+		return () => {
+			clearTimeout(timeoutId);
+			window.removeEventListener('resize', checkScrollable);
+		};
+	}, [isOpen, checkScrollable, mode, issue]);
 
 	// Helper to close all dropdowns
 	const closeAllDropdowns = React.useCallback(() => {
@@ -521,8 +549,13 @@ export function IssueModal({
 					</div>
 				)}
 
-				{/* Content - Scrollable area */}
-				<div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 scrollbar-stable scrollbar-thin">
+				{/* Content - Scrollable area with fade indicator */}
+				<div className="relative flex-1 min-h-0">
+					<div 
+						ref={contentRef}
+						onScroll={checkScrollable}
+						className="h-full overflow-y-auto p-4 sm:p-6 space-y-5 scrollbar-stable scrollbar-thin"
+					>
 					{/* Description */}
 					<div>
 						<h3 className="flex items-center gap-2 text-sm font-semibold text-lapis-600 mb-3">
@@ -805,6 +838,15 @@ export function IssueModal({
 								)}
 							</div>
 						</div>
+					)}
+					</div>
+
+					{/* Scroll fade indicator */}
+					{canScrollDown && (
+						<div 
+							className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none bg-gradient-to-t from-parchment-50 to-transparent"
+							aria-hidden="true"
+						/>
 					)}
 				</div>
 
