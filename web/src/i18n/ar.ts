@@ -220,6 +220,11 @@ export default {
 			previewPlaceholder: 'ستظهر المعاينة هنا...',
 			hint: 'Ctrl+E تبديل التحرير | Ctrl+Shift+P معاينة',
 		},
+		tabs: {
+			comments: 'التعليقات',
+			activity: 'النشاط',
+		},
+		jumpToComments: 'الانتقال للتعليقات',
 	},
 
 	// Releases Page

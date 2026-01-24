@@ -220,6 +220,11 @@ export default {
 			previewPlaceholder: 'Preview will appear here...',
 			hint: 'Ctrl+E toggle edit | Ctrl+Shift+P preview',
 		},
+		tabs: {
+			comments: 'Comments',
+			activity: 'Activity',
+		},
+		jumpToComments: 'Jump to comments',
 	},
 
 	// Releases Page

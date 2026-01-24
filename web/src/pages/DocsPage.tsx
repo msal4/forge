@@ -19,7 +19,10 @@ import {
   Clock,
   X,
   Check,
-  Eye
+  Eye,
+  MessageSquare,
+  History,
+  ChevronDown
 } from 'lucide-react';
 import { useWebSocket } from '../context/WebSocketContext';
 import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
@@ -34,6 +37,7 @@ import type { Doc, CreateDocRequest, UpdateDocRequest } from '../api/docs';
 // ============================================
 
 type PageMode = 'list' | 'view' | 'edit' | 'create';
+type DocTabType = 'comments' | 'activity';
 
 export function DocsPage() {
   const { t } = useTranslation();
@@ -62,6 +66,10 @@ export function DocsPage() {
   
   const titleInputRef = React.useRef<HTMLInputElement>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const tabbedPanelRef = React.useRef<HTMLDivElement>(null);
+  
+  // Tab state for Comments/Activity panel
+  const [activeTab, setActiveTab] = React.useState<DocTabType>('comments');
   
   // Confirm dialog
   const { confirm, DialogComponent: ConfirmDialogComponent } = useConfirmDialog();
@@ -178,6 +186,14 @@ export function DocsPage() {
       navigate('/docs');
     }
   }, [navigate]);
+
+  // Scroll to comments/activity panel
+  const scrollToComments = React.useCallback(() => {
+    setActiveTab('comments');
+    setTimeout(() => {
+      tabbedPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }, []);
 
   // Enter edit mode
   const enterEditMode = React.useCallback((doc?: Doc) => {
@@ -499,27 +515,85 @@ export function DocsPage() {
             )}
           </div>
           
-          {/* Document metadata */}
-          <div className="mt-6 pt-4 border-t border-parchment-300 flex items-center gap-4 text-sm text-lapis-500">
-            {selectedDoc.author && (
+          {/* Document metadata + scroll to comments button */}
+          <div className="mt-6 pt-4 border-t border-parchment-300 flex items-center justify-between">
+            <div className="flex items-center gap-4 text-sm text-lapis-500">
+              {selectedDoc.author && (
+                <div className="flex items-center gap-1">
+                  <User size={14} />
+                  <span>{selectedDoc.author.fullName || selectedDoc.author.username}</span>
+                </div>
+              )}
               <div className="flex items-center gap-1">
-                <User size={14} />
-                <span>{selectedDoc.author.fullName || selectedDoc.author.username}</span>
+                <Clock size={14} />
+                <span>{t('docs.created', { date: formatDate(selectedDoc.createdAt) })}</span>
               </div>
-            )}
-            <div className="flex items-center gap-1">
-              <Clock size={14} />
-              <span>{t('docs.created', { date: formatDate(selectedDoc.createdAt) })}</span>
+            </div>
+            
+            {/* Scroll to comments button */}
+            <button
+              onClick={scrollToComments}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-lapis-500 hover:text-lapis-700 hover:bg-parchment-200 rounded-lg transition-colors"
+            >
+              <MessageSquare size={14} />
+              {t('docs.jumpToComments')}
+              <ChevronDown size={14} />
+            </button>
+          </div>
+
+          {/* Tabbed Panel for Comments & Activity */}
+          <div 
+            ref={tabbedPanelRef}
+            className="mt-6 border border-parchment-200 rounded-lg bg-parchment-50 overflow-hidden scroll-mt-4"
+          >
+            {/* Tab Header */}
+            <div className="flex border-b border-parchment-200 bg-parchment-100/50">
+              <button
+                onClick={() => setActiveTab('comments')}
+                className={`
+                  flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium
+                  transition-colors relative
+                  ${activeTab === 'comments' 
+                    ? 'text-lapis-700 bg-parchment-50' 
+                    : 'text-lapis-500 hover:text-lapis-600 hover:bg-parchment-100'
+                  }
+                `}
+              >
+                <MessageSquare size={16} />
+                {t('docs.tabs.comments')}
+                {activeTab === 'comments' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500" />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('activity')}
+                className={`
+                  flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium
+                  transition-colors relative
+                  ${activeTab === 'activity' 
+                    ? 'text-lapis-700 bg-parchment-50' 
+                    : 'text-lapis-500 hover:text-lapis-600 hover:bg-parchment-100'
+                  }
+                `}
+              >
+                <History size={16} />
+                {t('docs.tabs.activity')}
+                {activeTab === 'activity' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500" />
+                )}
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            <div className="p-4">
+              {activeTab === 'comments' && (
+                <CommentSection resourceType="doc" resourceId={selectedDoc.id} />
+              )}
+              {activeTab === 'activity' && (
+                <ActivityHistory entityType="doc" entityId={selectedDoc.id} />
+              )}
             </div>
           </div>
-
-          {/* Comments */}
-          <div className="mt-6 pt-4 border-t border-parchment-300">
-            <CommentSection resourceType="doc" resourceId={selectedDoc.id} />
-          </div>
-
-          {/* Activity History */}
-          <ActivityHistory entityType="doc" entityId={selectedDoc.id} />
         </div>
       )}
 
