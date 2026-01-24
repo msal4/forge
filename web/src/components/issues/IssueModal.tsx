@@ -478,7 +478,7 @@ export function IssueModal({
 						</div>
 
 						{/* Title */}
-						<div className="min-h-[32px] flex items-center">
+						<div className="min-h-[40px] flex items-center">
 							{isEditing ? (
 								<input
 									ref={titleInputRef}
@@ -488,18 +488,16 @@ export function IssueModal({
 									placeholder={t('issueModal.titlePlaceholder')}
 									className="
                     w-full text-xl font-inscription font-normal text-lapis-700
-                    bg-transparent
-                    border-b-2 border-transparent
-                    outline-none ring-0
-                    focus:border-b-gold-400
+                    px-2 py-1 rounded-lg leading-normal
+                    bg-parchment-100/50 border border-parchment-300
+                    outline-none focus:ring-2 focus:ring-gold-400/30
                     placeholder:text-stone-500
                     caret-gold-500
                     transition-colors
                   "
-									style={{ boxShadow: 'none' }}
 								/>
 							) : (
-								<h2 className="text-xl font-inscription font-normal text-lapis-700 leading-tight">
+								<h2 className="text-xl font-inscription font-normal text-lapis-700 leading-normal px-2 py-1">
 									{title}
 								</h2>
 							)}
