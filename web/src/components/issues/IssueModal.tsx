@@ -15,7 +15,9 @@ import {
 	Tag,
 	Calendar,
 	FileText,
-	ChevronDown
+	ChevronDown,
+	MessageSquare,
+	History
 } from 'lucide-react';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboard';
 import { useWebSocket } from '../../context/WebSocketContext';
@@ -23,6 +25,9 @@ import { HotkeyBadge } from '../ui/HotkeyBadge';
 import type { Issue, CreateIssueRequest, UpdateIssueRequest, PriorityType, IssueStatusType } from '../../api/issues';
 import { Priority, IssueStatus } from '../../api/issues';
 import type { User as UserType } from '../../api/users';
+
+// Tab type for Comments/Activity panel
+type TabType = 'comments' | 'activity';
 
 // ============================================
 // Unified Issue Modal - View & Edit modes
@@ -89,6 +94,9 @@ export function IssueModal({
 	const [showStatusDropdown, setShowStatusDropdown] = React.useState(false);
 	const [showPriorityDropdown, setShowPriorityDropdown] = React.useState(false);
 	const [showAssigneeDropdown, setShowAssigneeDropdown] = React.useState(false);
+	
+	// Tab state for Comments/Activity panel
+	const [activeTab, setActiveTab] = React.useState<TabType>('comments');
 
 	const titleInputRef = React.useRef<HTMLInputElement>(null);
 	const isEditing = mode === 'edit' || mode === 'create';
@@ -326,19 +334,20 @@ export function IssueModal({
 	if (!isOpen) return null;
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] px-4 pb-8 overflow-y-auto overflow-x-hidden">
+		<div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 overflow-hidden">
 			{/* Backdrop */}
 			<div
 				className="fixed inset-0 bg-lapis-900/60 backdrop-blur-sm animate-fade-in"
 				onClick={onClose}
 			/>
 
-			{/* Modal */}
+			{/* Modal - Full screen on mobile, centered with max-height on desktop */}
 			<div 
 				className="
-					relative w-full max-w-2xl
+					relative w-full h-full
+					sm:h-auto sm:max-h-[80vh] sm:max-w-2xl sm:rounded-xl
 					bg-parchment-50
-					rounded-xl shadow-2xl border border-parchment-300
+					shadow-2xl border-0 sm:border border-parchment-300
 					flex flex-col
 					overflow-hidden
 					animate-scale-in
@@ -512,8 +521,8 @@ export function IssueModal({
 					</div>
 				)}
 
-				{/* Content */}
-				<div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-stable scrollbar-thin">
+				{/* Content - Scrollable area */}
+				<div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 scrollbar-stable scrollbar-thin">
 					{/* Description */}
 					<div>
 						<h3 className="flex items-center gap-2 text-sm font-semibold text-lapis-600 mb-3">
@@ -527,7 +536,7 @@ export function IssueModal({
 								placeholder={t('issueModal.descriptionPlaceholder')}
 								rows={4}
 								className="
-                  w-full min-h-[120px] p-4 rounded-lg 
+                  w-full min-h-[100px] sm:min-h-[120px] p-3 sm:p-4 rounded-lg 
                   bg-parchment-100/50 text-lapis-700 resize-none
                   border border-parchment-300 
                   outline-none focus:border-lapis-400 focus:bg-parchment-100
@@ -536,75 +545,18 @@ export function IssueModal({
                 "
 							/>
 						) : description ? (
-							<div className="min-h-[120px] bg-parchment-100/30 rounded-lg p-4 prose-mesopotamian">
+							<div className="min-h-[80px] sm:min-h-[100px] bg-parchment-100/30 rounded-lg p-3 sm:p-4 prose-mesopotamian">
 								<Markdown>{description}</Markdown>
 							</div>
 						) : (
-							<div className="min-h-[120px] flex items-center justify-center text-lapis-400 italic text-sm bg-parchment-100/30 rounded-lg">
+							<div className="min-h-[80px] sm:min-h-[100px] flex items-center justify-center text-lapis-400 italic text-sm bg-parchment-100/30 rounded-lg">
 								{t('issueModal.noDescription')}
 							</div>
 						)}
 					</div>
 
-					{/* Labels */}
-					<div>
-						<h3 className="flex items-center gap-2 text-sm font-semibold text-lapis-600 mb-3">
-							<Tag size={16} />
-							{t('issueModal.labels')}
-						</h3>
-						<div className="flex flex-wrap items-center gap-2">
-							{labels.map((label) => (
-								<span
-									key={label}
-									className="
-                    inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                    bg-lapis-100 text-lapis-700 border border-lapis-200
-                    text-sm font-medium
-                  "
-								>
-									{label}
-									{isEditing && (
-										<button onClick={() => removeLabel(label)} className="hover:text-red-500">
-											<X size={14} />
-										</button>
-									)}
-								</span>
-							))}
-							{labels.length === 0 && !isEditing && (
-								<span className="text-lapis-400 italic text-sm">{t('issueModal.noLabels')}</span>
-							)}
-							{isEditing && (
-								<input
-									type="text"
-									value={labelInput}
-									onChange={(e) => setLabelInput(e.target.value)}
-									onKeyDown={(e) => {
-										if (e.key === 'Enter') {
-											e.preventDefault();
-											addLabel();
-										}
-									}}
-									placeholder={`+ ${t('issueModal.labels')}`}
-									className="
-                    px-3 py-1.5 rounded-lg text-sm w-28
-                    bg-transparent text-lapis-600
-                    outline-none
-                    placeholder:text-lapis-400
-                    focus:bg-parchment-100 focus:w-40
-                    transition-all
-                  "
-								/>
-							)}
-						</div>
-					</div>
-
-					{/* Comments - only show in view mode */}
-					{mode === 'view' && issue && (
-						<CommentSection resourceType="issue" resourceId={issue.id} />
-					)}
-
-					{/* Details grid */}
-					<div className="grid grid-cols-2 gap-x-6 gap-y-4 p-4 rounded-lg bg-parchment-100/60 border border-parchment-200">
+					{/* Details grid - Moved up before labels */}
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 p-3 sm:p-4 rounded-lg bg-parchment-100/60 border border-parchment-200">
 						{/* Assignee */}
 						<div>
 							<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 mb-2">
@@ -750,15 +702,115 @@ export function IssueModal({
 						</div>
 					</div>
 
-					{/* Activity History - only shown in view mode for existing issues */}
-					{!isEditing && !isCreating && issue && (
-						<ActivityHistory entityType="issue" entityId={issue.id} />
+					{/* Labels */}
+					<div>
+						<h3 className="flex items-center gap-2 text-sm font-semibold text-lapis-600 mb-3">
+							<Tag size={16} />
+							{t('issueModal.labels')}
+						</h3>
+						<div className="flex flex-wrap items-center gap-2">
+							{labels.map((label) => (
+								<span
+									key={label}
+									className="
+                    inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                    bg-lapis-100 text-lapis-700 border border-lapis-200
+                    text-sm font-medium
+                  "
+								>
+									{label}
+									{isEditing && (
+										<button onClick={() => removeLabel(label)} className="hover:text-red-500">
+											<X size={14} />
+										</button>
+									)}
+								</span>
+							))}
+							{labels.length === 0 && !isEditing && (
+								<span className="text-lapis-400 italic text-sm">{t('issueModal.noLabels')}</span>
+							)}
+							{isEditing && (
+								<input
+									type="text"
+									value={labelInput}
+									onChange={(e) => setLabelInput(e.target.value)}
+									onKeyDown={(e) => {
+										if (e.key === 'Enter') {
+											e.preventDefault();
+											addLabel();
+										}
+									}}
+									placeholder={`+ ${t('issueModal.labels')}`}
+									className="
+                    px-3 py-1.5 rounded-lg text-sm w-28
+                    bg-transparent text-lapis-600
+                    outline-none
+                    placeholder:text-lapis-400
+                    focus:bg-parchment-100 focus:w-40
+                    transition-all
+                  "
+								/>
+							)}
+						</div>
+					</div>
+
+					{/* Tabbed Panel for Comments & Activity - only in view mode */}
+					{mode === 'view' && issue && (
+						<div className="border border-parchment-200 rounded-lg bg-parchment-50 overflow-hidden">
+							{/* Tab Header */}
+							<div className="flex border-b border-parchment-200 bg-parchment-100/50">
+								<button
+									onClick={() => setActiveTab('comments')}
+									className={`
+										flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium
+										transition-colors relative
+										${activeTab === 'comments' 
+											? 'text-lapis-700 bg-parchment-50' 
+											: 'text-lapis-500 hover:text-lapis-600 hover:bg-parchment-100'
+										}
+									`}
+								>
+									<MessageSquare size={16} />
+									{t('issueModal.tabs.comments')}
+									{activeTab === 'comments' && (
+										<div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500" />
+									)}
+								</button>
+								<button
+									onClick={() => setActiveTab('activity')}
+									className={`
+										flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium
+										transition-colors relative
+										${activeTab === 'activity' 
+											? 'text-lapis-700 bg-parchment-50' 
+											: 'text-lapis-500 hover:text-lapis-600 hover:bg-parchment-100'
+										}
+									`}
+								>
+									<History size={16} />
+									{t('issueModal.tabs.activity')}
+									{activeTab === 'activity' && (
+										<div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500" />
+									)}
+								</button>
+							</div>
+
+							{/* Tab Content */}
+							<div className="p-4">
+								{activeTab === 'comments' && (
+									<CommentSection resourceType="issue" resourceId={issue.id} />
+								)}
+								{activeTab === 'activity' && (
+									<ActivityHistory entityType="issue" entityId={issue.id} />
+								)}
+							</div>
+						</div>
 					)}
 				</div>
 
 				{/* Footer */}
-				<div className="flex items-center justify-between px-6 py-4 border-t border-parchment-200 bg-parchment-100/80">
-					<div className="text-xs text-lapis-400">
+				<div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t border-parchment-200 bg-parchment-100/80">
+					<div className="text-xs text-lapis-400 text-center sm:text-left">
 						{issue?.updatedAt && !isCreating && (
 							<span title={formatDate(issue.updatedAt) || ''}>
 								{t('issueModal.lastUpdated')}: {formatRelativeTime(issue.updatedAt)}
@@ -766,7 +818,7 @@ export function IssueModal({
 						)}
 					</div>
 
-					<div className="flex items-center gap-3">
+					<div className="flex items-center justify-center sm:justify-end gap-3">
 						{isEditing ? (
 							<>
 								<button
@@ -779,7 +831,7 @@ export function IssueModal({
                   "
 								>
 									{t('common.cancel')}
-									<HotkeyBadge keys="Escape" />
+									<HotkeyBadge keys="Escape" className="hidden sm:inline-flex" />
 								</button>
 								<button
 									onClick={handleSave}
@@ -799,14 +851,16 @@ export function IssueModal({
 										<Check size={16} />
 									)}
 									{isCreating ? t('issueModal.createInscription') : t('issueModal.saveChanges')}
-									<HotkeyBadge keys="Ctrl+Enter" variant="dark" />
+									<HotkeyBadge keys="Ctrl+Enter" variant="dark" className="hidden sm:inline-flex" />
 								</button>
 							</>
 						) : (
 							<p className="text-xs text-lapis-400 flex items-center gap-1">
-								{t('issueModal.pressToEdit')} <HotkeyBadge keys="e" />
-								{' '}&bull;{' '}
-								<HotkeyBadge keys="Escape" /> {t('issueModal.toClose')}
+								<span className="hidden sm:inline">{t('issueModal.pressToEdit')} <HotkeyBadge keys="e" /></span>
+								<span className="hidden sm:inline">{' '}&bull;{' '}</span>
+								<HotkeyBadge keys="Escape" className="hidden sm:inline-flex" />
+								<span className="hidden sm:inline">{t('issueModal.toClose')}</span>
+								<span className="sm:hidden">{t('issueModal.tapOutsideToClose')}</span>
 							</p>
 						)}
 					</div>

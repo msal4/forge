@@ -163,6 +163,11 @@ export default {
 		lastUpdated: 'Last updated',
 		pressToEdit: 'Press',
 		toClose: 'to close',
+		tapOutsideToClose: 'Tap outside to close',
+		tabs: {
+			comments: 'Comments',
+			activity: 'Activity',
+		},
 		priorities: {
 			low: 'Low',
 			medium: 'Medium',

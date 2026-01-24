@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
-  History, 
   ChevronDown, 
   ChevronRight, 
   Clock,
@@ -82,11 +81,9 @@ export function ActivityHistory({ entityType, entityId }: ActivityHistoryProps) 
   // Don't render anything if loading initial data
   if (isLoading) {
     return (
-      <div className="border-t border-parchment-200 mt-6 pt-4">
-        <div className="flex items-center gap-2 text-sm text-lapis-400">
-          <Loader2 size={14} className="animate-spin" />
-          {t('history.loading')}
-        </div>
+      <div className="flex items-center gap-2 text-sm text-lapis-400 py-4">
+        <Loader2 size={14} className="animate-spin" />
+        {t('history.loading')}
       </div>
     );
   }
@@ -97,12 +94,7 @@ export function ActivityHistory({ entityType, entityId }: ActivityHistoryProps) 
   }
 
   return (
-    <div className="border-t border-parchment-200 mt-6 pt-4">
-      {/* Section Header */}
-      <div className="flex items-center gap-2 text-sm font-semibold text-lapis-600 mb-3">
-        <History size={16} />
-        <span>{t('history.title')}</span>
-      </div>
+    <div className="space-y-3">
 
       {isError ? (
         <div className="text-sm text-clay-600">{t('history.failedToLoad')}</div>

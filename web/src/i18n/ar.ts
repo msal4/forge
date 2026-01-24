@@ -163,6 +163,11 @@ export default {
 		lastUpdated: 'آخر تحديث',
 		pressToEdit: 'اضغط',
 		toClose: 'للإغلاق',
+		tapOutsideToClose: 'انقر خارج النافذة للإغلاق',
+		tabs: {
+			comments: 'التعليقات',
+			activity: 'النشاط',
+		},
 		priorities: {
 			low: 'منخفضة',
 			medium: 'متوسطة',
