@@ -282,7 +282,7 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
                   <div className="font-medium truncate">
                     {user.fullName || user.username}
                   </div>
-                  <div className="text-xs text-lapis-400 truncate">
+                  <div className="text-xs text-stone-500 truncate">
                     @{user.username}
                   </div>
                 </div>

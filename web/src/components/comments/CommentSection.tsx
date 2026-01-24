@@ -195,11 +195,11 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
 				{/* Comments list */}
 				<div className="space-y-1">
 					{isLoading ? (
-						<div className="flex items-center justify-center py-8 text-lapis-400">
+						<div className="flex items-center justify-center py-8 text-stone-400">
 							<div className="w-5 h-5 border-2 border-lapis-300 border-t-transparent rounded-full animate-spin" />
 						</div>
 					) : totalComments === 0 ? (
-						<div className="text-center py-6 text-lapis-400 text-sm italic">
+						<div className="text-center py-6 text-stone-500 text-sm italic">
 							{t('comments.empty', 'No comments yet. Be the first to add one!')}
 						</div>
 					) : (
@@ -243,7 +243,7 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
 								{newComment.trim() ? (
 									<Markdown>{newComment}</Markdown>
 								) : (
-									<span className="text-lapis-400 italic text-sm">
+									<span className="text-stone-500 italic text-sm">
 										{t('comments.previewEmpty', 'Nothing to preview')}
 									</span>
 								)}
@@ -260,7 +260,7 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
                   bg-parchment-100/50 text-lapis-700
                   border border-parchment-300
                   outline-none focus:border-lapis-400 focus:bg-parchment-100
-                  placeholder:text-lapis-400
+                  placeholder:text-stone-500
                   transition-colors
                 "
 							/>
@@ -294,7 +294,7 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
 									</>
 								)}
 							</button>
-							<span className="text-xs text-lapis-400">
+							<span className="text-xs text-stone-500">
 								{t('comments.markdownHint', 'Markdown supported')}
 							</span>
 						</div>
@@ -360,7 +360,7 @@ function CommentItem({ comment, isOwn, onDelete, isDeleting, formatRelativeTime 
 						<span className="font-medium text-sm text-lapis-700">
 							{authorName}
 						</span>
-						<span className="text-xs text-lapis-400">
+						<span className="text-xs text-stone-500">
 							{formatRelativeTime(comment.createdAt)}
 						</span>
 					</div>
@@ -376,7 +376,7 @@ function CommentItem({ comment, isOwn, onDelete, isDeleting, formatRelativeTime 
 							disabled={isDeleting}
 							className="
                 mt-2 flex items-center gap-1 px-2 py-1 rounded
-                text-xs text-lapis-400 
+                text-xs text-stone-500 
                 hover:text-red-600 hover:bg-red-50
                 opacity-0 group-hover:opacity-100
                 disabled:opacity-50 disabled:cursor-not-allowed

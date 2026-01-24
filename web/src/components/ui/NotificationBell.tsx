@@ -246,7 +246,7 @@ export function NotificationBell() {
               )}
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1 rounded text-lapis-400 hover:text-lapis-600 hover:bg-parchment-100"
+                className="p-1 rounded text-stone-400 hover:text-lapis-600 hover:bg-parchment-100"
               >
                 <X size={16} />
               </button>
@@ -257,10 +257,10 @@ export function NotificationBell() {
           <div className="flex-1 overflow-y-auto">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="w-5 h-5 border-2 border-lapis-300 border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-stone-300 border-t-transparent rounded-full animate-spin" />
               </div>
             ) : notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-lapis-400">
+              <div className="flex flex-col items-center justify-center py-8 text-stone-400">
                 <Bell size={32} className="mb-2 opacity-50" />
                 <span className="text-sm">{t('notifications.empty')}</span>
               </div>
@@ -318,7 +318,7 @@ function NotificationItem({ notification, onClick, formatRelativeTime }: Notific
             <span className={`text-sm truncate ${notification.isRead ? 'text-lapis-600' : 'text-lapis-700 font-semibold'}`}>
               {notification.title}
             </span>
-            <span className="text-xs text-lapis-400 flex-shrink-0">
+            <span className="text-xs text-stone-500 flex-shrink-0">
               {formatRelativeTime(notification.createdAt)}
             </span>
           </div>
@@ -330,7 +330,7 @@ function NotificationItem({ notification, onClick, formatRelativeTime }: Notific
               avatarUrl={notification.actor?.avatarUrl}
               size="xs"
             />
-            <span className={`text-xs ${notification.isRead ? 'text-lapis-400' : 'text-lapis-500'}`}>
+            <span className={`text-xs ${notification.isRead ? 'text-stone-500' : 'text-lapis-500'}`}>
               {notification.message}
             </span>
           </div>

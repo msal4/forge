@@ -67,7 +67,7 @@
   .forge-input {
     @apply w-full px-3 py-2 rounded-tablet;
     @apply bg-parchment-50 border border-parchment-400;
-    @apply text-lapis-700 placeholder-lapis-400;
+    @apply text-lapis-700 placeholder-stone-500;
     @apply focus:border-lapis-500 focus:ring-2 focus:ring-lapis-400/20;
     @apply transition-colors duration-150;
   }
@@ -116,7 +116,7 @@
   }
   
   .priority-low {
-    @apply text-lapis-400;
+    @apply text-stone-500;
   }
 }
 

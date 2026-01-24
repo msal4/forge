@@ -173,7 +173,7 @@ export function LoginPage() {
                       w-full px-4 py-3 pr-28
                       bg-parchment-50 
                       border-2 rounded-xl
-                      text-lapis-700 placeholder-lapis-400
+                      text-lapis-700 placeholder-stone-500
                       font-body text-base
                       transition-all duration-200
                       focus:outline-none
@@ -186,11 +186,11 @@ export function LoginPage() {
                     `}
                   />
                   {/* Domain suffix */}
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lapis-400 text-sm font-medium pointer-events-none">
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-500 text-sm font-medium pointer-events-none">
                     @sarray.de
                   </span>
                 </div>
-                <p className="mt-2 text-xs text-lapis-400">
+                <p className="mt-2 text-xs text-stone-500">
                   {t('login.usernameHint')}
                 </p>
               </div>
@@ -230,7 +230,7 @@ export function LoginPage() {
                       w-full px-4 py-3 pr-12
                       bg-parchment-50 
                       border-2 rounded-xl
-                      text-lapis-700 placeholder-lapis-400
+                      text-lapis-700 placeholder-stone-500
                       font-body text-base
                       transition-all duration-200
                       focus:outline-none
@@ -250,7 +250,7 @@ export function LoginPage() {
                     className="
                       absolute right-3 top-1/2 -translate-y-1/2
                       p-1 rounded-lg
-                      text-lapis-400 hover:text-lapis-600
+                      text-stone-500 hover:text-lapis-600
                       hover:bg-parchment-200
                       transition-colors duration-150
                       focus:outline-none focus:ring-2 focus:ring-lapis-400
@@ -308,11 +308,11 @@ export function LoginPage() {
           </div>
 
           {/* Decorative bottom edge */}
-          <div className="h-1 bg-gradient-to-r from-transparent via-lapis-400 to-transparent opacity-30" />
+          <div className="h-1 bg-gradient-to-r from-transparent via-stone-400 to-transparent opacity-30" />
         </div>
 
         {/* Footer */}
-        <p className="text-center text-xs text-lapis-400 mt-6">
+        <p className="text-center text-xs text-stone-500 mt-6">
           Sarray Forge v0.1.0 — Internal ALM Tool
         </p>
       </div>

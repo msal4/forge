@@ -512,7 +512,7 @@ export function DocsPage() {
             {selectedDoc.content ? (
               <Markdown>{selectedDoc.content}</Markdown>
             ) : (
-              <p className="text-lapis-400 italic">{t('docs.noContent')}</p>
+              <p className="text-stone-500 italic">{t('docs.noContent')}</p>
             )}
           </div>
           
@@ -617,7 +617,7 @@ export function DocsPage() {
                 className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
                            bg-parchment-100 text-lapis-700 text-lg font-medium
                            focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
-                           placeholder:text-lapis-400 transition-colors"
+                           placeholder:text-stone-500 transition-colors"
               />
             </div>
 
@@ -661,14 +661,14 @@ export function DocsPage() {
         <>
           {docs.length === 0 ? (
             <div className="tablet-card p-8 text-center">
-              <FolderOpen className="mx-auto text-lapis-300" size={48} />
+              <FolderOpen className="mx-auto text-stone-400" size={48} />
               <h3 className="mt-4 font-inscription text-lg text-lapis-600">
                 {t('docs.emptyLibrary')}
               </h3>
               <p className="mt-2 text-lapis-500 text-sm">
                 {t('docs.emptyLibraryHint')}
               </p>
-              <p className="mt-4 text-xs text-lapis-400">
+              <p className="mt-4 text-xs text-stone-500">
                 {t('docs.markdownSupport')}
               </p>
             </div>
@@ -802,7 +802,7 @@ function InlineMarkdownEditor({
         </div>
 
         {/* Hints */}
-        <div className="text-xs text-lapis-400">
+        <div className="text-xs text-stone-500">
           {t('docs.editor.hint')}
         </div>
       </div>
@@ -822,7 +822,7 @@ function InlineMarkdownEditor({
                 font-code text-sm text-lapis-700
                 bg-parchment-50 
                 focus:outline-none
-                placeholder:text-lapis-400
+                placeholder:text-stone-500
                 min-h-[500px]
               "
             />
@@ -836,7 +836,7 @@ function InlineMarkdownEditor({
               {value ? (
                 <Markdown>{value}</Markdown>
               ) : (
-                <p className="text-lapis-400 italic">{t('docs.editor.previewPlaceholder')}</p>
+                <p className="text-stone-500 italic">{t('docs.editor.previewPlaceholder')}</p>
               )}
             </div>
           </div>
@@ -895,13 +895,13 @@ function DocCard({ doc, onClick, onEdit, onDelete }: DocCardProps) {
         </div>
         <ChevronRight 
           size={18} 
-          className="text-lapis-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 rtl:rotate-180" 
+          className="text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 rtl:rotate-180" 
         />
       </div>
 
       {/* Card footer */}
       <div className="mt-3 pt-3 border-t border-parchment-200 flex items-center justify-between">
-        <div className="text-xs text-lapis-400">
+        <div className="text-xs text-stone-500">
           {new Date(doc.updatedAt).toLocaleDateString(i18n.language === 'ar' ? 'ar-SA' : 'en-US', {
             day: 'numeric',
             month: 'short',

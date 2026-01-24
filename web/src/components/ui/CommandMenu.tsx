@@ -124,9 +124,9 @@ export function CommandMenu() {
           {/* Search Input */}
           <div className="flex items-center border-b-2 border-parchment-300 px-4">
             {isSearching ? (
-              <Loader2 className="text-lapis-400 animate-spin" size={20} />
+              <Loader2 className="text-stone-400 animate-spin" size={20} />
             ) : (
-              <Search className="text-lapis-400" size={20} />
+              <Search className="text-stone-400" size={20} />
             )}
             <Command.Input
               value={query}
@@ -134,7 +134,7 @@ export function CommandMenu() {
               placeholder={t('commandPalette.placeholder')}
               className="
                 w-full bg-transparent px-3 py-4
-                text-lapis-700 placeholder-lapis-400
+                text-lapis-700 placeholder-stone-500
                 outline-none border-none ring-0
                 focus:outline-none focus:border-none focus:ring-0
                 font-body

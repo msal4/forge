@@ -625,7 +625,7 @@ function EmptyColumnState({ columnId, isDragOver, onCreateIssue, isFiltering = f
       <p className={`text-sm font-medium ${isDragOver ? 'text-lapis-600' : 'text-lapis-500'}`}>
         {isDragOver ? t('issues.dropHere') : t(message.titleKey)}
       </p>
-      <p className="text-xs text-lapis-400 mt-1">
+      <p className="text-xs text-stone-500 mt-1">
         {isDragOver ? t('issues.releaseToMove') : t(message.subtitleKey)}
       </p>
       {columnId === IssueStatus.TO_INSCRIBE && !isDragOver && !isFiltering && (

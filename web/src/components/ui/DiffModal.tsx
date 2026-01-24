@@ -140,7 +140,7 @@ export function DiffModal({ isOpen, onClose, title, oldText, newText }: DiffModa
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-lapis-400 hover:text-lapis-600 hover:bg-parchment-200 rounded-tablet transition-colors"
+            className="p-2 text-stone-400 hover:text-lapis-600 hover:bg-parchment-200 rounded-tablet transition-colors"
           >
             <X size={20} />
           </button>
@@ -150,7 +150,7 @@ export function DiffModal({ isOpen, onClose, title, oldText, newText }: DiffModa
         <div className="flex-1 overflow-auto p-4">
           <div className="font-mono text-sm rounded-lg border border-parchment-200 overflow-hidden">
             {diffLines.length === 0 ? (
-              <div className="p-4 text-center text-lapis-400">{t('history.diff.noChanges')}</div>
+              <div className="p-4 text-center text-stone-500">{t('history.diff.noChanges')}</div>
             ) : (
               diffLines.map((line, idx) => (
                 <DiffLineRow key={idx} line={line} lineNumber={idx + 1} />
@@ -195,12 +195,12 @@ function DiffLineRow({ line, lineNumber }: { line: DiffLine; lineNumber: number 
   const prefixColor = {
     added: 'text-green-600',
     removed: 'text-red-600',
-    unchanged: 'text-lapis-300',
+    unchanged: 'text-stone-400',
   }[line.type];
 
   return (
     <div className={`flex ${bgColor} border-b border-parchment-200 last:border-b-0`}>
-      <div className="w-12 flex-shrink-0 px-2 py-1 text-right text-lapis-400 bg-parchment-100 border-r border-parchment-200 select-none">
+      <div className="w-12 flex-shrink-0 px-2 py-1 text-right text-stone-500 bg-parchment-100 border-r border-parchment-200 select-none">
         {lineNumber}
       </div>
       <div className={`w-6 flex-shrink-0 px-1 py-1 text-center ${prefixColor} select-none`}>

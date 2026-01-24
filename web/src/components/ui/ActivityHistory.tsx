@@ -84,7 +84,7 @@ export function ActivityHistory({ entityType, entityId }: ActivityHistoryProps) 
   // Don't render anything if loading initial data
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 text-sm text-lapis-400 py-4">
+      <div className="flex items-center gap-2 text-sm text-stone-500 py-4">
         <Loader2 size={14} className="animate-spin" />
         {t('history.loading')}
       </div>
@@ -321,7 +321,7 @@ function ActivityEntry({ activity, onViewDiff }: ActivityEntryProps) {
 
         {/* Timestamp */}
         <div 
-          className="mt-1 flex items-center gap-1 text-xs text-lapis-400"
+          className="mt-1 flex items-center gap-1 text-xs text-stone-500"
           title={formatFullDate(activity.createdAt)}
         >
           <Clock size={12} />
@@ -348,7 +348,7 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
       <div className="flex items-center gap-2 text-xs text-lapis-500 bg-parchment-100 rounded px-2 py-1">
         <FileText size={12} className="flex-shrink-0" />
         <span>{t('history.changes.updated', { field: fieldLabel })}</span>
-        <span className="text-lapis-400">
+        <span className="text-stone-500">
           ({change.addedChars ? `+${change.addedChars}` : ''}{change.addedChars && change.removedChars ? ' / ' : ''}{change.removedChars ? `-${change.removedChars}` : ''} {t('history.changes.chars')})
         </span>
         <button
@@ -366,7 +366,7 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
     return (
       <div className="flex items-center gap-2 text-xs">
         <StatusBadge status={String(change.old)} />
-        <ArrowRight size={12} className="text-lapis-400" />
+        <ArrowRight size={12} className="text-stone-400" />
         <StatusBadge status={String(change.new)} />
       </div>
     );
@@ -377,7 +377,7 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
     return (
       <div className="flex items-center gap-2 text-xs">
         <PriorityBadge priority={String(change.old)} />
-        <ArrowRight size={12} className="text-lapis-400" />
+        <ArrowRight size={12} className="text-stone-400" />
         <PriorityBadge priority={String(change.new)} />
       </div>
     );
@@ -422,7 +422,7 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
     const newName = (change as Record<string, unknown>).newName as string || t('history.changes.unassigned');
     return (
       <div className="text-xs text-lapis-500">
-        {t('history.changes.changedAssignee')} <span className="text-lapis-400 line-through">{oldName || t('history.changes.unassigned')}</span>
+        {t('history.changes.changedAssignee')} <span className="text-stone-500 line-through">{oldName || t('history.changes.unassigned')}</span>
         <ArrowRight size={10} className="inline mx-1" />
         <span className="text-lapis-600">{newName || t('history.changes.unassigned')}</span>
       </div>
@@ -435,7 +435,7 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
     const newVal = change.new ? `User #${change.new}` : t('history.changes.unassigned');
     return (
       <div className="text-xs text-lapis-500">
-        {t('history.changes.changedAssignee')} <span className="text-lapis-400 line-through">{oldVal}</span>
+        {t('history.changes.changedAssignee')} <span className="text-stone-500 line-through">{oldVal}</span>
         <ArrowRight size={10} className="inline mx-1" />
         <span className="text-lapis-600">{newVal}</span>
       </div>
@@ -447,7 +447,7 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
     return (
       <div className="text-xs text-lapis-500">
         <div>
-          <span className="text-lapis-400 line-through">{String(change.old)}</span>
+          <span className="text-stone-500 line-through">{String(change.old)}</span>
         </div>
         <div className="flex items-center gap-1">
           <ArrowRight size={10} />
@@ -471,7 +471,7 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
     return (
       <div className="text-xs text-lapis-500">
         {t('history.fields.dueDate')}:{' '}
-        <span className="text-lapis-400 line-through mx-1">{formatDate(change.old)}</span>
+        <span className="text-stone-500 line-through mx-1">{formatDate(change.old)}</span>
         <ArrowRight size={10} className="inline" />
         <span className="text-lapis-600 ms-1">{formatDate(change.new)}</span>
       </div>
@@ -486,7 +486,7 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
   return (
     <div className="text-xs text-lapis-500">
       {fieldLabel}: 
-      <span className="text-lapis-400 line-through mx-1">{oldVal}</span>
+      <span className="text-stone-500 line-through mx-1">{oldVal}</span>
       <ArrowRight size={10} className="inline" />
       <span className="text-lapis-600 ms-1">{newVal}</span>
     </div>

@@ -390,7 +390,7 @@ export function IssueModal({
 				{/* Priority color bar */}
 				<div className={`flex-shrink-0 h-1.5 transition-colors duration-200 ${priority === 'critical' ? 'bg-red-500' :
 						priority === 'high' ? 'bg-clay-500' :
-							priority === 'medium' ? 'bg-gold-500' : 'bg-lapis-400'
+							priority === 'medium' ? 'bg-gold-500' : 'bg-stone-400'
 					}`} />
 
 				{/* Header */}
@@ -491,7 +491,7 @@ export function IssueModal({
                     bg-transparent
                     border-none outline-none ring-0
                     focus:border-none focus:outline-none focus:ring-0
-                    placeholder:text-lapis-400
+                    placeholder:text-stone-500
                     caret-lapis-500
                   "
 									style={{ boxShadow: 'none' }}
@@ -575,7 +575,7 @@ export function IssueModal({
                   bg-parchment-100/50 text-lapis-700 resize-none
                   border border-parchment-300 
                   outline-none focus:border-lapis-400 focus:bg-parchment-100
-                  placeholder:text-lapis-400
+                  placeholder:text-stone-500
                   transition-colors
                 "
 							/>
@@ -584,7 +584,7 @@ export function IssueModal({
 								<Markdown>{description}</Markdown>
 							</div>
 						) : (
-							<div className="min-h-[80px] sm:min-h-[100px] flex items-center justify-center text-lapis-400 italic text-sm bg-parchment-100/30 rounded-lg">
+							<div className="min-h-[80px] sm:min-h-[100px] flex items-center justify-center text-stone-500 italic text-sm bg-parchment-100/30 rounded-lg">
 								{t('issueModal.noDescription')}
 							</div>
 						)}
@@ -623,9 +623,9 @@ export function IssueModal({
 													<span className="text-sm text-lapis-700 truncate">{selectedAssignee.fullName || selectedAssignee.username}</span>
 												</>
 											) : (
-												<span className="text-sm text-lapis-400">{t('issueModal.unassigned')}</span>
+												<span className="text-sm text-stone-500">{t('issueModal.unassigned')}</span>
 											)}
-											<ChevronDown size={14} className="ml-auto text-lapis-400 flex-shrink-0" />
+											<ChevronDown size={14} className="ml-auto text-stone-400 flex-shrink-0" />
 										</button>
 										{showAssigneeDropdown && (
 											<div className="absolute top-full left-0 right-0 mt-1 bg-parchment-50 border border-parchment-300 rounded-lg shadow-lg py-1 z-10 max-h-48 overflow-y-auto">
@@ -633,7 +633,7 @@ export function IssueModal({
 													onClick={() => { setAssigneeId(null); setShowAssigneeDropdown(false); }}
 													className={`w-full px-3 py-2 text-left text-sm hover:bg-parchment-200 ${!assigneeId ? 'bg-parchment-200' : ''}`}
 												>
-													<span className="text-lapis-400">{t('issueModal.unassigned')}</span>
+													<span className="text-stone-500">{t('issueModal.unassigned')}</span>
 												</button>
 												{users.map((user) => (
 													<button
@@ -662,7 +662,7 @@ export function IssueModal({
 										<span className="text-sm text-lapis-700 font-medium">{selectedAssignee.fullName || selectedAssignee.username}</span>
 									</div>
 								) : (
-									<span className="text-sm text-lapis-400 italic">{t('issueModal.unassigned')}</span>
+									<span className="text-sm text-stone-500 italic">{t('issueModal.unassigned')}</span>
 								)}
 							</div>
 						</div>
@@ -684,7 +684,7 @@ export function IssueModal({
 										<span className="text-sm text-lapis-700 font-medium">{issue.reporter.fullName || issue.reporter.username}</span>
 									</div>
 								) : (
-									<span className="text-sm text-lapis-400 italic">{isCreating ? t('issueModal.you') : t('issueModal.unknown')}</span>
+									<span className="text-sm text-stone-500 italic">{isCreating ? t('issueModal.you') : t('issueModal.unknown')}</span>
 								)}
 							</div>
 						</div>
@@ -713,7 +713,7 @@ export function IssueModal({
 										{isDueOverdue && <span className="ltr:ml-2 rtl:mr-2 text-xs text-red-500">({t('issueModal.overdue')})</span>}
 									</span>
 								) : (
-									<span className="text-sm text-lapis-400 italic">{t('issueModal.noDueDate')}</span>
+									<span className="text-sm text-stone-500 italic">{t('issueModal.noDueDate')}</span>
 								)}
 							</div>
 						</div>
@@ -760,7 +760,7 @@ export function IssueModal({
 								</span>
 							))}
 							{labels.length === 0 && !isEditing && (
-								<span className="text-lapis-400 italic text-sm">{t('issueModal.noLabels')}</span>
+								<span className="text-stone-500 italic text-sm">{t('issueModal.noLabels')}</span>
 							)}
 							{isEditing && (
 								<input
@@ -778,7 +778,7 @@ export function IssueModal({
                     px-3 py-1.5 rounded-lg text-sm w-28
                     bg-transparent text-lapis-600
                     outline-none
-                    placeholder:text-lapis-400
+                    placeholder:text-stone-500
                     focus:bg-parchment-100 focus:w-40
                     transition-all
                   "
@@ -852,7 +852,7 @@ export function IssueModal({
 
 				{/* Footer */}
 				<div className="flex-shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t border-parchment-200 bg-parchment-100/80">
-					<div className="text-xs text-lapis-400 text-center sm:text-left">
+					<div className="text-xs text-stone-500 text-center sm:text-left">
 						{issue?.updatedAt && !isCreating && (
 							<span title={formatDate(issue.updatedAt) || ''}>
 								{t('issueModal.lastUpdated')}: {formatRelativeTime(issue.updatedAt)}
@@ -897,7 +897,7 @@ export function IssueModal({
 								</button>
 							</>
 						) : (
-							<p className="text-xs text-lapis-400 flex items-center gap-1">
+							<p className="text-xs text-stone-500 flex items-center gap-1">
 								<span className="hidden sm:inline">{t('issueModal.pressToEdit')} <HotkeyBadge keys="e" /></span>
 								<span className="hidden sm:inline">{' '}&bull;{' '}</span>
 								<HotkeyBadge keys="Escape" className="hidden sm:inline-flex" />

@@ -103,7 +103,7 @@ export function ConfirmDialog({
           </div>
           <button
             onClick={onCancel}
-            className="p-1 rounded-lg hover:bg-parchment-200 text-lapis-400 transition-colors"
+            className="p-1 rounded-lg hover:bg-parchment-200 text-stone-400 transition-colors"
           >
             <X size={20} />
           </button>

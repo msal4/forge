@@ -202,7 +202,7 @@ export function HomePage() {
           
           {issuesLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="animate-spin text-lapis-400" size={24} />
+              <Loader2 className="animate-spin text-stone-400" size={24} />
             </div>
           ) : recentIssues.length === 0 ? (
             <EmptyState 
@@ -236,7 +236,7 @@ export function HomePage() {
             
             {releasesLoading ? (
               <div className="flex items-center justify-center py-4">
-                <Loader2 className="animate-spin text-lapis-400" size={20} />
+                <Loader2 className="animate-spin text-stone-400" size={20} />
               </div>
             ) : latestRelease ? (
               <Link 
@@ -256,7 +256,7 @@ export function HomePage() {
                     <p className="text-sm text-lapis-700 font-medium truncate">
                       {latestRelease.title}
                     </p>
-                    <p className="text-xs text-lapis-400 mt-1" title={formatFullDate(latestRelease.publishedAt || latestRelease.createdAt)}>
+                    <p className="text-xs text-stone-500 mt-1" title={formatFullDate(latestRelease.publishedAt || latestRelease.createdAt)}>
                       {formatRelativeTime(latestRelease.publishedAt || latestRelease.createdAt)}
                     </p>
                   </div>
@@ -286,7 +286,7 @@ export function HomePage() {
             
             {docsLoading ? (
               <div className="flex items-center justify-center py-4">
-                <Loader2 className="animate-spin text-lapis-400" size={20} />
+                <Loader2 className="animate-spin text-stone-400" size={20} />
               </div>
             ) : recentDocs.length === 0 ? (
               <EmptyState 
@@ -302,12 +302,12 @@ export function HomePage() {
                     className="block p-2 -mx-2 rounded-tablet hover:bg-parchment-100 transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                      <BookOpen size={14} className="text-lapis-400 flex-shrink-0" />
+                      <BookOpen size={14} className="text-stone-400 flex-shrink-0" />
                       <span className="text-sm text-lapis-600 truncate">
                         {doc.title}
                       </span>
                     </div>
-                    <p className="text-xs text-lapis-400 mt-0.5 ltr:ml-6 rtl:mr-6" title={formatFullDate(doc.updatedAt)}>
+                    <p className="text-xs text-stone-500 mt-0.5 ltr:ml-6 rtl:mr-6" title={formatFullDate(doc.updatedAt)}>
                       {formatRelativeTime(doc.updatedAt)}
                     </p>
                   </Link>
@@ -353,7 +353,7 @@ function StatCard({ icon, label, value, color, loading }: StatCardProps) {
     lapis: 'text-lapis-500',
     clay: 'text-clay-500',
     gold: 'text-gold-600',
-    parchment: 'text-lapis-400',
+    parchment: 'text-stone-500',
   };
 
   return (
@@ -387,7 +387,7 @@ function IssueRow({ issue, formatRelativeTime, formatFullDate }: IssueRowProps) 
   const statusConfig = {
     [IssueStatus.TO_INSCRIBE]: { 
       icon: <Circle size={14} />, 
-      color: 'text-lapis-400',
+      color: 'text-stone-500',
       bg: 'bg-parchment-200',
     },
     [IssueStatus.CARVING]: { 
@@ -406,7 +406,7 @@ function IssueRow({ issue, formatRelativeTime, formatFullDate }: IssueRowProps) 
     critical: 'text-red-600',
     high: 'text-clay-600',
     medium: 'text-gold-600',
-    low: 'text-lapis-400',
+    low: 'text-stone-500',
   };
 
   const config = statusConfig[issue.status];
@@ -431,7 +431,7 @@ function IssueRow({ issue, formatRelativeTime, formatFullDate }: IssueRowProps) 
             <span className={`text-xs ${priorityColors.critical}`}>!</span>
           )}
         </div>
-        <div className="flex items-center gap-3 mt-0.5 text-xs text-lapis-400">
+        <div className="flex items-center gap-3 mt-0.5 text-xs text-stone-500">
           <span className="flex items-center gap-1" title={formatFullDate(issue.updatedAt)}>
             <Clock size={10} />
             {formatRelativeTime(issue.updatedAt)}
@@ -457,7 +457,7 @@ function IssueRow({ issue, formatRelativeTime, formatFullDate }: IssueRowProps) 
         </div>
       )}
 
-      <ArrowRight size={14} className="text-lapis-300 group-hover:text-lapis-500 flex-shrink-0 rtl:rotate-180" />
+      <ArrowRight size={14} className="text-stone-400 group-hover:text-lapis-500 flex-shrink-0 rtl:rotate-180" />
     </Link>
   );
 }
@@ -508,7 +508,7 @@ function QuickActionCard({ to, icon, title, description, color, shortcut }: Quic
         {description}
       </p>
       <div className="flex items-center justify-between">
-        <span className="text-sm text-lapis-400 group-hover:text-lapis-600 transition-colors flex items-center gap-1">
+        <span className="text-sm text-stone-500 group-hover:text-lapis-600 transition-colors flex items-center gap-1">
           {t('home.enter')} <ArrowRight size={14} className="rtl:rotate-180" />
         </span>
         <kbd className="px-1.5 py-0.5 bg-parchment-200 rounded text-xs text-lapis-600">
@@ -534,7 +534,7 @@ function EmptyState({ message, hint, small }: EmptyStateProps) {
     <div className={`text-center ${small ? 'py-4' : 'py-8'} text-lapis-500`}>
       <p className={small ? 'text-sm' : ''}>{message}</p>
       {hint && (
-        <p className="text-sm mt-2 text-lapis-400">
+        <p className="text-sm mt-2 text-stone-500">
           {hint}
         </p>
       )}

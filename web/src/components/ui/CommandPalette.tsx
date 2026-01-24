@@ -194,16 +194,16 @@ export function CommandPalette() {
         >
           {/* Search Input */}
           <div className="flex items-center border-b border-parchment-300 px-4">
-            <Search className="text-lapis-400" size={20} />
+            <Search className="text-stone-400" size={20} />
             <input
               ref={inputRef}
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Type a command or search..."
-              className="w-full bg-transparent px-3 py-4 text-lapis-700 placeholder-lapis-400 focus:outline-none font-body"
+              className="w-full bg-transparent px-3 py-4 text-lapis-700 placeholder-stone-500 focus:outline-none font-body"
             />
-            <div className="flex items-center gap-1 text-lapis-400">
+            <div className="flex items-center gap-1 text-stone-400">
               <Command size={14} />
               <span className="text-xs">K</span>
             </div>

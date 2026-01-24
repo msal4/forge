@@ -103,7 +103,7 @@ export function Layout() {
                   <div className="text-sm font-medium text-lapis-600 truncate">
                     {user.fullName || user.username}
                   </div>
-                  <div className="text-xs text-lapis-400 truncate">
+                  <div className="text-xs text-stone-500 truncate">
                     {user.email}
                   </div>
                 </div>

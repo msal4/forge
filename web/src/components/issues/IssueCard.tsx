@@ -156,7 +156,7 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
         "
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <GripVertical size={14} className="text-lapis-400" />
+        <GripVertical size={14} className="text-stone-400" />
       </div>
 
       {/* Content */}
@@ -201,7 +201,7 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
             </span>
           ))}
           {issue.labels && issue.labels.length > 2 && (
-            <span className="text-[10px] text-lapis-400 font-medium">
+            <span className="text-[10px] text-stone-500 font-medium">
               +{issue.labels.length - 2}
             </span>
           )}
@@ -223,7 +223,7 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
                 </span>
               </div>
             ) : (
-              <div className="flex items-center gap-1 text-lapis-400">
+              <div className="flex items-center gap-1 text-stone-500">
                 <User size={12} strokeWidth={2.5} />
                 <span className="text-[11px]">{t('issueModal.unassigned')}</span>
               </div>

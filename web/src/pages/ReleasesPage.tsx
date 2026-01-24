@@ -231,7 +231,7 @@ export function ReleasesPage() {
           `}>
             {releases.length === 0 && (
               <div className="tablet-card p-8 text-center">
-                <Package className="mx-auto text-lapis-300" size={48} />
+                <Package className="mx-auto text-stone-400" size={48} />
                 <h3 className="mt-4 font-inscription text-lg text-lapis-600">
                   {t('releases.emptyGranary')}
                 </h3>
@@ -324,7 +324,7 @@ export function ReleasesPage() {
 
                 {selectedRelease.files.length === 0 ? (
                   <div className="text-center py-8 border-2 border-dashed border-parchment-300 rounded-tablet">
-                    <HardDrive className="mx-auto text-lapis-300" size={32} />
+                    <HardDrive className="mx-auto text-stone-400" size={32} />
                     <p className="mt-2 text-sm text-lapis-500">
                       {t('releases.noFiles')}
                     </p>
@@ -578,7 +578,7 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
               className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
                          bg-parchment-100 text-lapis-700 font-code
                          focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
-                         placeholder:text-lapis-400"
+                         placeholder:text-stone-500"
             />
           </div>
 
@@ -594,7 +594,7 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
               className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
                          bg-parchment-100 text-lapis-700
                          focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
-                         placeholder:text-lapis-400"
+                         placeholder:text-stone-500"
             />
           </div>
 
@@ -610,7 +610,7 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
               className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
                          bg-parchment-100 text-lapis-700 resize-none
                          focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
-                         placeholder:text-lapis-400"
+                         placeholder:text-stone-500"
             />
           </div>
         </form>
