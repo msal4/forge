@@ -25,7 +25,12 @@ func main() {
 		migrationsDir = "./migrations"
 	}
 
-	database, err := db.OpenAndMigrate("./data/sarray-forge.db", migrationsDir)
+	databasePath := os.Getenv("DATABASE_PATH")
+	if databasePath == "" {
+		databasePath = "./data/sarray-forge.db"
+	}
+
+	database, err := db.OpenAndMigrate(databasePath, migrationsDir)
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}

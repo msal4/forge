@@ -1,0 +1,48 @@
+[Unit]
+Description=Sarray Forge ALM Server
+Documentation=https://github.com/sarray-de/sarray-forge
+After=network.target
+
+[Service]
+Type=simple
+User=forge
+Group=forge
+WorkingDirectory=/opt/sarray-forge
+
+# Main process
+ExecStart=/opt/sarray-forge/bin/sarray-forge
+
+# Restart policy
+Restart=on-failure
+RestartSec=5
+StartLimitBurst=3
+StartLimitInterval=60
+
+# Environment variables
+Environment=PORT=8080
+Environment=DATABASE_PATH=/opt/sarray-forge/data/sarray-forge.db
+Environment=STATIC_DIR=/opt/sarray-forge/web/dist
+Environment=MIGRATIONS_DIR=/opt/sarray-forge/migrations
+Environment=UPLOADS_DIR=/opt/sarray-forge/data/releases
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+
+# Allow write access to data directory
+ReadWritePaths=/opt/sarray-forge/data
+
+# Resource limits
+LimitNOFILE=65535
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target

@@ -16,12 +16,17 @@ import (
 	"sarray-forge/internal/websocket"
 )
 
-const (
-	// ReleasesDir is where release files are stored
-	ReleasesDir = "./data/releases"
-	// MaxUploadSize is the maximum file upload size (100MB)
-	MaxUploadSize = 100 << 20
-)
+// MaxUploadSize is the maximum file upload size (100MB)
+const MaxUploadSize = 100 << 20
+
+// ReleasesDir is where release files are stored (configurable via UPLOADS_DIR env var)
+var ReleasesDir = "./data/releases"
+
+func init() {
+	if dir := os.Getenv("UPLOADS_DIR"); dir != "" {
+		ReleasesDir = dir
+	}
+}
 
 // ============================================
 // Release Handlers (The Granary)

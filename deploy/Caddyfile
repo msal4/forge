@@ -1,0 +1,26 @@
+# Caddyfile for Sarray Forge
+# Place this in /etc/caddy/Caddyfile on the server
+
+forge.sarray.de {
+    # Reverse proxy to Go backend
+    reverse_proxy localhost:8080
+
+    # Enable gzip compression
+    encode gzip
+
+    # Security headers
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        # Remove server header
+        -Server
+    }
+
+    # Logging
+    log {
+        output file /var/log/caddy/forge.log
+        format json
+    }
+}
