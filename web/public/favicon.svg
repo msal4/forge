@@ -1,26 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Background: Clay tablet shape -->
-  <rect x="2" y="4" width="28" height="24" rx="3" fill="#c9a86c"/>
-  <rect x="3" y="5" width="26" height="22" rx="2" fill="#d4b896"/>
+  <!-- Background: Rounded square in parchment -->
+  <rect x="2" y="2" width="28" height="28" rx="6" fill="#d4b896"/>
   
-  <!-- Cuneiform-style marks (simplified) -->
+  <!-- 𒀭 (DINGIR/AN) symbol - stylized star shape in lapis -->
   <g fill="#1a365d">
-    <!-- Top row -->
-    <polygon points="7,9 9,11 7,11"/>
-    <rect x="11" y="9" width="5" height="2"/>
-    <polygon points="19,9 21,11 19,11"/>
-    <rect x="23" y="9" width="4" height="2"/>
-    
-    <!-- Middle row -->
-    <polygon points="7,14 9,16 7,16"/>
-    <polygon points="11,14 13,16 11,16"/>
-    <rect x="15" y="14" width="6" height="2"/>
-    <polygon points="23,14 25,16 23,16"/>
-    
-    <!-- Bottom row -->
-    <rect x="7" y="19" width="4" height="2"/>
-    <polygon points="13,19 15,21 13,21"/>
-    <rect x="17" y="19" width="3" height="2"/>
-    <polygon points="22,19 24,21 22,21"/>
+    <!-- Center vertical wedge -->
+    <polygon points="16,6 18,16 16,18 14,16"/>
+    <!-- Left diagonal wedge -->
+    <polygon points="8,10 14,14 13,16 7,12"/>
+    <!-- Right diagonal wedge -->
+    <polygon points="24,10 18,14 19,16 25,12"/>
+    <!-- Bottom left wedge -->
+    <polygon points="10,24 14,18 16,19 12,26"/>
+    <!-- Bottom right wedge -->
+    <polygon points="22,24 18,18 16,19 20,26"/>
   </g>
 </svg>

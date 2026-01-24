@@ -70,16 +70,78 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
     );
   }).slice(0, 5); // Limit to 5 results
 
-  // Calculate dropdown position based on textarea position
+  // Calculate dropdown position based on caret position in textarea
   const updateDropdownPosition = useCallback(() => {
     if (!textareaRef.current) return;
     
-    const rect = textareaRef.current.getBoundingClientRect();
+    const textarea = textareaRef.current;
+    const rect = textarea.getBoundingClientRect();
+    const cursorPos = textarea.selectionStart;
     
-    // Position dropdown below the textarea
+    // Get computed styles for accurate measurement
+    const styles = window.getComputedStyle(textarea);
+    const lineHeight = parseFloat(styles.lineHeight) || parseFloat(styles.fontSize) * 1.2;
+    
+    // Create a mirror div to measure caret position
+    const mirror = document.createElement('div');
+    mirror.style.cssText = `
+      position: absolute;
+      visibility: hidden;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      width: ${textarea.clientWidth}px;
+      font-family: ${styles.fontFamily};
+      font-size: ${styles.fontSize};
+      line-height: ${styles.lineHeight};
+      padding: ${styles.padding};
+      border: ${styles.border};
+      box-sizing: border-box;
+    `;
+    
+    // Get text up to cursor and add a marker span
+    const textBeforeCursor = textarea.value.substring(0, cursorPos);
+    mirror.innerHTML = textBeforeCursor.replace(/\n$/, '\n ') + '<span id="caret-marker">|</span>';
+    
+    document.body.appendChild(mirror);
+    
+    const marker = mirror.querySelector('#caret-marker');
+    let caretTop = 0;
+    let caretLeft = 0;
+    
+    if (marker) {
+      const markerRect = marker.getBoundingClientRect();
+      const mirrorRect = mirror.getBoundingClientRect();
+      caretTop = markerRect.top - mirrorRect.top;
+      caretLeft = markerRect.left - mirrorRect.left;
+    }
+    
+    document.body.removeChild(mirror);
+    
+    // Calculate position relative to viewport, accounting for scroll within textarea
+    const scrollTop = textarea.scrollTop;
+    const top = rect.top + caretTop - scrollTop + lineHeight + 4;
+    const left = rect.left + caretLeft;
+    
+    // Ensure dropdown doesn't go off-screen
+    const dropdownHeight = 200; // approximate max height
+    const dropdownWidth = 256;
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    
+    // If dropdown would go below viewport, show it above the cursor
+    const finalTop = top + dropdownHeight > viewportHeight 
+      ? rect.top + caretTop - scrollTop - dropdownHeight - 4
+      : top;
+    
+    // If dropdown would go off right edge, align to right edge
+    const finalLeft = left + dropdownWidth > viewportWidth
+      ? viewportWidth - dropdownWidth - 8
+      : left;
+    
     setDropdownPosition({
-      top: rect.bottom + window.scrollY + 4,
-      left: rect.left + window.scrollX,
+      top: finalTop,
+      left: finalLeft,
     });
   }, []);
 
