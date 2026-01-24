@@ -271,6 +271,9 @@ func (h *Handlers) CreateIssue(w http.ResponseWriter, r *http.Request) {
 
 	issueID, _ := result.LastInsertId()
 
+	// Log activity
+	h.logActivity(userID, "issue.created", "issue", issueID, map[string]interface{}{})
+
 	// Broadcast WebSocket event
 	h.hub.Broadcast(websocket.Event{
 		Type:     websocket.EventIssueCreated,
@@ -312,38 +315,83 @@ func (h *Handlers) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fetch old values for change tracking (including assignee name)
+	var oldTitle, oldDescription, oldStatus, oldPriority, oldLabelsJSON string
+	var oldAssigneeID *int64
+	var oldAssigneeName *string
+	var oldDueDate *string
+	err = h.db.QueryRow(`
+		SELECT i.title, i.description, i.status, i.priority, i.assignee_id, i.labels, i.due_date,
+		       COALESCE(u.full_name, u.username)
+		FROM issues i
+		LEFT JOIN users u ON i.assignee_id = u.id
+		WHERE i.id = ?
+	`, id).Scan(&oldTitle, &oldDescription, &oldStatus, &oldPriority, &oldAssigneeID, &oldLabelsJSON, &oldDueDate, &oldAssigneeName)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "not_found", "Issue not found")
+		return
+	}
+	var oldLabels []string
+	json.Unmarshal([]byte(oldLabelsJSON), &oldLabels)
+
 	// Build dynamic update query
 	updates := []string{}
 	args := []interface{}{}
 
+	// Track new values for change comparison
+	newTitle := oldTitle
+	newDescription := oldDescription
+	newStatus := oldStatus
+	newPriority := oldPriority
+	newAssigneeID := oldAssigneeID
+	newAssigneeName := oldAssigneeName
+	newLabels := oldLabels
+	newDueDate := oldDueDate
+
 	if req.Title != nil {
 		updates = append(updates, "title = ?")
 		args = append(args, *req.Title)
+		newTitle = *req.Title
 	}
 	if req.Description != nil {
 		updates = append(updates, "description = ?")
 		args = append(args, *req.Description)
+		newDescription = *req.Description
 	}
 	if req.Status != nil {
 		updates = append(updates, "status = ?")
 		args = append(args, *req.Status)
+		newStatus = string(*req.Status)
 	}
 	if req.Priority != nil {
 		updates = append(updates, "priority = ?")
 		args = append(args, *req.Priority)
+		newPriority = string(*req.Priority)
 	}
 	if req.AssigneeID != nil {
 		updates = append(updates, "assignee_id = ?")
 		args = append(args, *req.AssigneeID)
+		newAssigneeID = req.AssigneeID
+		// Fetch new assignee name
+		if *req.AssigneeID != 0 {
+			var name string
+			h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", *req.AssigneeID).Scan(&name)
+			newAssigneeName = &name
+		} else {
+			newAssigneeName = nil
+		}
 	}
 	if req.Labels != nil {
 		labelsJSON, _ := json.Marshal(req.Labels)
 		updates = append(updates, "labels = ?")
 		args = append(args, string(labelsJSON))
+		newLabels = req.Labels
 	}
 	if req.DueDate != nil {
 		updates = append(updates, "due_date = ?")
 		args = append(args, *req.DueDate)
+		dueDateStr := req.DueDate.Format("2006-01-02T15:04:05Z07:00")
+		newDueDate = &dueDateStr
 	}
 
 	if len(updates) == 0 {
@@ -359,6 +407,22 @@ func (h *Handlers) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "db_error", "Failed to update issue")
 		return
+	}
+
+	// Log activity with changes
+	oldAssignee := AssigneeInfo{ID: oldAssigneeID, Name: safeStringPtr(oldAssigneeName)}
+	newAssignee := AssigneeInfo{ID: newAssigneeID, Name: safeStringPtr(newAssigneeName)}
+	changes := buildIssueChanges(
+		oldTitle, newTitle,
+		oldDescription, newDescription,
+		oldStatus, newStatus,
+		oldPriority, newPriority,
+		oldAssignee, newAssignee,
+		oldLabels, newLabels,
+		oldDueDate, newDueDate,
+	)
+	if len(changes) > 0 {
+		h.logActivity(userID, "issue.updated", "issue", id, changes)
 	}
 
 	// Broadcast WebSocket event
@@ -383,6 +447,10 @@ func (h *Handlers) DeleteIssue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fetch issue title before deletion for activity log
+	var title string
+	h.db.QueryRow("SELECT title FROM issues WHERE id = ?", id).Scan(&title)
+
 	result, err := h.db.Exec("DELETE FROM issues WHERE id = ?", id)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "db_error", "Failed to delete issue")
@@ -394,6 +462,11 @@ func (h *Handlers) DeleteIssue(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "not_found", "Issue not found")
 		return
 	}
+
+	// Log activity
+	h.logActivity(userID, "issue.deleted", "issue", id, map[string]interface{}{
+		"title": title,
+	})
 
 	// Broadcast WebSocket event
 	h.hub.Broadcast(websocket.Event{
@@ -432,6 +505,14 @@ func (h *Handlers) UpdateIssueStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fetch old status for change tracking
+	var oldStatus string
+	err = h.db.QueryRow("SELECT status FROM issues WHERE id = ?", id).Scan(&oldStatus)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "not_found", "Issue not found")
+		return
+	}
+
 	result, err := h.db.Exec(`
 		UPDATE issues SET status = ?, updated_at = datetime('now') WHERE id = ?
 	`, req.Status, id)
@@ -444,6 +525,17 @@ func (h *Handlers) UpdateIssueStatus(w http.ResponseWriter, r *http.Request) {
 	if rowsAffected == 0 {
 		writeError(w, http.StatusNotFound, "not_found", "Issue not found")
 		return
+	}
+
+	// Log activity if status actually changed
+	newStatus := string(req.Status)
+	if oldStatus != newStatus {
+		h.logActivity(userID, "issue.status_changed", "issue", id, map[string]interface{}{
+			"status": map[string]interface{}{
+				"old": oldStatus,
+				"new": newStatus,
+			},
+		})
 	}
 
 	// Broadcast WebSocket event
@@ -474,17 +566,48 @@ func (h *Handlers) PatchIssue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fetch old values for change tracking (including assignee name)
+	var oldTitle, oldDescription, oldStatus, oldPriority, oldLabelsJSON string
+	var oldAssigneeID *int64
+	var oldAssigneeName *string
+	var oldDueDate *string
+	err = h.db.QueryRow(`
+		SELECT i.title, i.description, i.status, i.priority, i.assignee_id, i.labels, i.due_date,
+		       COALESCE(u.full_name, u.username)
+		FROM issues i
+		LEFT JOIN users u ON i.assignee_id = u.id
+		WHERE i.id = ?
+	`, id).Scan(&oldTitle, &oldDescription, &oldStatus, &oldPriority, &oldAssigneeID, &oldLabelsJSON, &oldDueDate, &oldAssigneeName)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "not_found", "Issue not found")
+		return
+	}
+	var oldLabels []string
+	json.Unmarshal([]byte(oldLabelsJSON), &oldLabels)
+
 	// Build dynamic update query
 	updates := []string{}
 	args := []interface{}{}
 
+	// Track new values for change comparison
+	newTitle := oldTitle
+	newDescription := oldDescription
+	newStatus := oldStatus
+	newPriority := oldPriority
+	newAssigneeID := oldAssigneeID
+	newAssigneeName := oldAssigneeName
+	newLabels := oldLabels
+	newDueDate := oldDueDate
+
 	if req.Title != nil {
 		updates = append(updates, "title = ?")
 		args = append(args, *req.Title)
+		newTitle = *req.Title
 	}
 	if req.Description != nil {
 		updates = append(updates, "description = ?")
 		args = append(args, *req.Description)
+		newDescription = *req.Description
 	}
 	if req.Status != nil {
 		// Validate status
@@ -492,6 +615,7 @@ func (h *Handlers) PatchIssue(w http.ResponseWriter, r *http.Request) {
 		case models.StatusToInscribe, models.StatusCarving, models.StatusBaked:
 			updates = append(updates, "status = ?")
 			args = append(args, *req.Status)
+			newStatus = string(*req.Status)
 		default:
 			writeError(w, http.StatusBadRequest, "invalid_status", "Status must be: to_inscribe, carving, or baked")
 			return
@@ -500,19 +624,32 @@ func (h *Handlers) PatchIssue(w http.ResponseWriter, r *http.Request) {
 	if req.Priority != nil {
 		updates = append(updates, "priority = ?")
 		args = append(args, *req.Priority)
+		newPriority = string(*req.Priority)
 	}
 	if req.AssigneeID != nil {
 		updates = append(updates, "assignee_id = ?")
 		args = append(args, *req.AssigneeID)
+		newAssigneeID = req.AssigneeID
+		// Fetch new assignee name
+		if *req.AssigneeID != 0 {
+			var name string
+			h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", *req.AssigneeID).Scan(&name)
+			newAssigneeName = &name
+		} else {
+			newAssigneeName = nil
+		}
 	}
 	if req.Labels != nil {
 		labelsJSON, _ := json.Marshal(req.Labels)
 		updates = append(updates, "labels = ?")
 		args = append(args, string(labelsJSON))
+		newLabels = req.Labels
 	}
 	if req.DueDate != nil {
 		updates = append(updates, "due_date = ?")
 		args = append(args, *req.DueDate)
+		dueDateStr := req.DueDate.Format("2006-01-02T15:04:05Z07:00")
+		newDueDate = &dueDateStr
 	}
 
 	if len(updates) == 0 {
@@ -534,6 +671,22 @@ func (h *Handlers) PatchIssue(w http.ResponseWriter, r *http.Request) {
 	if rowsAffected == 0 {
 		writeError(w, http.StatusNotFound, "not_found", "Issue not found")
 		return
+	}
+
+	// Log activity with changes
+	oldAssignee := AssigneeInfo{ID: oldAssigneeID, Name: safeStringPtr(oldAssigneeName)}
+	newAssignee := AssigneeInfo{ID: newAssigneeID, Name: safeStringPtr(newAssigneeName)}
+	changes := buildIssueChanges(
+		oldTitle, newTitle,
+		oldDescription, newDescription,
+		oldStatus, newStatus,
+		oldPriority, newPriority,
+		oldAssignee, newAssignee,
+		oldLabels, newLabels,
+		oldDueDate, newDueDate,
+	)
+	if len(changes) > 0 {
+		h.logActivity(userID, "issue.updated", "issue", id, changes)
 	}
 
 	// Broadcast WebSocket event

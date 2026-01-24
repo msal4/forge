@@ -79,6 +79,7 @@ func main() {
 	mux.Handle("PATCH /api/issues/{id}", requireAuth(http.HandlerFunc(h.PatchIssue)))
 	mux.Handle("DELETE /api/issues/{id}", requireAuth(http.HandlerFunc(h.DeleteIssue)))
 	mux.Handle("PATCH /api/issues/{id}/status", requireAuth(http.HandlerFunc(h.UpdateIssueStatus)))
+	mux.Handle("GET /api/issues/{id}/activity", requireAuth(http.HandlerFunc(h.GetIssueActivity)))
 	// Issue comments
 	mux.Handle("GET /api/issues/{id}/comments", requireAuth(http.HandlerFunc(h.ListIssueComments)))
 	mux.Handle("POST /api/issues/{id}/comments", requireAuth(http.HandlerFunc(h.CreateIssueComment)))
@@ -90,6 +91,7 @@ func main() {
 	mux.Handle("GET /api/docs/{id}", requireAuth(http.HandlerFunc(h.GetDoc)))
 	mux.Handle("PUT /api/docs/{id}", requireAuth(http.HandlerFunc(h.UpdateDoc)))
 	mux.Handle("DELETE /api/docs/{id}", requireAuth(http.HandlerFunc(h.DeleteDoc)))
+	mux.Handle("GET /api/docs/{id}/activity", requireAuth(http.HandlerFunc(h.GetDocActivity)))
 	// Doc comments
 	mux.Handle("GET /api/docs/{id}/comments", requireAuth(http.HandlerFunc(h.ListDocComments)))
 	mux.Handle("POST /api/docs/{id}/comments", requireAuth(http.HandlerFunc(h.CreateDocComment)))

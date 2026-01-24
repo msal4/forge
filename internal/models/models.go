@@ -189,6 +189,23 @@ type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
+// ActivityLog represents a modification history entry
+type ActivityLog struct {
+	ID         int64                  `json:"id"`
+	Action     string                 `json:"action"`
+	EntityType string                 `json:"entityType"`
+	EntityID   int64                  `json:"entityId"`
+	User       *User                  `json:"user,omitempty"`
+	Changes    map[string]interface{} `json:"changes,omitempty"`
+	CreatedAt  time.Time              `json:"createdAt"`
+}
+
+// ActivityLogResponse is the response for activity log endpoints
+type ActivityLogResponse struct {
+	Activities []ActivityLog `json:"activities"`
+	HasMore    bool          `json:"hasMore"`
+}
+
 // ListResponse is a generic paginated list response
 type ListResponse[T any] struct {
 	Items      []T   `json:"items"`

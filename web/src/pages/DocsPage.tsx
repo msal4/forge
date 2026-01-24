@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { Markdown } from '../components/ui/Markdown';
 import { CommentSection } from '../components/comments/CommentSection';
+import { ActivityHistory } from '../components/ui/ActivityHistory';
 import { useQueryClient } from '@tanstack/react-query';
 import { 
   Plus, 
@@ -516,6 +517,9 @@ export function DocsPage() {
           <div className="mt-6 pt-4 border-t border-parchment-300">
             <CommentSection resourceType="doc" resourceId={selectedDoc.id} />
           </div>
+
+          {/* Activity History */}
+          <ActivityHistory entityType="doc" entityId={selectedDoc.id} />
         </div>
       )}
 

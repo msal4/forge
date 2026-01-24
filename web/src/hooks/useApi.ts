@@ -2,11 +2,12 @@
 // React Query Hooks for API Data Fetching
 // ============================================
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { issuesApi, type Issue, type CreateIssueRequest, type UpdateIssueRequest, type IssueStatusType } from '../api/issues';
 import { docsApi, type Doc, type CreateDocRequest, type UpdateDocRequest } from '../api/docs';
 import { releasesApi, type Release, type CreateReleaseRequest } from '../api/releases';
 import { usersApi } from '../api/users';
+import { activityApi } from '../api/activity';
 
 // ============================================
 // Query Keys
@@ -17,11 +18,13 @@ export const queryKeys = {
     all: ['issues'] as const,
     list: () => [...queryKeys.issues.all, 'list'] as const,
     detail: (id: number) => [...queryKeys.issues.all, 'detail', id] as const,
+    activity: (id: number) => [...queryKeys.issues.all, 'activity', id] as const,
   },
   docs: {
     all: ['docs'] as const,
     list: () => [...queryKeys.docs.all, 'list'] as const,
     detail: (id: number) => [...queryKeys.docs.all, 'detail', id] as const,
+    activity: (id: number) => [...queryKeys.docs.all, 'activity', id] as const,
   },
   releases: {
     all: ['releases'] as const,
@@ -271,5 +274,42 @@ export function useCurrentUser() {
     queryKey: queryKeys.users.me(),
     queryFn: () => usersApi.me(),
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+// ============================================
+// Activity Hooks
+// ============================================
+
+export function useIssueActivity(issueId: number | undefined) {
+  return useInfiniteQuery({
+    queryKey: queryKeys.issues.activity(issueId!),
+    queryFn: ({ pageParam = 0 }) => 
+      activityApi.getIssueActivity(issueId!, { limit: 10, offset: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage.hasMore) return undefined;
+      // Calculate total items loaded so far
+      const totalLoaded = allPages.reduce((sum, page) => sum + page.activities.length, 0);
+      return totalLoaded;
+    },
+    enabled: !!issueId,
+    staleTime: 30 * 1000, // 30 seconds
+  });
+}
+
+export function useDocActivity(docId: number | undefined) {
+  return useInfiniteQuery({
+    queryKey: queryKeys.docs.activity(docId!),
+    queryFn: ({ pageParam = 0 }) => 
+      activityApi.getDocActivity(docId!, { limit: 10, offset: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage.hasMore) return undefined;
+      const totalLoaded = allPages.reduce((sum, page) => sum + page.activities.length, 0);
+      return totalLoaded;
+    },
+    enabled: !!docId,
+    staleTime: 30 * 1000,
   });
 }

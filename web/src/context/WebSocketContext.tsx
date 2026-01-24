@@ -178,6 +178,8 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
           case 'issue':
             // Always refresh the list
             queryClient.invalidateQueries({ queryKey: queryKeys.issues.list() });
+            // Always refresh activity (new history entries)
+            queryClient.invalidateQueries({ queryKey: queryKeys.issues.activity(data.id) });
             // Only refresh detail if not currently editing this item
             if (!isEditingThisItem) {
               queryClient.invalidateQueries({ queryKey: queryKeys.issues.detail(data.id) });
@@ -185,6 +187,8 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
             break;
           case 'doc':
             queryClient.invalidateQueries({ queryKey: queryKeys.docs.list() });
+            // Always refresh activity (new history entries)
+            queryClient.invalidateQueries({ queryKey: queryKeys.docs.activity(data.id) });
             if (!isEditingThisItem) {
               queryClient.invalidateQueries({ queryKey: queryKeys.docs.detail(data.id) });
             }
