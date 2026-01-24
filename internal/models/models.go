@@ -97,6 +97,19 @@ type ReleaseFile struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
+// Comment represents a comment on an issue, doc, or release
+type Comment struct {
+	ID        int64     `json:"id"`
+	IssueID   *int64    `json:"issueId,omitempty"`
+	DocID     *int64    `json:"docId,omitempty"`
+	ReleaseID *int64    `json:"releaseId,omitempty"`
+	AuthorID  int64     `json:"authorId"`
+	Author    *User     `json:"author,omitempty"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
 // ============================================
 // Request/Response DTOs
 // ============================================
@@ -163,6 +176,11 @@ type CreateReleaseRequest struct {
 	Version     string `json:"version"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
+}
+
+// CreateCommentRequest is the request body for creating a comment
+type CreateCommentRequest struct {
+	Content string `json:"content"`
 }
 
 // ErrorResponse is a standard error response

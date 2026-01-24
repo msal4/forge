@@ -13,7 +13,9 @@ type Querier interface {
 	ActivateUser(ctx context.Context, id int64) error
 	ArchiveProject(ctx context.Context, id int64) error
 	CountActivityByUser(ctx context.Context, userID sql.NullInt64) (int64, error)
+	CountCommentsByDoc(ctx context.Context, docID int64) (int64, error)
 	CountCommentsByIssue(ctx context.Context, issueID int64) (int64, error)
+	CountCommentsByRelease(ctx context.Context, releaseID int64) (int64, error)
 	CountDocs(ctx context.Context) (int64, error)
 	CountDocsByProject(ctx context.Context, projectID sql.NullInt64) (int64, error)
 	CountIssuesByProject(ctx context.Context, projectID int64) (int64, error)
@@ -29,17 +31,22 @@ type Querier interface {
 	CreateActivity(ctx context.Context, arg CreateActivityParams) (ActivityLog, error)
 	CreateComment(ctx context.Context, arg CreateCommentParams) (IssueComment, error)
 	CreateDoc(ctx context.Context, arg CreateDocParams) (Doc, error)
+	CreateDocComment(ctx context.Context, arg CreateDocCommentParams) (DocComment, error)
 	CreateIssue(ctx context.Context, arg CreateIssueParams) (Issue, error)
 	CreateProject(ctx context.Context, arg CreateProjectParams) (Project, error)
 	CreateRelease(ctx context.Context, arg CreateReleaseParams) (Release, error)
+	CreateReleaseComment(ctx context.Context, arg CreateReleaseCommentParams) (ReleaseComment, error)
 	CreateReleaseFile(ctx context.Context, arg CreateReleaseFileParams) (ReleaseFile, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeactivateUser(ctx context.Context, id int64) error
 	DeleteComment(ctx context.Context, id int64) error
 	// Only allow author to delete their own comment
-	DeleteCommentByAuthor(ctx context.Context, arg DeleteCommentByAuthorParams) error
+	DeleteCommentByAuthor(ctx context.Context, arg DeleteCommentByAuthorParams) (int64, error)
 	DeleteDoc(ctx context.Context, id int64) error
+	DeleteDocComment(ctx context.Context, id int64) error
+	// Only allow author to delete their own comment
+	DeleteDocCommentByAuthor(ctx context.Context, arg DeleteDocCommentByAuthorParams) (int64, error)
 	DeleteExpiredSessions(ctx context.Context) error
 	DeleteIssue(ctx context.Context, id int64) error
 	// Clean up activity logs older than N days
@@ -48,6 +55,9 @@ type Querier interface {
 	DeleteOldestUserSessions(ctx context.Context, arg DeleteOldestUserSessionsParams) error
 	DeleteProject(ctx context.Context, id int64) error
 	DeleteRelease(ctx context.Context, id int64) error
+	DeleteReleaseComment(ctx context.Context, id int64) error
+	// Only allow author to delete their own comment
+	DeleteReleaseCommentByAuthor(ctx context.Context, arg DeleteReleaseCommentByAuthorParams) (int64, error)
 	DeleteReleaseFile(ctx context.Context, id int64) error
 	DeleteReleaseFiles(ctx context.Context, releaseID int64) error
 	DeleteSession(ctx context.Context, token string) error
@@ -62,6 +72,10 @@ type Querier interface {
 	// ============================================
 	GetDocByID(ctx context.Context, id int64) (GetDocByIDRow, error)
 	GetDocBySlug(ctx context.Context, slug string) (GetDocBySlugRow, error)
+	// ============================================
+	// Doc Comment Queries
+	// ============================================
+	GetDocCommentByID(ctx context.Context, id int64) (GetDocCommentByIDRow, error)
 	// Recursive CTE to get full doc tree (SQLite 3.8.3+)
 	GetDocTree(ctx context.Context) ([]GetDocTreeRow, error)
 	// ============================================
@@ -83,6 +97,10 @@ type Querier interface {
 	// ============================================
 	GetReleaseByID(ctx context.Context, id int64) (GetReleaseByIDRow, error)
 	GetReleaseByVersion(ctx context.Context, arg GetReleaseByVersionParams) (GetReleaseByVersionRow, error)
+	// ============================================
+	// Release Comment Queries
+	// ============================================
+	GetReleaseCommentByID(ctx context.Context, id int64) (GetReleaseCommentByIDRow, error)
 	// ============================================
 	// Release File Queries
 	// ============================================
@@ -110,7 +128,9 @@ type Querier interface {
 	// Include drafts (for admin/author)
 	ListAllReleases(ctx context.Context) ([]ListAllReleasesRow, error)
 	ListAllUsers(ctx context.Context) ([]User, error)
+	ListCommentsByDoc(ctx context.Context, docID int64) ([]ListCommentsByDocRow, error)
 	ListCommentsByIssue(ctx context.Context, issueID int64) ([]ListCommentsByIssueRow, error)
+	ListCommentsByRelease(ctx context.Context, releaseID int64) ([]ListCommentsByReleaseRow, error)
 	// List all root-level docs (no parent)
 	ListDocs(ctx context.Context) ([]ListDocsRow, error)
 	// Get children of a doc (for tree navigation)

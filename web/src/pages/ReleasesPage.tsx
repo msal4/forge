@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { Markdown } from '../components/ui/Markdown';
+import { CommentSection } from '../components/comments/CommentSection';
 import { useQueryClient } from '@tanstack/react-query';
 import { 
   Plus, 
@@ -340,6 +341,9 @@ export function ReleasesPage() {
                   </div>
                 )}
               </div>
+
+              {/* Comments */}
+              <CommentSection resourceType="release" resourceId={selectedRelease.id} />
 
               {/* Danger Zone */}
               <div className="pt-4 border-t border-parchment-300">

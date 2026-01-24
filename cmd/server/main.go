@@ -80,6 +80,10 @@ func main() {
 	mux.Handle("DELETE /api/issues/{id}", requireAuth(http.HandlerFunc(h.DeleteIssue)))
 	mux.Handle("PATCH /api/issues/{id}/status", requireAuth(http.HandlerFunc(h.UpdateIssueStatus)))
 	mux.Handle("GET /api/issues/{id}/activity", requireAuth(http.HandlerFunc(h.GetIssueActivity)))
+	// Issue comments
+	mux.Handle("GET /api/issues/{id}/comments", requireAuth(http.HandlerFunc(h.ListIssueComments)))
+	mux.Handle("POST /api/issues/{id}/comments", requireAuth(http.HandlerFunc(h.CreateIssueComment)))
+	mux.Handle("DELETE /api/issues/{id}/comments/{commentId}", requireAuth(http.HandlerFunc(h.DeleteIssueComment)))
 
 	// Docs (The "Library") routes
 	mux.Handle("GET /api/docs", requireAuth(http.HandlerFunc(h.ListDocs)))
@@ -88,6 +92,10 @@ func main() {
 	mux.Handle("PUT /api/docs/{id}", requireAuth(http.HandlerFunc(h.UpdateDoc)))
 	mux.Handle("DELETE /api/docs/{id}", requireAuth(http.HandlerFunc(h.DeleteDoc)))
 	mux.Handle("GET /api/docs/{id}/activity", requireAuth(http.HandlerFunc(h.GetDocActivity)))
+	// Doc comments
+	mux.Handle("GET /api/docs/{id}/comments", requireAuth(http.HandlerFunc(h.ListDocComments)))
+	mux.Handle("POST /api/docs/{id}/comments", requireAuth(http.HandlerFunc(h.CreateDocComment)))
+	mux.Handle("DELETE /api/docs/{id}/comments/{commentId}", requireAuth(http.HandlerFunc(h.DeleteDocComment)))
 
 	// Releases (The "Granary") routes
 	mux.Handle("GET /api/releases", requireAuth(http.HandlerFunc(h.ListReleases)))
@@ -96,6 +104,10 @@ func main() {
 	mux.Handle("DELETE /api/releases/{id}", requireAuth(http.HandlerFunc(h.DeleteRelease)))
 	mux.Handle("GET /api/releases/{id}/download/{filename}", requireAuth(http.HandlerFunc(h.DownloadReleaseFile)))
 	mux.Handle("POST /api/releases/{id}/files", requireAuth(http.HandlerFunc(h.UploadReleaseFile)))
+	// Release comments
+	mux.Handle("GET /api/releases/{id}/comments", requireAuth(http.HandlerFunc(h.ListReleaseComments)))
+	mux.Handle("POST /api/releases/{id}/comments", requireAuth(http.HandlerFunc(h.CreateReleaseComment)))
+	mux.Handle("DELETE /api/releases/{id}/comments/{commentId}", requireAuth(http.HandlerFunc(h.DeleteReleaseComment)))
 
 	// ============================================
 	// Static File Serving (React SPA)

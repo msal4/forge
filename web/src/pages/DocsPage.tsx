@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { Markdown } from '../components/ui/Markdown';
+import { CommentSection } from '../components/comments/CommentSection';
 import { ActivityHistory } from '../components/ui/ActivityHistory';
 import { useQueryClient } from '@tanstack/react-query';
 import { 
@@ -510,6 +511,11 @@ export function DocsPage() {
               <Clock size={14} />
               <span>{t('docs.created', { date: formatDate(selectedDoc.createdAt) })}</span>
             </div>
+          </div>
+
+          {/* Comments */}
+          <div className="mt-6 pt-4 border-t border-parchment-300">
+            <CommentSection resourceType="doc" resourceId={selectedDoc.id} />
           </div>
 
           {/* Activity History */}

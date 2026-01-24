@@ -355,6 +355,22 @@ export default {
 		keepEditing: 'Keep Editing',
 	},
 
+	// Comments
+	comments: {
+		title: 'Comments',
+		empty: 'No comments yet. Be the first to add one!',
+		placeholder: 'Add a comment... (Markdown supported)',
+		previewEmpty: 'Nothing to preview',
+		edit: 'Edit',
+		preview: 'Preview',
+		markdownHint: 'Markdown supported',
+		send: 'Send',
+		delete: 'Delete comment',
+		showMore: 'Show {{count}} more comments',
+		deleteConfirmTitle: 'Delete Comment',
+		deleteConfirmMessage: 'Are you sure you want to delete this comment?',
+	},
+
 	// Activity History
 	history: {
 		title: 'History',

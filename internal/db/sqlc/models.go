@@ -34,6 +34,15 @@ type Doc struct {
 	UpdatedAt    time.Time      `json:"updatedAt"`
 }
 
+type DocComment struct {
+	ID        int64     `json:"id"`
+	DocID     int64     `json:"docId"`
+	AuthorID  int64     `json:"authorId"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
 type Issue struct {
 	ID          int64          `json:"id"`
 	ProjectID   int64          `json:"projectId"`
@@ -87,6 +96,15 @@ type Release struct {
 	PublishedAt  sql.NullTime   `json:"publishedAt"`
 	CreatedAt    time.Time      `json:"createdAt"`
 	UpdatedAt    time.Time      `json:"updatedAt"`
+}
+
+type ReleaseComment struct {
+	ID        int64     `json:"id"`
+	ReleaseID int64     `json:"releaseId"`
+	AuthorID  int64     `json:"authorId"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 type ReleaseFile struct {
