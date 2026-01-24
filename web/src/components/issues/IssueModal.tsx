@@ -386,13 +386,13 @@ export function IssueModal({
 				}}
 			>
 				{/* Priority color bar */}
-				<div className={`h-1.5 transition-colors duration-200 ${priority === 'critical' ? 'bg-red-500' :
+				<div className={`flex-shrink-0 h-1.5 transition-colors duration-200 ${priority === 'critical' ? 'bg-red-500' :
 						priority === 'high' ? 'bg-clay-500' :
 							priority === 'medium' ? 'bg-gold-500' : 'bg-lapis-400'
 					}`} />
 
 				{/* Header */}
-				<div className="flex items-start justify-between px-6 py-4 border-b border-parchment-200 bg-parchment-100/50">
+				<div className="flex-shrink-0 flex items-start justify-between px-6 py-4 border-b border-parchment-200 bg-parchment-100/50">
 					<div className="flex-1 pr-4">
 						{/* Status & Priority badges */}
 						<div className="flex items-center gap-2 mb-3">
@@ -544,7 +544,7 @@ export function IssueModal({
 
 				{/* Error */}
 				{error && (
-					<div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+					<div className="flex-shrink-0 mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
 						{error}
 					</div>
 				)}
@@ -851,7 +851,7 @@ export function IssueModal({
 				</div>
 
 				{/* Footer */}
-				<div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t border-parchment-200 bg-parchment-100/80">
+				<div className="flex-shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t border-parchment-200 bg-parchment-100/80">
 					<div className="text-xs text-lapis-400 text-center sm:text-left">
 						{issue?.updatedAt && !isCreating && (
 							<span title={formatDate(issue.updatedAt) || ''}>
