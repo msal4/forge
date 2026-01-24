@@ -259,7 +259,7 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
                   w-full p-3 rounded-lg resize-none
                   bg-parchment-100/50 text-lapis-700
                   border border-parchment-300
-                  outline-none focus:border-gold-400 focus:bg-parchment-100
+                  outline-none focus:ring-2 focus:ring-gold-400/30 focus:bg-parchment-100
                   placeholder:text-stone-500
                   transition-colors
                 "

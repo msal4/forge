@@ -576,7 +576,7 @@ export function IssueModal({
                   w-full min-h-[100px] sm:min-h-[120px] p-3 sm:p-4 rounded-lg 
                   bg-parchment-100/50 text-lapis-700 resize-none
                   border border-parchment-300 
-                  outline-none focus:border-gold-400 focus:bg-parchment-100
+                  outline-none focus:ring-2 focus:ring-gold-400/30 focus:bg-parchment-100
                   placeholder:text-stone-500
                   transition-colors
                 "
@@ -706,7 +706,7 @@ export function IssueModal({
 										className="
                       w-full h-10 px-3 rounded-lg text-sm
                       border border-parchment-300 bg-parchment-100/50 text-lapis-700
-                      focus:border-gold-400 focus:bg-parchment-100 outline-none transition-all
+                      focus:ring-2 focus:ring-gold-400/30 focus:bg-parchment-100 outline-none transition-all
                     "
 									/>
 								) : dueDate ? (

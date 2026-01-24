@@ -88,7 +88,7 @@ export function SettingsPage() {
                   onChange={handleLanguageChange}
                   className="w-full max-w-xs px-4 py-2 rounded-tablet border border-parchment-300 
                              bg-parchment-100 text-lapis-700
-                             focus:border-gold-400 focus:ring-1 focus:ring-gold-400 focus:outline-none
+                             focus:ring-2 focus:ring-gold-400/30 focus:outline-none
                              transition-colors"
                 >
                   <option value="en">{t('settings.english')}</option>
@@ -142,7 +142,7 @@ export function SettingsPage() {
                     onChange={(e) => setNewPassword(e.target.value)}
                     className="w-full px-4 py-2 rounded-tablet border border-parchment-300 
                                bg-parchment-100 text-lapis-700
-                               focus:border-gold-400 focus:ring-1 focus:ring-gold-400 focus:outline-none
+                               focus:ring-2 focus:ring-gold-400/30 focus:outline-none
                                transition-colors"
                     required
                     minLength={4}
@@ -160,7 +160,7 @@ export function SettingsPage() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="w-full px-4 py-2 rounded-tablet border border-parchment-300 
                                bg-parchment-100 text-lapis-700
-                               focus:border-gold-400 focus:ring-1 focus:ring-gold-400 focus:outline-none
+                               focus:ring-2 focus:ring-gold-400/30 focus:outline-none
                                transition-colors"
                     required
                     minLength={4}

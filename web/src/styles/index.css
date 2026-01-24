@@ -45,11 +45,11 @@
     @apply outline-none ring-2 ring-gold-400 ring-offset-2 ring-offset-parchment-100;
   }
   
-  /* Input focus styles - gold highlight */
+  /* Input focus styles - gold highlight (ring only, no border change) */
   input:focus,
   textarea:focus,
   select:focus {
-    @apply border-gold-400 ring-2 ring-gold-400/20;
+    @apply ring-2 ring-gold-400/30 outline-none;
   }
   
   /* Selection color */
@@ -75,7 +75,7 @@
     @apply w-full px-3 py-2 rounded-tablet;
     @apply bg-parchment-50 border border-parchment-400;
     @apply text-lapis-700 placeholder-stone-500;
-    @apply focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20;
+    @apply focus:ring-2 focus:ring-gold-400/30 focus:outline-none;
     @apply transition-colors duration-150;
   }
   
