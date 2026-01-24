@@ -73,9 +73,12 @@ export function ActivityHistory({ entityType, entityId }: ActivityHistoryProps) 
     }
   };
 
-  // Get the latest activity (first in the list)
-  const latestActivity = activities[0];
-  const remainingActivities = activities.slice(1);
+  // Number of activities to show initially (before expanding)
+  const INITIAL_ACTIVITIES_SHOWN = 3;
+  
+  // Get initial activities and remaining ones
+  const initialActivities = activities.slice(0, INITIAL_ACTIVITIES_SHOWN);
+  const remainingActivities = activities.slice(INITIAL_ACTIVITIES_SHOWN);
   const hasRemainingActivities = remainingActivities.length > 0 || hasNextPage;
 
   // Don't render anything if loading initial data
@@ -89,7 +92,7 @@ export function ActivityHistory({ entityType, entityId }: ActivityHistoryProps) 
   }
 
   // Don't render if no activities and no error
-  if (!latestActivity && !isError) {
+  if (initialActivities.length === 0 && !isError) {
     return null;
   }
 
@@ -100,18 +103,23 @@ export function ActivityHistory({ entityType, entityId }: ActivityHistoryProps) 
         <div className="text-sm text-clay-600">{t('history.failedToLoad')}</div>
       ) : (
         <>
-          {/* Latest Activity - Always visible */}
-          {latestActivity && (
+          {/* Initial Activities - Always visible */}
+          {initialActivities.length > 0 && (
             <div className="relative ml-2">
-              {/* Show vertical line only if there are more activities */}
-              {(isExpanded && remainingActivities.length > 0) && (
+              {/* Show vertical line if there are multiple initial activities or expanded */}
+              {(initialActivities.length > 1 || (isExpanded && remainingActivities.length > 0)) && (
                 <div className="absolute left-[7px] top-6 bottom-0 w-0.5 bg-parchment-300" />
               )}
               
-              <ActivityEntry
-                activity={latestActivity}
-                onViewDiff={handleViewDiff}
-              />
+              <div className="space-y-4">
+                {initialActivities.map((activity) => (
+                  <ActivityEntry
+                    key={activity.id}
+                    activity={activity}
+                    onViewDiff={handleViewDiff}
+                  />
+                ))}
+              </div>
             </div>
           )}
 

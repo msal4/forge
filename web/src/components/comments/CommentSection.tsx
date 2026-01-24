@@ -25,7 +25,7 @@ interface CommentSectionProps {
 }
 
 // Number of comments to show initially
-const INITIAL_COMMENTS_SHOWN = 2;
+const INITIAL_COMMENTS_SHOWN = 3;
 
 export function CommentSection({ resourceType, resourceId }: CommentSectionProps) {
 	const { t } = useTranslation();
