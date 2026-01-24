@@ -489,10 +489,12 @@ export function IssueModal({
 									className="
                     w-full text-xl font-inscription font-normal text-lapis-700
                     bg-transparent
-                    border-none outline-none ring-0
-                    focus:border-none focus:outline-none focus:ring-0
+                    border-b-2 border-transparent
+                    outline-none ring-0
+                    focus:border-b-gold-400
                     placeholder:text-stone-500
-                    caret-lapis-500
+                    caret-gold-500
+                    transition-colors
                   "
 									style={{ boxShadow: 'none' }}
 								/>
@@ -574,7 +576,7 @@ export function IssueModal({
                   w-full min-h-[100px] sm:min-h-[120px] p-3 sm:p-4 rounded-lg 
                   bg-parchment-100/50 text-lapis-700 resize-none
                   border border-parchment-300 
-                  outline-none focus:border-lapis-400 focus:bg-parchment-100
+                  outline-none focus:border-gold-400 focus:bg-parchment-100
                   placeholder:text-stone-500
                   transition-colors
                 "
@@ -704,7 +706,7 @@ export function IssueModal({
 										className="
                       w-full h-10 px-3 rounded-lg text-sm
                       border border-parchment-300 bg-parchment-100/50 text-lapis-700
-                      focus:border-lapis-400 focus:bg-parchment-100 outline-none transition-all
+                      focus:border-gold-400 focus:bg-parchment-100 outline-none transition-all
                     "
 									/>
 								) : dueDate ? (

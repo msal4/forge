@@ -577,7 +577,7 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
               placeholder={t('releases.modal.versionPlaceholder')}
               className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
                          bg-parchment-100 text-lapis-700 font-code
-                         focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
+                         focus:border-gold-400 focus:ring-1 focus:ring-gold-400 focus:outline-none
                          placeholder:text-stone-500"
             />
           </div>
@@ -593,7 +593,7 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
               placeholder={t('releases.modal.titlePlaceholder')}
               className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
                          bg-parchment-100 text-lapis-700
-                         focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
+                         focus:border-gold-400 focus:ring-1 focus:ring-gold-400 focus:outline-none
                          placeholder:text-stone-500"
             />
           </div>
@@ -609,7 +609,7 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
               rows={3}
               className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
                          bg-parchment-100 text-lapis-700 resize-none
-                         focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
+                         focus:border-gold-400 focus:ring-1 focus:ring-gold-400 focus:outline-none
                          placeholder:text-stone-500"
             />
           </div>

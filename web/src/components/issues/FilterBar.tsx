@@ -95,7 +95,7 @@ export function FilterBar({
               bg-parchment-50 text-lapis-700 text-sm
               border border-parchment-300 rounded-tablet
               placeholder:text-stone-500
-              focus:outline-none focus:border-lapis-400 focus:ring-2 focus:ring-lapis-200
+              focus:outline-none focus:border-gold-400 focus:ring-2 focus:ring-gold-200
               transition-all
             "
           />

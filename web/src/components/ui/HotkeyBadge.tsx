@@ -98,7 +98,7 @@ export function ButtonWithHotkey({
         font-body font-medium
         rounded-tablet
         transition-colors duration-150
-        focus:outline-none focus:ring-2 focus:ring-lapis-400 focus:ring-offset-2 focus:ring-offset-parchment-100
+        focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2 focus:ring-offset-parchment-100
         disabled:opacity-50 disabled:cursor-not-allowed
         ${variantClasses[variant]}
         ${sizeClasses[size]}

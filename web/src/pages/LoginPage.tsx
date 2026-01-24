@@ -253,7 +253,7 @@ export function LoginPage() {
                       text-stone-500 hover:text-lapis-600
                       hover:bg-parchment-200
                       transition-colors duration-150
-                      focus:outline-none focus:ring-2 focus:ring-lapis-400
+                      focus:outline-none focus:ring-2 focus:ring-gold-400
                       disabled:opacity-50
                     "
                     tabIndex={-1}
@@ -286,7 +286,7 @@ export function LoginPage() {
                   shadow-[0_2px_8px_-2px_rgba(26,54,93,0.4),inset_0_1px_0_rgba(255,255,255,0.1)]
                   hover:shadow-[0_4px_12px_-2px_rgba(26,54,93,0.5),inset_0_1px_0_rgba(255,255,255,0.1)]
                   transition-all duration-200
-                  focus:outline-none focus:ring-2 focus:ring-lapis-400 focus:ring-offset-2 focus:ring-offset-parchment-100
+                  focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2 focus:ring-offset-parchment-100
                   disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-lapis-500 disabled:hover:to-lapis-600
                 `}
               >

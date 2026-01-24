@@ -616,7 +616,7 @@ export function DocsPage() {
                 placeholder={t('docs.titlePlaceholder')}
                 className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
                            bg-parchment-100 text-lapis-700 text-lg font-medium
-                           focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
+                           focus:border-gold-400 focus:ring-1 focus:ring-gold-400 focus:outline-none
                            placeholder:text-stone-500 transition-colors"
               />
             </div>
@@ -632,7 +632,7 @@ export function DocsPage() {
                   onChange={(e) => setEditParentId(e.target.value ? Number(e.target.value) : '')}
                   className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
                              bg-parchment-100 text-lapis-700
-                             focus:border-lapis-400 focus:ring-1 focus:ring-lapis-400 focus:outline-none
+                             focus:border-gold-400 focus:ring-1 focus:ring-gold-400 focus:outline-none
                              transition-colors"
                 >
                   <option value="">{t('docs.parentNone')}</option>
