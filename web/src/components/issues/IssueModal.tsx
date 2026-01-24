@@ -373,7 +373,7 @@ export function IssueModal({
 			<div 
 				className="
 					relative w-full h-full
-					sm:h-auto sm:max-h-[80vh] sm:max-w-4xl sm:rounded-xl
+					sm:h-[80vh] sm:max-w-4xl sm:rounded-xl
 					bg-parchment-50
 					shadow-2xl border-0 sm:border border-parchment-300
 					flex flex-col
