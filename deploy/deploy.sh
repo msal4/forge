@@ -13,7 +13,7 @@ if [[ -f deploy/.env ]]; then
 fi
 
 # Configuration (override these in .env or environment)
-DEPLOY_HOST="${DEPLOY_HOST:-forge.sarray.de}"
+DEPLOY_HOST="${DEPLOY_HOST:-direct.forge.sarray.de}"
 DEPLOY_USER="${DEPLOY_USER:-root}"
 DEPLOY_PATH="${DEPLOY_PATH:-/opt/sarray-forge}"
 
