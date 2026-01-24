@@ -4,6 +4,8 @@ import i18n from '../../i18n';
 import { Markdown } from '../ui/Markdown';
 import { CommentSection } from '../comments/CommentSection';
 import { ActivityHistory } from '../ui/ActivityHistory';
+import { Avatar } from '../ui/Avatar';
+import { MentionInput } from '../comments/MentionInput';
 import {
 	X,
 	ArrowRight,
@@ -563,9 +565,9 @@ export function IssueModal({
 							{t('issueModal.description')}
 						</h3>
 						{isEditing ? (
-							<textarea
+							<MentionInput
 								value={description}
-								onChange={(e) => setDescription(e.target.value)}
+								onChange={setDescription}
 								placeholder={t('issueModal.descriptionPlaceholder')}
 								rows={4}
 								className="
@@ -614,11 +616,10 @@ export function IssueModal({
 										>
 											{selectedAssignee ? (
 												<>
-													<div className="w-6 h-6 rounded-full bg-gradient-to-br from-lapis-400 to-lapis-600 flex items-center justify-center flex-shrink-0">
-														<span className="text-[10px] text-parchment-100 font-semibold">
-															{(selectedAssignee.fullName?.[0] || selectedAssignee.username[0]).toUpperCase()}
-														</span>
-													</div>
+													<Avatar 
+														name={selectedAssignee.fullName || selectedAssignee.username}
+														size="sm"
+													/>
 													<span className="text-sm text-lapis-700 truncate">{selectedAssignee.fullName || selectedAssignee.username}</span>
 												</>
 											) : (
@@ -641,11 +642,10 @@ export function IssueModal({
 														className={`w-full px-3 py-2 text-left text-sm hover:bg-parchment-200 flex items-center gap-2
                               ${assigneeId === user.id ? 'bg-parchment-200' : ''}`}
 													>
-														<div className="w-5 h-5 rounded-full bg-gradient-to-br from-lapis-400 to-lapis-600 flex items-center justify-center">
-															<span className="text-[9px] text-parchment-100 font-semibold">
-																{(user.fullName?.[0] || user.username[0]).toUpperCase()}
-															</span>
-														</div>
+														<Avatar 
+															name={user.fullName || user.username}
+															size="xs"
+														/>
 														{user.fullName || user.username}
 													</button>
 												))}
@@ -654,11 +654,11 @@ export function IssueModal({
 									</div>
 								) : selectedAssignee ? (
 									<div className="flex items-center gap-2">
-										<div className="w-7 h-7 rounded-full bg-gradient-to-br from-lapis-400 to-lapis-600 flex items-center justify-center ring-2 ring-parchment-200">
-											<span className="text-xs text-parchment-100 font-semibold">
-												{(selectedAssignee.fullName?.[0] || selectedAssignee.username[0]).toUpperCase()}
-											</span>
-										</div>
+										<Avatar 
+											name={selectedAssignee.fullName || selectedAssignee.username}
+											size="md"
+											className="ring-2 ring-parchment-200"
+										/>
 										<span className="text-sm text-lapis-700 font-medium">{selectedAssignee.fullName || selectedAssignee.username}</span>
 									</div>
 								) : (
@@ -676,11 +676,11 @@ export function IssueModal({
 							<div className="h-10 flex items-center">
 								{issue?.reporter ? (
 									<div className="flex items-center gap-2">
-										<div className="w-7 h-7 rounded-full bg-gradient-to-br from-clay-400 to-clay-600 flex items-center justify-center ring-2 ring-parchment-200">
-											<span className="text-xs text-parchment-100 font-semibold">
-												{(issue.reporter.fullName?.[0] || issue.reporter.username[0]).toUpperCase()}
-											</span>
-										</div>
+										<Avatar 
+											name={issue.reporter.fullName || issue.reporter.username}
+											size="md"
+											className="ring-2 ring-parchment-200"
+										/>
 										<span className="text-sm text-lapis-700 font-medium">{issue.reporter.fullName || issue.reporter.username}</span>
 									</div>
 								) : (

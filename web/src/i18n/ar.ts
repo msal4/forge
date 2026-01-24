@@ -369,7 +369,7 @@ export default {
 	comments: {
 		title: 'التعليقات',
 		empty: 'لا توجد تعليقات بعد. كن أول من يضيف تعليقاً!',
-		placeholder: 'أضف تعليقاً... (يدعم Markdown)',
+		placeholder: 'أضف تعليقاً... (يدعم Markdown، @الإشارة للمستخدمين)',
 		previewEmpty: 'لا شيء للمعاينة',
 		edit: 'تحرير',
 		preview: 'معاينة',
@@ -379,6 +379,19 @@ export default {
 		showMore: 'عرض {{count}} تعليقات أخرى',
 		deleteConfirmTitle: 'حذف التعليق',
 		deleteConfirmMessage: 'هل أنت متأكد من حذف هذا التعليق؟',
+	},
+
+	// Notifications
+	notifications: {
+		title: 'الإشعارات',
+		empty: 'لا توجد إشعارات',
+		markAllRead: 'تعليم الكل كمقروء',
+		types: {
+			mention: '{{actor}} أشار إليك',
+			assigned: '{{actor}} أسند إليك',
+			comment_on_owned: '{{actor}} علّق على {{entityType}} الخاص بك',
+			comment_on_assigned: '{{actor}} علّق',
+		},
 	},
 
 	// Activity History

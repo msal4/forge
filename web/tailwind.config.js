@@ -66,6 +66,21 @@ export default {
           900: '#673a17',
           950: '#3c1e09',
         },
+        // Stone - Warm grays for muted/secondary text
+        // Inspired by weathered clay tablets and limestone
+        stone: {
+          50: '#fafaf9',
+          100: '#f5f5f4',
+          200: '#e7e5e4',
+          300: '#d6d3d1',
+          400: '#a8a29e', // Muted icons, borders
+          500: '#78716c', // Primary - secondary text, placeholders
+          600: '#57534e', // Darker muted text
+          700: '#44403c',
+          800: '#292524',
+          900: '#1c1917',
+          950: '#0c0a09',
+        },
       },
       // ============================================
       // Typography - Serif for ancient inscription feel

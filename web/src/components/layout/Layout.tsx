@@ -10,13 +10,14 @@ import {
   LogOut,
   Command,
   Menu,
-  X,
-  User
+  X
 } from 'lucide-react';
 import { useKeyboard } from '../../context/KeyboardContext';
 import { useAuth } from '../../context/AuthContext';
 import { HotkeyBadge } from '../ui/HotkeyBadge';
 import { ConnectionStatus } from '../ui/ConnectionStatus';
+import { NotificationBell } from '../ui/NotificationBell';
+import { Avatar } from '../ui/Avatar';
 
 // ============================================
 // Main Layout - Sidebar + Content
@@ -54,18 +55,21 @@ export function Layout() {
             <p className="text-xs text-lapis-500 mt-1">{t('app.tagline')}</p>
           </div>
           
-          {/* Command Palette Trigger */}
-          <div className="p-3">
-            <button
-              onClick={openCommandPalette}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-tablet
-                         bg-parchment-200 text-lapis-500 text-sm
-                         hover:bg-parchment-300 transition-colors"
-            >
-              <Command size={16} />
-              <span className="flex-1 ltr:text-left rtl:text-right">{t('nav.commandPalette')}</span>
-              <HotkeyBadge keys="Ctrl+k" size="sm" />
-            </button>
+          {/* Command Palette Trigger + Notifications */}
+          <div className="p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={openCommandPalette}
+                className="flex-1 flex items-center gap-2 px-3 py-2 rounded-tablet
+                           bg-parchment-200 text-lapis-500 text-sm
+                           hover:bg-parchment-300 transition-colors"
+              >
+                <Command size={16} />
+                <span className="flex-1 ltr:text-left rtl:text-right">{t('nav.commandPalette')}</span>
+                <HotkeyBadge keys="Ctrl+k" size="sm" />
+              </button>
+              <NotificationBell />
+            </div>
           </div>
           
           {/* Navigation */}
@@ -90,13 +94,11 @@ export function Layout() {
             {/* Current User */}
             {user && (
               <div className="flex items-center gap-3 px-3 py-2">
-                <div className="w-8 h-8 rounded-full bg-lapis-500 flex items-center justify-center text-parchment-100">
-                  {user.avatarUrl ? (
-                    <img src={user.avatarUrl} alt={user.fullName} className="w-8 h-8 rounded-full" />
-                  ) : (
-                    <User size={16} />
-                  )}
-                </div>
+                <Avatar 
+                  name={user.fullName || user.username}
+                  avatarUrl={user.avatarUrl}
+                  size="md"
+                />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-lapis-600 truncate">
                     {user.fullName || user.username}

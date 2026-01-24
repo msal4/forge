@@ -4,6 +4,7 @@ import { Search, User, Tag, X, ChevronDown, Filter } from 'lucide-react';
 import type { User as UserType } from '../../api/users';
 import type { IssueFilters } from '../../hooks/useIssueFilters';
 import { HotkeyBadge } from '../ui/HotkeyBadge';
+import { Avatar } from '../ui/Avatar';
 
 // ============================================
 // Filter Bar Component
@@ -169,11 +170,10 @@ export function FilterBar({
                     ${filters.selectedAssignee === user.id ? 'bg-parchment-200 text-lapis-700' : 'text-lapis-600'}
                   `}
                 >
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-lapis-400 to-lapis-600 flex items-center justify-center flex-shrink-0">
-                    <span className="text-[10px] text-parchment-100 font-semibold">
-                      {(user.fullName?.[0] || user.username[0]).toUpperCase()}
-                    </span>
-                  </div>
+                  <Avatar 
+                    name={user.fullName || user.username}
+                    size="sm"
+                  />
                   <span className="truncate">{user.fullName || user.username}</span>
                 </button>
               ))}

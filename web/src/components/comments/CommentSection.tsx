@@ -2,13 +2,15 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MessageSquare, Trash2, Send, Eye, Edit3, ChevronDown } from 'lucide-react';
+import { Trash2, Send, Eye, Edit3, ChevronDown } from 'lucide-react';
 import { Markdown } from '../ui/Markdown';
 import { HotkeyBadge } from '../ui/HotkeyBadge';
 import { useConfirmDialog } from '../ui/ConfirmDialog';
+import { Avatar } from '../ui/Avatar';
 import { commentsApi, type Comment } from '../../api/comments';
 import { usersApi } from '../../api/users';
 import { useWebSocket } from '../../context/WebSocketContext';
+import { MentionInput } from './MentionInput';
 
 // ============================================
 // Comment Section Component
@@ -18,265 +20,242 @@ import { useWebSocket } from '../../context/WebSocketContext';
 type ResourceType = 'issue' | 'doc' | 'release';
 
 interface CommentSectionProps {
-  resourceType: ResourceType;
-  resourceId: number;
+	resourceType: ResourceType;
+	resourceId: number;
 }
 
 // Number of comments to show initially
 const INITIAL_COMMENTS_SHOWN = 2;
 
-// Get initials from name
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map(part => part[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-}
-
 export function CommentSection({ resourceType, resourceId }: CommentSectionProps) {
-  const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const { lastEvent } = useWebSocket();
-  const { confirm, DialogComponent } = useConfirmDialog();
-  
-  const [newComment, setNewComment] = React.useState('');
-  const [isPreview, setIsPreview] = React.useState(false);
-  // Track the minimum number of comments to show (increases when user adds comments)
-  const [minCommentsToShow, setMinCommentsToShow] = React.useState(INITIAL_COMMENTS_SHOWN);
-  const [showAllComments, setShowAllComments] = React.useState(false);
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+	const { t } = useTranslation();
+	const queryClient = useQueryClient();
+	const { lastEvent } = useWebSocket();
+	const { confirm, DialogComponent } = useConfirmDialog();
 
-  // Query key based on resource type - memoized to prevent unnecessary re-renders
-  const queryKey = React.useMemo(
-    () => ['comments', resourceType, resourceId],
-    [resourceType, resourceId]
-  );
+	const [newComment, setNewComment] = React.useState('');
+	const [isPreview, setIsPreview] = React.useState(false);
+	// Track the minimum number of comments to show (increases when user adds comments)
+	const [minCommentsToShow, setMinCommentsToShow] = React.useState(INITIAL_COMMENTS_SHOWN);
+	const [showAllComments, setShowAllComments] = React.useState(false);
 
-  // Fetch current user
-  const { data: currentUser } = useQuery({
-    queryKey: ['users', 'me'],
-    queryFn: () => usersApi.me(),
-  });
+	// Query key based on resource type - memoized to prevent unnecessary re-renders
+	const queryKey = React.useMemo(
+		() => ['comments', resourceType, resourceId],
+		[resourceType, resourceId]
+	);
 
-  // Fetch comments
-  const { data: comments = [], isLoading } = useQuery({
-    queryKey,
-    queryFn: () => {
-      switch (resourceType) {
-        case 'issue':
-          return commentsApi.listForIssue(resourceId);
-        case 'doc':
-          return commentsApi.listForDoc(resourceId);
-        case 'release':
-          return commentsApi.listForRelease(resourceId);
-      }
-    },
-    enabled: resourceId > 0,
-  });
+	// Fetch current user
+	const { data: currentUser } = useQuery({
+		queryKey: ['users', 'me'],
+		queryFn: () => usersApi.me(),
+	});
 
-  // Listen for WebSocket events to refetch comments
-  // Use a ref to store the last event to avoid re-running effect on each render
-  const lastEventRef = React.useRef(lastEvent);
-  React.useEffect(() => {
-    // Only process if lastEvent actually changed
-    if (lastEvent === lastEventRef.current) return;
-    lastEventRef.current = lastEvent;
-    
-    if (!lastEvent) return;
-    
-    if (lastEvent.type === 'comment_created' || lastEvent.type === 'comment_deleted') {
-      const data = lastEvent.data as Record<string, number> | undefined;
-      // Check if the event is for this resource
-      const eventResourceId = data?.issueId || data?.docId || data?.releaseId;
-      if (eventResourceId === resourceId) {
-        queryClient.invalidateQueries({ queryKey });
-      }
-    }
-  }, [lastEvent, resourceId, queryClient, queryKey]);
+	// Fetch comments
+	const { data: comments = [], isLoading } = useQuery({
+		queryKey,
+		queryFn: () => {
+			switch (resourceType) {
+				case 'issue':
+					return commentsApi.listForIssue(resourceId);
+				case 'doc':
+					return commentsApi.listForDoc(resourceId);
+				case 'release':
+					return commentsApi.listForRelease(resourceId);
+			}
+		},
+		enabled: resourceId > 0,
+	});
 
-  // Create comment mutation
-  const createMutation = useMutation({
-    mutationFn: (content: string) => {
-      switch (resourceType) {
-        case 'issue':
-          return commentsApi.createForIssue(resourceId, { content });
-        case 'doc':
-          return commentsApi.createForDoc(resourceId, { content });
-        case 'release':
-          return commentsApi.createForRelease(resourceId, { content });
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
-      setNewComment('');
-      setIsPreview(false);
-      // Increase minimum shown to include the new comment
-      setMinCommentsToShow(prev => prev + 1);
-    },
-  });
+	// Listen for WebSocket events to refetch comments
+	// Use a ref to store the last event to avoid re-running effect on each render
+	const lastEventRef = React.useRef(lastEvent);
+	React.useEffect(() => {
+		// Only process if lastEvent actually changed
+		if (lastEvent === lastEventRef.current) return;
+		lastEventRef.current = lastEvent;
 
-  // Delete comment mutation
-  const deleteMutation = useMutation({
-    mutationFn: (commentId: number) => {
-      switch (resourceType) {
-        case 'issue':
-          return commentsApi.deleteForIssue(resourceId, commentId);
-        case 'doc':
-          return commentsApi.deleteForDoc(resourceId, commentId);
-        case 'release':
-          return commentsApi.deleteForRelease(resourceId, commentId);
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
-    },
-  });
+		if (!lastEvent) return;
 
-  // Handle delete with confirmation
-  const handleDeleteComment = async (comment: Comment) => {
-    const confirmed = await confirm({
-      title: t('comments.deleteConfirmTitle', 'Delete Comment'),
-      message: t('comments.deleteConfirmMessage', 'Are you sure you want to delete this comment?'),
-      confirmLabel: t('common.delete'),
-      variant: 'danger',
-    });
+		if (lastEvent.type === 'comment_created' || lastEvent.type === 'comment_deleted') {
+			const data = lastEvent.data as Record<string, number> | undefined;
+			// Check if the event is for this resource
+			const eventResourceId = data?.issueId || data?.docId || data?.releaseId;
+			if (eventResourceId === resourceId) {
+				queryClient.invalidateQueries({ queryKey });
+			}
+		}
+	}, [lastEvent, resourceId, queryClient, queryKey]);
 
-    if (confirmed) {
-      deleteMutation.mutate(comment.id);
-    }
-  };
+	// Create comment mutation
+	const createMutation = useMutation({
+		mutationFn: (content: string) => {
+			switch (resourceType) {
+				case 'issue':
+					return commentsApi.createForIssue(resourceId, { content });
+				case 'doc':
+					return commentsApi.createForDoc(resourceId, { content });
+				case 'release':
+					return commentsApi.createForRelease(resourceId, { content });
+			}
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey });
+			setNewComment('');
+			setIsPreview(false);
+			// Increase minimum shown to include the new comment
+			setMinCommentsToShow(prev => prev + 1);
+		},
+	});
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-    createMutation.mutate(newComment.trim());
-  };
+	// Delete comment mutation
+	const deleteMutation = useMutation({
+		mutationFn: (commentId: number) => {
+			switch (resourceType) {
+				case 'issue':
+					return commentsApi.deleteForIssue(resourceId, commentId);
+				case 'doc':
+					return commentsApi.deleteForDoc(resourceId, commentId);
+				case 'release':
+					return commentsApi.deleteForRelease(resourceId, commentId);
+			}
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey });
+		},
+	});
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Ctrl+Enter to submit
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      if (newComment.trim()) {
-        createMutation.mutate(newComment.trim());
-      }
-    }
-  };
+	// Handle delete with confirmation
+	const handleDeleteComment = async (comment: Comment) => {
+		const confirmed = await confirm({
+			title: t('comments.deleteConfirmTitle', 'Delete Comment'),
+			message: t('comments.deleteConfirmMessage', 'Are you sure you want to delete this comment?'),
+			confirmLabel: t('common.delete'),
+			variant: 'danger',
+		});
 
-  // Format relative time with localization
-  const formatRelativeTime = (dateString: string): string => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffSecs = Math.floor(diffMs / 1000);
-    const diffMins = Math.floor(diffSecs / 60);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
+		if (confirmed) {
+			deleteMutation.mutate(comment.id);
+		}
+	};
 
-    if (diffSecs < 60) return t('dates.justNow');
-    if (diffMins < 60) return t('dates.minutesAgo', { count: diffMins });
-    if (diffHours < 24) return t('dates.hoursAgo', { count: diffHours });
-    if (diffDays === 1) return t('dates.yesterday');
-    if (diffDays < 7) return t('dates.daysAgo', { count: diffDays });
-    
-    const locale = i18n.language === 'ar' ? 'ar-SA' : 'en-US';
-    return date.toLocaleDateString(locale, { 
-      month: 'short', 
-      day: 'numeric',
-      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-    });
-  };
+	const handleSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!newComment.trim()) return;
+		createMutation.mutate(newComment.trim());
+	};
 
-  // Calculate which comments to show
-  // Show latest comments (at the end of the array since they're sorted ASC)
-  const totalComments = comments.length;
-  const commentsToShow = Math.max(minCommentsToShow, INITIAL_COMMENTS_SHOWN);
-  const hasHiddenComments = totalComments > commentsToShow && !showAllComments;
-  const hiddenCount = hasHiddenComments ? totalComments - commentsToShow : 0;
-  const visibleComments = hasHiddenComments 
-    ? comments.slice(-commentsToShow) 
-    : comments;
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		// Ctrl+Enter to submit
+		if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+			e.preventDefault();
+			if (newComment.trim()) {
+				createMutation.mutate(newComment.trim());
+			}
+		}
+	};
 
-  return (
-    <>
-      <div className="space-y-4">
-        {/* Header */}
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-lapis-600">
-          <MessageSquare size={16} />
-          {t('comments.title', 'Comments')}
-          {totalComments > 0 && (
-            <span className="text-xs font-normal text-lapis-400">
-              ({totalComments})
-            </span>
-          )}
-        </h3>
+	// Format relative time with localization
+	const formatRelativeTime = (dateString: string): string => {
+		const date = new Date(dateString);
+		const now = new Date();
+		const diffMs = now.getTime() - date.getTime();
+		const diffSecs = Math.floor(diffMs / 1000);
+		const diffMins = Math.floor(diffSecs / 60);
+		const diffHours = Math.floor(diffMins / 60);
+		const diffDays = Math.floor(diffHours / 24);
 
-        {/* Comments list */}
-        <div className="space-y-1">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8 text-lapis-400">
-              <div className="w-5 h-5 border-2 border-lapis-300 border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : totalComments === 0 ? (
-            <div className="text-center py-6 text-lapis-400 text-sm italic">
-              {t('comments.empty', 'No comments yet. Be the first to add one!')}
-            </div>
-          ) : (
-            <>
-              {/* Show more button */}
-              {hasHiddenComments && (
-                <button
-                  onClick={() => setShowAllComments(true)}
-                  className="
+		if (diffSecs < 60) return t('dates.justNow');
+		if (diffMins < 60) return t('dates.minutesAgo', { count: diffMins });
+		if (diffHours < 24) return t('dates.hoursAgo', { count: diffHours });
+		if (diffDays === 1) return t('dates.yesterday');
+		if (diffDays < 7) return t('dates.daysAgo', { count: diffDays });
+
+		const locale = i18n.language === 'ar' ? 'ar-SA' : 'en-US';
+		return date.toLocaleDateString(locale, {
+			month: 'short',
+			day: 'numeric',
+			year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+		});
+	};
+
+	// Calculate which comments to show
+	// Show latest comments (at the end of the array since they're sorted ASC)
+	const totalComments = comments.length;
+	const commentsToShow = Math.max(minCommentsToShow, INITIAL_COMMENTS_SHOWN);
+	const hasHiddenComments = totalComments > commentsToShow && !showAllComments;
+	const hiddenCount = hasHiddenComments ? totalComments - commentsToShow : 0;
+	const visibleComments = hasHiddenComments
+		? comments.slice(-commentsToShow)
+		: comments;
+
+	return (
+		<>
+			<div className="space-y-4">
+				{/* Comments list */}
+				<div className="space-y-1">
+					{isLoading ? (
+						<div className="flex items-center justify-center py-8 text-lapis-400">
+							<div className="w-5 h-5 border-2 border-lapis-300 border-t-transparent rounded-full animate-spin" />
+						</div>
+					) : totalComments === 0 ? (
+						<div className="text-center py-6 text-lapis-400 text-sm italic">
+							{t('comments.empty', 'No comments yet. Be the first to add one!')}
+						</div>
+					) : (
+						<>
+							{/* Show more button */}
+							{hasHiddenComments && (
+								<button
+									onClick={() => setShowAllComments(true)}
+									className="
                     w-full flex items-center justify-center gap-2 py-2 px-3
                     text-sm text-lapis-500 hover:text-lapis-700
                     hover:bg-parchment-100 rounded-lg
                     transition-colors
                   "
-                >
-                  <ChevronDown size={16} />
-                  {t('comments.showMore', 'Show {{count}} more comments', { count: hiddenCount })}
-                </button>
-              )}
-              
-              {/* Visible comments */}
-              {visibleComments.map((comment) => (
-                <CommentItem
-                  key={comment.id}
-                  comment={comment}
-                  isOwn={currentUser?.id === comment.authorId}
-                  onDelete={() => handleDeleteComment(comment)}
-                  isDeleting={deleteMutation.isPending && deleteMutation.variables === comment.id}
-                  formatRelativeTime={formatRelativeTime}
-                />
-              ))}
-            </>
-          )}
-        </div>
+								>
+									<ChevronDown size={16} />
+									{t('comments.showMore', 'Show {{count}} more comments', { count: hiddenCount })}
+								</button>
+							)}
 
-        {/* New comment form */}
-        <form onSubmit={handleSubmit} className="space-y-2">
-          <div className="relative">
-            {isPreview ? (
-              <div className="min-h-[80px] p-3 rounded-lg bg-parchment-100/50 border border-parchment-300">
-                {newComment.trim() ? (
-                  <Markdown>{newComment}</Markdown>
-                ) : (
-                  <span className="text-lapis-400 italic text-sm">
-                    {t('comments.previewEmpty', 'Nothing to preview')}
-                  </span>
-                )}
-              </div>
-            ) : (
-              <textarea
-                ref={textareaRef}
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={t('comments.placeholder', 'Add a comment... (Markdown supported)')}
-                rows={3}
-                className="
+							{/* Visible comments */}
+							{visibleComments.map((comment) => (
+								<CommentItem
+									key={comment.id}
+									comment={comment}
+									isOwn={currentUser?.id === comment.authorId}
+									onDelete={() => handleDeleteComment(comment)}
+									isDeleting={deleteMutation.isPending && deleteMutation.variables === comment.id}
+									formatRelativeTime={formatRelativeTime}
+								/>
+							))}
+						</>
+					)}
+				</div>
+
+				{/* New comment form */}
+				<form onSubmit={handleSubmit} className="space-y-2">
+					<div className="relative">
+						{isPreview ? (
+							<div className="min-h-[80px] p-3 rounded-lg bg-parchment-100/50 border border-parchment-300">
+								{newComment.trim() ? (
+									<Markdown>{newComment}</Markdown>
+								) : (
+									<span className="text-lapis-400 italic text-sm">
+										{t('comments.previewEmpty', 'Nothing to preview')}
+									</span>
+								)}
+							</div>
+						) : (
+							<MentionInput
+								value={newComment}
+								onChange={setNewComment}
+								onKeyDown={handleKeyDown}
+								placeholder={t('comments.placeholder', 'Add a comment... (Markdown supported)')}
+								rows={3}
+								className="
                   w-full p-3 rounded-lg resize-none
                   bg-parchment-100/50 text-lapis-700
                   border border-parchment-300
@@ -284,126 +263,118 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
                   placeholder:text-lapis-400
                   transition-colors
                 "
-              />
-            )}
-          </div>
+							/>
+						)}
+					</div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setIsPreview(!isPreview)}
-                className={`
+					{/* Actions */}
+					<div className="flex items-center justify-between">
+						<div className="flex items-center gap-2">
+							<button
+								type="button"
+								onClick={() => setIsPreview(!isPreview)}
+								className={`
                   flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium
                   transition-colors
                   ${isPreview
-                    ? 'text-lapis-600 bg-lapis-100'
-                    : 'text-lapis-500 hover:bg-parchment-200'
-                  }
+										? 'text-lapis-600 bg-lapis-100'
+										: 'text-lapis-500 hover:bg-parchment-200'
+									}
                 `}
-              >
-                {isPreview ? (
-                  <>
-                    <Edit3 size={12} />
-                    {t('comments.edit', 'Edit')}
-                  </>
-                ) : (
-                  <>
-                    <Eye size={12} />
-                    {t('comments.preview', 'Preview')}
-                  </>
-                )}
-              </button>
-              <span className="text-xs text-lapis-400">
-                {t('comments.markdownHint', 'Markdown supported')}
-              </span>
-            </div>
+							>
+								{isPreview ? (
+									<>
+										<Edit3 size={12} />
+										{t('comments.edit', 'Edit')}
+									</>
+								) : (
+									<>
+										<Eye size={12} />
+										{t('comments.preview', 'Preview')}
+									</>
+								)}
+							</button>
+							<span className="text-xs text-lapis-400">
+								{t('comments.markdownHint', 'Markdown supported')}
+							</span>
+						</div>
 
-            <button
-              type="submit"
-              disabled={!newComment.trim() || createMutation.isPending}
-              className="
+						<button
+							type="submit"
+							disabled={!newComment.trim() || createMutation.isPending}
+							className="
                 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
                 bg-lapis-500 text-parchment-50
                 hover:bg-lapis-600
                 disabled:opacity-50 disabled:cursor-not-allowed
                 transition-colors
               "
-            >
-              {createMutation.isPending ? (
-                <div className="w-4 h-4 border-2 border-parchment-200 border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Send size={14} />
-              )}
-              {t('comments.send', 'Send')}
-              <HotkeyBadge keys="Ctrl+Enter" variant="dark" />
-            </button>
-          </div>
-        </form>
-      </div>
+						>
+							{createMutation.isPending ? (
+								<div className="w-4 h-4 border-2 border-parchment-200 border-t-transparent rounded-full animate-spin" />
+							) : (
+								<Send size={14} />
+							)}
+							{t('comments.send', 'Send')}
+							<HotkeyBadge keys="Ctrl+Enter" variant="dark" />
+						</button>
+					</div>
+				</form>
+			</div>
 
-      {/* Confirm Dialog */}
-      {DialogComponent}
-    </>
-  );
+			{/* Confirm Dialog */}
+			{DialogComponent}
+		</>
+	);
 }
 
 // Individual comment item
 interface CommentItemProps {
-  comment: Comment;
-  isOwn: boolean;
-  onDelete: () => void;
-  isDeleting: boolean;
-  formatRelativeTime: (date: string) => string;
+	comment: Comment;
+	isOwn: boolean;
+	onDelete: () => void;
+	isDeleting: boolean;
+	formatRelativeTime: (date: string) => string;
 }
 
 function CommentItem({ comment, isOwn, onDelete, isDeleting, formatRelativeTime }: CommentItemProps) {
-  const { t } = useTranslation();
-  const authorName = comment.author?.fullName || comment.author?.username || 'Unknown';
-  
-  return (
-    <div className="group relative p-3 -mx-3 rounded-lg hover:bg-parchment-100/50 transition-colors">
-      <div className="flex gap-3">
-        {/* Avatar */}
-        <div className="flex-shrink-0">
-          {comment.author?.avatarUrl ? (
-            <img
-              src={comment.author.avatarUrl}
-              alt={authorName}
-              className="w-8 h-8 rounded-full"
-            />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-lapis-400 to-lapis-600 flex items-center justify-center">
-              <span className="text-xs text-parchment-100 font-semibold">
-                {getInitials(authorName)}
-              </span>
-            </div>
-          )}
-        </div>
+	const { t } = useTranslation();
+	const authorName = comment.author?.fullName || comment.author?.username || 'Unknown';
 
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          {/* Header row with author, date, and delete button */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-sm text-lapis-700">
-              {authorName}
-            </span>
-            <span className="text-xs text-lapis-400">
-              {formatRelativeTime(comment.createdAt)}
-            </span>
-          </div>
-          
-          <div className="mt-1 text-sm text-lapis-600 prose-sm prose-mesopotamian max-w-none">
-            <Markdown>{comment.content}</Markdown>
-          </div>
+	return (
+		<div className="group relative p-3 -mx-3 rounded-lg hover:bg-parchment-100/50 transition-colors">
+			<div className="flex gap-3">
+				{/* Avatar */}
+				<div className="flex-shrink-0">
+					<Avatar 
+						name={authorName} 
+						avatarUrl={comment.author?.avatarUrl} 
+						size="md" 
+					/>
+				</div>
 
-          {/* Delete button - below content for clear association */}
-          {isOwn && (
-            <button
-              onClick={onDelete}
-              disabled={isDeleting}
-              className="
+				{/* Content */}
+				<div className="flex-1 min-w-0">
+					{/* Header row with author, date, and delete button */}
+					<div className="flex items-center gap-2 flex-wrap">
+						<span className="font-medium text-sm text-lapis-700">
+							{authorName}
+						</span>
+						<span className="text-xs text-lapis-400">
+							{formatRelativeTime(comment.createdAt)}
+						</span>
+					</div>
+
+					<div className="mt-1 text-sm text-lapis-600 prose-sm prose-mesopotamian max-w-none">
+						<Markdown>{comment.content}</Markdown>
+					</div>
+
+					{/* Delete button - below content for clear association */}
+					{isOwn && (
+						<button
+							onClick={onDelete}
+							disabled={isDeleting}
+							className="
                 mt-2 flex items-center gap-1 px-2 py-1 rounded
                 text-xs text-lapis-400 
                 hover:text-red-600 hover:bg-red-50
@@ -411,19 +382,19 @@ function CommentItem({ comment, isOwn, onDelete, isDeleting, formatRelativeTime 
                 disabled:opacity-50 disabled:cursor-not-allowed
                 transition-all
               "
-            >
-              {isDeleting ? (
-                <div className="w-3 h-3 border-2 border-red-300 border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Trash2 size={12} />
-              )}
-              <span>{t('common.delete')}</span>
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+						>
+							{isDeleting ? (
+								<div className="w-3 h-3 border-2 border-red-300 border-t-transparent rounded-full animate-spin" />
+							) : (
+								<Trash2 size={12} />
+							)}
+							<span>{t('common.delete')}</span>
+						</button>
+					)}
+				</div>
+			</div>
+		</div>
+	);
 }
 
 export default CommentSection;

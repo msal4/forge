@@ -10,6 +10,7 @@ import {
   Trash2
 } from 'lucide-react';
 import type { Issue, PriorityType } from '../../api/issues';
+import { Avatar } from '../ui/Avatar';
 
 // Strip markdown syntax for plain text preview
 function stripMarkdown(text: string): string {
@@ -212,16 +213,11 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
           <div className="flex items-center gap-1.5">
             {issue.assignee ? (
               <div className="flex items-center gap-1.5">
-                <div className="
-                  w-5 h-5 rounded-full 
-                  bg-gradient-to-br from-lapis-400 to-lapis-600
-                  flex items-center justify-center
-                  ring-1 ring-parchment-300
-                ">
-                  <span className="text-[10px] text-parchment-100 font-semibold">
-                    {(issue.assignee.fullName?.[0] || issue.assignee.username[0]).toUpperCase()}
-                  </span>
-                </div>
+                <Avatar 
+                  name={issue.assignee.fullName || issue.assignee.username}
+                  size="xs"
+                  className="ring-1 ring-parchment-300"
+                />
                 <span className="text-[11px] text-lapis-600 font-medium">
                   {issue.assignee.fullName?.split(' ')[0] || issue.assignee.username}
                 </span>

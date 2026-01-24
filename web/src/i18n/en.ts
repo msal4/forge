@@ -369,7 +369,7 @@ export default {
 	comments: {
 		title: 'Comments',
 		empty: 'No comments yet. Be the first to add one!',
-		placeholder: 'Add a comment... (Markdown supported)',
+		placeholder: 'Add a comment... (Markdown supported, @mention users)',
 		previewEmpty: 'Nothing to preview',
 		edit: 'Edit',
 		preview: 'Preview',
@@ -379,6 +379,19 @@ export default {
 		showMore: 'Show {{count}} more comments',
 		deleteConfirmTitle: 'Delete Comment',
 		deleteConfirmMessage: 'Are you sure you want to delete this comment?',
+	},
+
+	// Notifications
+	notifications: {
+		title: 'Notifications',
+		empty: 'No notifications',
+		markAllRead: 'Mark all read',
+		types: {
+			mention: '{{actor}} mentioned you',
+			assigned: '{{actor}} assigned you',
+			comment_on_owned: '{{actor}} commented on your {{entityType}}',
+			comment_on_assigned: '{{actor}} commented',
+		},
 	},
 
 	// Activity History

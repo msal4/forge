@@ -13,12 +13,13 @@ import {
   Circle,
   Hammer,
   Tag,
-  User,
   AlertCircle,
+  User,
 } from 'lucide-react';
 import { useIssues, useReleases, useDocs } from '../hooks/useApi';
 import { IssueStatus, type Issue } from '../api/issues';
 import { useAuth } from '../context/AuthContext';
+import { Avatar } from '../components/ui/Avatar';
 
 // ============================================
 // Home Page - Dashboard Overview
@@ -447,13 +448,12 @@ function IssueRow({ issue, formatRelativeTime, formatFullDate }: IssueRowProps) 
 
       {/* Assignee avatar */}
       {issue.assignee && (
-        <div 
-          className="w-6 h-6 rounded-full bg-lapis-100 flex items-center justify-center flex-shrink-0"
-          title={issue.assignee.fullName || issue.assignee.username}
-        >
-          <span className="text-[10px] text-lapis-600 font-medium">
-            {(issue.assignee.fullName?.[0] || issue.assignee.username[0]).toUpperCase()}
-          </span>
+        <div title={issue.assignee.fullName || issue.assignee.username}>
+          <Avatar 
+            name={issue.assignee.fullName || issue.assignee.username}
+            size="sm"
+            variant="solid"
+          />
         </div>
       )}
 

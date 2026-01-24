@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { Markdown } from '../components/ui/Markdown';
 import { CommentSection } from '../components/comments/CommentSection';
+import { MentionInput } from '../components/comments/MentionInput';
 import { useQueryClient } from '@tanstack/react-query';
 import { 
   Plus, 
@@ -601,9 +602,9 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
             <label className="block text-sm font-medium text-lapis-600 mb-1">
               {t('releases.modal.description')}
             </label>
-            <textarea
+            <MentionInput
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={setDescription}
               placeholder={t('releases.modal.descriptionPlaceholder')}
               rows={3}
               className="w-full px-3 py-2 rounded-tablet border border-parchment-300 

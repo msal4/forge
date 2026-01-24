@@ -5,6 +5,7 @@ import i18n from '../i18n';
 import { Markdown } from '../components/ui/Markdown';
 import { CommentSection } from '../components/comments/CommentSection';
 import { ActivityHistory } from '../components/ui/ActivityHistory';
+import { MentionInput, type MentionInputRef } from '../components/comments/MentionInput';
 import { useQueryClient } from '@tanstack/react-query';
 import { 
   Plus, 
@@ -65,7 +66,7 @@ export function DocsPage() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false);
   
   const titleInputRef = React.useRef<HTMLInputElement>(null);
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const textareaRef = React.useRef<MentionInputRef>(null);
   const tabbedPanelRef = React.useRef<HTMLDivElement>(null);
   
   // Tab state for Comments/Activity panel
@@ -715,7 +716,7 @@ export function DocsPage() {
 interface InlineMarkdownEditorProps {
   value: string;
   onChange: (value: string) => void;
-  textareaRef: React.RefObject<HTMLTextAreaElement>;
+  textareaRef: React.RefObject<MentionInputRef>;
   placeholder?: string;
 }
 
@@ -811,10 +812,10 @@ function InlineMarkdownEditor({
         {/* Editor */}
         {viewMode !== 'preview' && (
           <div className={`${viewMode === 'split' ? 'w-1/2 border-r border-parchment-200' : 'w-full'} flex flex-col`}>
-            <textarea
+            <MentionInput
               ref={textareaRef}
               value={value}
-              onChange={(e) => onChange(e.target.value)}
+              onChange={onChange}
               placeholder={placeholder}
               className="
                 flex-1 w-full p-4 resize-none
@@ -824,7 +825,6 @@ function InlineMarkdownEditor({
                 placeholder:text-lapis-400
                 min-h-[500px]
               "
-              spellCheck={false}
             />
           </div>
         )}
