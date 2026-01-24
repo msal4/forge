@@ -123,6 +123,13 @@ func (h *Handlers) CreateDoc(w http.ResponseWriter, r *http.Request) {
 		UserID:   userID,
 	})
 
+	// Process @mentions in content
+	if req.Content != "" {
+		var actorName string
+		h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+		h.Notification.CreateForContentMentions(r.Context(), userID, actorName, "doc", docID, req.Title, "", req.Content)
+	}
+
 	h.getDocByID(w, docID)
 }
 
@@ -216,6 +223,13 @@ func (h *Handlers) UpdateDoc(w http.ResponseWriter, r *http.Request) {
 	changes := buildDocChanges(oldTitle, newTitle, oldContent, newContent, oldParentID, newParentID)
 	if len(changes) > 0 {
 		h.logActivity(userID, "doc.updated", "doc", id, changes)
+	}
+
+	// Process @mentions in content if it changed
+	if req.Content != nil && oldContent != newContent {
+		var actorName string
+		h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+		h.Notification.CreateForContentMentions(r.Context(), userID, actorName, "doc", id, newTitle, oldContent, newContent)
 	}
 
 	// Broadcast WebSocket event

@@ -9,6 +9,7 @@ import (
 	"sarray-forge/internal/db"
 	"sarray-forge/internal/middleware"
 	"sarray-forge/internal/models"
+	"sarray-forge/internal/notifications"
 	"sarray-forge/internal/websocket"
 
 	gorillaws "github.com/gorilla/websocket"
@@ -16,13 +17,18 @@ import (
 
 // Handlers holds all HTTP handler dependencies
 type Handlers struct {
-	db  *db.DB
-	hub *websocket.Hub
+	db           *db.DB
+	hub          *websocket.Hub
+	Notification *notifications.Service
 }
 
 // New creates a new Handlers instance
 func New(database *db.DB, hub *websocket.Hub) *Handlers {
-	return &Handlers{db: database, hub: hub}
+	return &Handlers{
+		db:           database,
+		hub:          hub,
+		Notification: notifications.NewService(database.DB, hub),
+	}
 }
 
 // WebSocket upgrader
@@ -282,6 +288,20 @@ func (h *Handlers) CreateIssue(w http.ResponseWriter, r *http.Request) {
 		UserID:   userID,
 	})
 
+	// Process @mentions in description
+	if req.Description != "" {
+		var actorName string
+		h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+		h.Notification.CreateForContentMentions(r.Context(), userID, actorName, "issue", issueID, req.Title, "", req.Description)
+	}
+
+	// Notify assignee if assigned on creation
+	if req.AssigneeID != nil && *req.AssigneeID != 0 && *req.AssigneeID != userID {
+		var actorName string
+		h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+		h.Notification.CreateForAssignment(r.Context(), userID, actorName, issueID, *req.AssigneeID)
+	}
+
 	// Fetch the created issue
 	h.getIssueByID(w, issueID)
 }
@@ -423,6 +443,20 @@ func (h *Handlers) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 	)
 	if len(changes) > 0 {
 		h.logActivity(userID, "issue.updated", "issue", id, changes)
+	}
+
+	// Get actor name for notifications
+	var actorName string
+	h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+
+	// Create notification if assignee changed
+	if newAssigneeID != nil && (oldAssigneeID == nil || *oldAssigneeID != *newAssigneeID) {
+		h.Notification.CreateForAssignment(r.Context(), userID, actorName, id, *newAssigneeID)
+	}
+
+	// Process @mentions in description if it changed
+	if req.Description != nil && oldDescription != newDescription {
+		h.Notification.CreateForContentMentions(r.Context(), userID, actorName, "issue", id, newTitle, oldDescription, newDescription)
 	}
 
 	// Broadcast WebSocket event
@@ -687,6 +721,13 @@ func (h *Handlers) PatchIssue(w http.ResponseWriter, r *http.Request) {
 	)
 	if len(changes) > 0 {
 		h.logActivity(userID, "issue.updated", "issue", id, changes)
+	}
+
+	// Create notification if assignee changed
+	if newAssigneeID != nil && (oldAssigneeID == nil || *oldAssigneeID != *newAssigneeID) {
+		var actorName string
+		h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+		h.Notification.CreateForAssignment(r.Context(), userID, actorName, id, *newAssigneeID)
 	}
 
 	// Broadcast WebSocket event

@@ -109,6 +109,12 @@ func main() {
 	mux.Handle("POST /api/releases/{id}/comments", requireAuth(http.HandlerFunc(h.CreateReleaseComment)))
 	mux.Handle("DELETE /api/releases/{id}/comments/{commentId}", requireAuth(http.HandlerFunc(h.DeleteReleaseComment)))
 
+	// Notifications routes
+	mux.Handle("GET /api/notifications", requireAuth(http.HandlerFunc(h.ListNotifications)))
+	mux.Handle("GET /api/notifications/count", requireAuth(http.HandlerFunc(h.GetUnreadCount)))
+	mux.Handle("POST /api/notifications/{id}/read", requireAuth(http.HandlerFunc(h.MarkNotificationRead)))
+	mux.Handle("POST /api/notifications/read-all", requireAuth(http.HandlerFunc(h.MarkAllNotificationsRead)))
+
 	// ============================================
 	// Static File Serving (React SPA)
 	// ============================================

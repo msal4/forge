@@ -110,6 +110,38 @@ type Comment struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
+// NotificationType represents the type of notification
+type NotificationType string
+
+const (
+	NotificationTypeMention           NotificationType = "mention"
+	NotificationTypeAssigned          NotificationType = "assigned"
+	NotificationTypeCommentOnOwned    NotificationType = "comment_on_owned"
+	NotificationTypeCommentOnAssigned NotificationType = "comment_on_assigned"
+)
+
+// Notification represents an in-app notification
+type Notification struct {
+	ID               int64            `json:"id"`
+	UserID           int64            `json:"userId"`
+	ActorID          int64            `json:"actorId"`
+	Actor            *User            `json:"actor,omitempty"`
+	NotificationType NotificationType `json:"notificationType"`
+	EntityType       string           `json:"entityType"` // "issue", "doc", "release"
+	EntityID         int64            `json:"entityId"`
+	CommentID        *int64           `json:"commentId,omitempty"`
+	Title            string           `json:"title"`
+	Message          string           `json:"message"`
+	IsRead           bool             `json:"isRead"`
+	ReadAt           *time.Time       `json:"readAt,omitempty"`
+	CreatedAt        time.Time        `json:"createdAt"`
+}
+
+// NotificationCount represents the count of unread notifications
+type NotificationCount struct {
+	Unread int64 `json:"unread"`
+}
+
 // ============================================
 // Request/Response DTOs
 // ============================================

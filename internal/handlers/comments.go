@@ -113,6 +113,13 @@ func (h *Handlers) CreateIssueComment(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
+	// Create notifications for mentions, owner, and assignee
+	actorName := commentRow.AuthorFullName
+	if actorName == "" {
+		actorName = commentRow.AuthorUsername
+	}
+	h.Notification.CreateForComment(r.Context(), userID, actorName, "issue", issueID, comment.ID, req.Content)
+
 	// Broadcast WebSocket event
 	h.hub.Broadcast(websocket.Event{
 		Type:     websocket.EventCommentCreated,
@@ -275,6 +282,13 @@ func (h *Handlers) CreateDocComment(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
+	// Create notifications for mentions and owner
+	actorName := commentRow.AuthorFullName
+	if actorName == "" {
+		actorName = commentRow.AuthorUsername
+	}
+	h.Notification.CreateForComment(r.Context(), userID, actorName, "doc", docID, comment.ID, req.Content)
+
 	// Broadcast WebSocket event
 	h.hub.Broadcast(websocket.Event{
 		Type:     websocket.EventCommentCreated,
@@ -436,6 +450,13 @@ func (h *Handlers) CreateReleaseComment(w http.ResponseWriter, r *http.Request) 
 			AvatarURL: commentRow.AuthorAvatar.String,
 		},
 	}
+
+	// Create notifications for mentions and owner
+	actorName := commentRow.AuthorFullName
+	if actorName == "" {
+		actorName = commentRow.AuthorUsername
+	}
+	h.Notification.CreateForComment(r.Context(), userID, actorName, "release", releaseID, comment.ID, req.Content)
 
 	// Broadcast WebSocket event
 	h.hub.Broadcast(websocket.Event{

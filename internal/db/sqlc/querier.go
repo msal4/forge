@@ -23,6 +23,8 @@ type Querier interface {
 	CountProjects(ctx context.Context) (int64, error)
 	CountReleases(ctx context.Context) (int64, error)
 	CountReleasesByProject(ctx context.Context, projectID sql.NullInt64) (int64, error)
+	// Get count of unread notifications for badge display
+	CountUnreadNotifications(ctx context.Context, userID int64) (int64, error)
 	CountUserSessions(ctx context.Context, userID int64) (int64, error)
 	CountUsers(ctx context.Context) (int64, error)
 	// ============================================
@@ -33,6 +35,7 @@ type Querier interface {
 	CreateDoc(ctx context.Context, arg CreateDocParams) (Doc, error)
 	CreateDocComment(ctx context.Context, arg CreateDocCommentParams) (DocComment, error)
 	CreateIssue(ctx context.Context, arg CreateIssueParams) (Issue, error)
+	CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error)
 	CreateProject(ctx context.Context, arg CreateProjectParams) (Project, error)
 	CreateRelease(ctx context.Context, arg CreateReleaseParams) (Release, error)
 	CreateReleaseComment(ctx context.Context, arg CreateReleaseCommentParams) (ReleaseComment, error)
@@ -49,6 +52,7 @@ type Querier interface {
 	DeleteDocCommentByAuthor(ctx context.Context, arg DeleteDocCommentByAuthorParams) (int64, error)
 	DeleteExpiredSessions(ctx context.Context) error
 	DeleteIssue(ctx context.Context, id int64) error
+	DeleteNotification(ctx context.Context, arg DeleteNotificationParams) error
 	// Clean up activity logs older than N days
 	DeleteOldActivity(ctx context.Context, dollar_1 sql.NullString) error
 	// Keep only the N most recent sessions per user
@@ -76,6 +80,8 @@ type Querier interface {
 	// Doc Comment Queries
 	// ============================================
 	GetDocCommentByID(ctx context.Context, id int64) (GetDocCommentByIDRow, error)
+	// Get author for a doc (for notification recipients)
+	GetDocOwner(ctx context.Context, id int64) (GetDocOwnerRow, error)
 	// Recursive CTE to get full doc tree (SQLite 3.8.3+)
 	GetDocTree(ctx context.Context) ([]GetDocTreeRow, error)
 	// ============================================
@@ -83,10 +89,13 @@ type Querier interface {
 	// ============================================
 	GetIssueByID(ctx context.Context, id int64) (GetIssueByIDRow, error)
 	GetIssueByProjectAndNumber(ctx context.Context, arg GetIssueByProjectAndNumberParams) (GetIssueByProjectAndNumberRow, error)
+	// Get reporter and assignee for an issue (for notification recipients)
+	GetIssueOwnerAndAssignee(ctx context.Context, id int64) (GetIssueOwnerAndAssigneeRow, error)
 	GetLatestRelease(ctx context.Context, projectID sql.NullInt64) (GetLatestReleaseRow, error)
 	// Get the highest rank in a status column for inserting at the end
 	GetMaxRankInStatus(ctx context.Context, arg GetMaxRankInStatusParams) (interface{}, error)
 	GetNextIssueNumber(ctx context.Context, projectID int64) (int64, error)
+	GetNotificationByID(ctx context.Context, arg GetNotificationByIDParams) (GetNotificationByIDRow, error)
 	// ============================================
 	// Project Queries
 	// ============================================
@@ -106,6 +115,8 @@ type Querier interface {
 	// ============================================
 	GetReleaseFileByID(ctx context.Context, id int64) (ReleaseFile, error)
 	GetReleaseFileByName(ctx context.Context, arg GetReleaseFileByNameParams) (ReleaseFile, error)
+	// Get author for a release (for notification recipients)
+	GetReleaseOwner(ctx context.Context, id int64) (GetReleaseOwnerRow, error)
 	// ============================================
 	// Session Queries
 	// ============================================
@@ -120,6 +131,8 @@ type Querier interface {
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	// Used for smart login: accepts either username or full email
 	GetUserByUsernameOrEmail(ctx context.Context, arg GetUserByUsernameOrEmailParams) (User, error)
+	// For @mention lookup - find user by username
+	GetUserIDByUsername(ctx context.Context, username string) (int64, error)
 	ListActivityByEntity(ctx context.Context, arg ListActivityByEntityParams) ([]ListActivityByEntityRow, error)
 	ListActivityByUser(ctx context.Context, arg ListActivityByUserParams) ([]ListActivityByUserRow, error)
 	// Include unpublished (for admin)
@@ -141,6 +154,12 @@ type Querier interface {
 	ListIssuesByProject(ctx context.Context, projectID int64) ([]ListIssuesByProjectRow, error)
 	// For Kanban board: get all issues in a status column, ordered by rank
 	ListIssuesByStatus(ctx context.Context, arg ListIssuesByStatusParams) ([]ListIssuesByStatusRow, error)
+	// ============================================
+	// Notification Queries
+	// ============================================
+	// Get all notifications for a user, ordered by most recent first
+	// Includes actor information for display
+	ListNotificationsByUser(ctx context.Context, arg ListNotificationsByUserParams) ([]ListNotificationsByUserRow, error)
 	ListProjects(ctx context.Context) ([]ListProjectsRow, error)
 	ListRecentActivity(ctx context.Context, limit int64) ([]ListRecentActivityRow, error)
 	ListRecentIssues(ctx context.Context, limit int64) ([]ListRecentIssuesRow, error)
@@ -149,6 +168,8 @@ type Querier interface {
 	ListReleasesByProject(ctx context.Context, projectID sql.NullInt64) ([]ListReleasesByProjectRow, error)
 	ListUserSessions(ctx context.Context, userID int64) ([]Session, error)
 	ListUsers(ctx context.Context) ([]User, error)
+	MarkAllNotificationsRead(ctx context.Context, userID int64) (int64, error)
+	MarkNotificationRead(ctx context.Context, arg MarkNotificationReadParams) (Notification, error)
 	PublishRelease(ctx context.Context, id int64) (Release, error)
 	SearchDocs(ctx context.Context, arg SearchDocsParams) ([]SearchDocsRow, error)
 	SearchIssues(ctx context.Context, arg SearchIssuesParams) ([]SearchIssuesRow, error)

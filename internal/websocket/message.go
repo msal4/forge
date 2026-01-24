@@ -29,12 +29,16 @@ const (
 	// Comments
 	EventCommentCreated = "comment_created"
 	EventCommentDeleted = "comment_deleted"
+
+	// Notifications
+	EventNotificationCreated = "notification_created"
 )
 
 // Resource types
 const (
-	ResourceIssue   = "issue"
-	ResourceDoc     = "doc"
-	ResourceRelease = "release"
-	ResourceComment = "comment"
+	ResourceIssue        = "issue"
+	ResourceDoc          = "doc"
+	ResourceRelease      = "release"
+	ResourceComment      = "comment"
+	ResourceNotification = "notification"
 )

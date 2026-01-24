@@ -93,3 +93,28 @@ func (h *Hub) ClientCount() int {
 func (h *Hub) Register(client *Client) {
 	h.register <- client
 }
+
+// SendToUser sends an event to all connections of a specific user
+func (h *Hub) SendToUser(userID int64, event Event) {
+	data, err := json.Marshal(event)
+	if err != nil {
+		log.Printf("[WS Hub] Error marshaling event: %v", err)
+		return
+	}
+
+	log.Printf("[WS Hub] Sending to user %d: %s for %s#%d", userID, event.Type, event.Resource, event.ID)
+
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	for client := range h.clients {
+		if client.userID == userID {
+			select {
+			case client.send <- data:
+			default:
+				// Client's buffer is full, skip
+				log.Printf("[WS Hub] User %d client buffer full, skipping", userID)
+			}
+		}
+	}
+}

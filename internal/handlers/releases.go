@@ -135,6 +135,13 @@ func (h *Handlers) CreateRelease(w http.ResponseWriter, r *http.Request) {
 		UserID:   userID,
 	})
 
+	// Process @mentions in description
+	if req.Description != "" {
+		var actorName string
+		h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+		h.Notification.CreateForContentMentions(r.Context(), userID, actorName, "release", releaseID, req.Title, "", req.Description)
+	}
+
 	h.getReleaseByID(w, releaseID)
 }
 
