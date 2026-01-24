@@ -57,7 +57,7 @@ func (q *Queries) DeleteComment(ctx context.Context, id int64) error {
 	return err
 }
 
-const deleteCommentByAuthor = `-- name: DeleteCommentByAuthor :exec
+const deleteCommentByAuthor = `-- name: DeleteCommentByAuthor :execrows
 DELETE FROM issue_comments WHERE id = ? AND author_id = ?
 `
 
@@ -67,28 +67,32 @@ type DeleteCommentByAuthorParams struct {
 }
 
 // Only allow author to delete their own comment
-func (q *Queries) DeleteCommentByAuthor(ctx context.Context, arg DeleteCommentByAuthorParams) error {
-	_, err := q.db.ExecContext(ctx, deleteCommentByAuthor, arg.ID, arg.AuthorID)
-	return err
+func (q *Queries) DeleteCommentByAuthor(ctx context.Context, arg DeleteCommentByAuthorParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deleteCommentByAuthor, arg.ID, arg.AuthorID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const getCommentByID = `-- name: GetCommentByID :one
 
-SELECT c.id, c.issue_id, c.author_id, c.content, c.created_at, c.updated_at, u.username as author_username, u.full_name as author_full_name
+SELECT c.id, c.issue_id, c.author_id, c.content, c.created_at, c.updated_at, u.username as author_username, u.full_name as author_full_name, u.avatar_url as author_avatar
 FROM issue_comments c
 JOIN users u ON c.author_id = u.id
 WHERE c.id = ? LIMIT 1
 `
 
 type GetCommentByIDRow struct {
-	ID             int64     `json:"id"`
-	IssueID        int64     `json:"issueId"`
-	AuthorID       int64     `json:"authorId"`
-	Content        string    `json:"content"`
-	CreatedAt      time.Time `json:"createdAt"`
-	UpdatedAt      time.Time `json:"updatedAt"`
-	AuthorUsername string    `json:"authorUsername"`
-	AuthorFullName string    `json:"authorFullName"`
+	ID             int64          `json:"id"`
+	IssueID        int64          `json:"issueId"`
+	AuthorID       int64          `json:"authorId"`
+	Content        string         `json:"content"`
+	CreatedAt      time.Time      `json:"createdAt"`
+	UpdatedAt      time.Time      `json:"updatedAt"`
+	AuthorUsername string         `json:"authorUsername"`
+	AuthorFullName string         `json:"authorFullName"`
+	AuthorAvatar   sql.NullString `json:"authorAvatar"`
 }
 
 // ============================================
@@ -106,6 +110,7 @@ func (q *Queries) GetCommentByID(ctx context.Context, id int64) (GetCommentByIDR
 		&i.UpdatedAt,
 		&i.AuthorUsername,
 		&i.AuthorFullName,
+		&i.AuthorAvatar,
 	)
 	return i, err
 }

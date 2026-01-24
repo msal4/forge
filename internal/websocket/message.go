@@ -25,6 +25,10 @@ const (
 	EventReleaseCreated = "release_created"
 	EventReleaseUpdated = "release_updated"
 	EventReleaseDeleted = "release_deleted"
+
+	// Comments
+	EventCommentCreated = "comment_created"
+	EventCommentDeleted = "comment_deleted"
 )
 
 // Resource types
@@ -32,4 +36,5 @@ const (
 	ResourceIssue   = "issue"
 	ResourceDoc     = "doc"
 	ResourceRelease = "release"
+	ResourceComment = "comment"
 )

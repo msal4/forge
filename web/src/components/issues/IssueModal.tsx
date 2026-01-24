@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import { Markdown } from '../ui/Markdown';
+import { CommentSection } from '../comments/CommentSection';
 import {
 	X,
 	ArrowRight,
@@ -595,6 +596,11 @@ export function IssueModal({
 							)}
 						</div>
 					</div>
+
+					{/* Comments - only show in view mode */}
+					{mode === 'view' && issue && (
+						<CommentSection resourceType="issue" resourceId={issue.id} />
+					)}
 
 					{/* Details grid */}
 					<div className="grid grid-cols-2 gap-x-6 gap-y-4 p-4 rounded-lg bg-parchment-100/60 border border-parchment-200">

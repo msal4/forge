@@ -13,3 +13,5 @@ export { usersApi } from './users';
 export type { User } from './users';
 export { searchApi } from './search';
 export type { SearchResult, SearchResponse } from './search';
+export { commentsApi } from './comments';
+export type { Comment, CreateCommentRequest } from './comments';

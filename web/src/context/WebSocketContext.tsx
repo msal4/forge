@@ -10,7 +10,7 @@ import { queryKeys } from '../hooks/useApi';
 // WebSocket event types from backend
 export interface WSEvent {
   type: string;
-  resource: 'issue' | 'doc' | 'release';
+  resource: 'issue' | 'doc' | 'release' | 'comment';
   id: number;
   data?: unknown;
   userId: number;
@@ -33,6 +33,8 @@ interface WebSocketContextValue {
   syncEditingItem: () => void;
   // Sync version - increments when user chooses to sync, forms can watch this to reload
   syncVersion: number;
+  // Last event received - for components that need to react to specific events
+  lastEvent: WSEvent | null;
 }
 
 const WebSocketContext = createContext<WebSocketContextValue | null>(null);
@@ -65,6 +67,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
   const [hasConflict, setHasConflict] = useState(false);
   const [conflictEvent, setConflictEvent] = useState<WSEvent | null>(null);
   const [syncVersion, setSyncVersion] = useState(0);
+  const [lastEvent, setLastEvent] = useState<WSEvent | null>(null);
   
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -140,6 +143,9 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
           editingId: editingIdRef.current,
           currentUserId: userIdRef.current
         });
+
+        // Store the last event for components to react to
+        setLastEvent(data);
 
         // Check if this affects the item being edited by the current user
         const isEditingThisItem = 
@@ -291,6 +297,7 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     dismissConflict,
     syncEditingItem,
     syncVersion,
+    lastEvent,
   };
 
   return (

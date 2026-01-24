@@ -3,7 +3,7 @@
 -- ============================================
 
 -- name: GetCommentByID :one
-SELECT c.*, u.username as author_username, u.full_name as author_full_name
+SELECT c.*, u.username as author_username, u.full_name as author_full_name, u.avatar_url as author_avatar
 FROM issue_comments c
 JOIN users u ON c.author_id = u.id
 WHERE c.id = ? LIMIT 1;
@@ -29,7 +29,7 @@ RETURNING *;
 -- name: DeleteComment :exec
 DELETE FROM issue_comments WHERE id = ?;
 
--- name: DeleteCommentByAuthor :exec
+-- name: DeleteCommentByAuthor :execrows
 -- Only allow author to delete their own comment
 DELETE FROM issue_comments WHERE id = ? AND author_id = ?;
 

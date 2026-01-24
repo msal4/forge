@@ -354,4 +354,20 @@ export default {
 		reload: 'إعادة التحميل',
 		keepEditing: 'استمر في التعديل',
 	},
+
+	// Comments
+	comments: {
+		title: 'التعليقات',
+		empty: 'لا توجد تعليقات بعد. كن أول من يضيف تعليقاً!',
+		placeholder: 'أضف تعليقاً... (يدعم Markdown)',
+		previewEmpty: 'لا شيء للمعاينة',
+		edit: 'تحرير',
+		preview: 'معاينة',
+		markdownHint: 'يدعم Markdown',
+		send: 'إرسال',
+		delete: 'حذف التعليق',
+		showMore: 'عرض {{count}} تعليقات أخرى',
+		deleteConfirmTitle: 'حذف التعليق',
+		deleteConfirmMessage: 'هل أنت متأكد من حذف هذا التعليق؟',
+	},
 };
