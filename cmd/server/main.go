@@ -79,6 +79,7 @@ func main() {
 	mux.Handle("PATCH /api/issues/{id}", requireAuth(http.HandlerFunc(h.PatchIssue)))
 	mux.Handle("DELETE /api/issues/{id}", requireAuth(http.HandlerFunc(h.DeleteIssue)))
 	mux.Handle("PATCH /api/issues/{id}/status", requireAuth(http.HandlerFunc(h.UpdateIssueStatus)))
+	mux.Handle("GET /api/issues/{id}/activity", requireAuth(http.HandlerFunc(h.GetIssueActivity)))
 
 	// Docs (The "Library") routes
 	mux.Handle("GET /api/docs", requireAuth(http.HandlerFunc(h.ListDocs)))
@@ -86,6 +87,7 @@ func main() {
 	mux.Handle("GET /api/docs/{id}", requireAuth(http.HandlerFunc(h.GetDoc)))
 	mux.Handle("PUT /api/docs/{id}", requireAuth(http.HandlerFunc(h.UpdateDoc)))
 	mux.Handle("DELETE /api/docs/{id}", requireAuth(http.HandlerFunc(h.DeleteDoc)))
+	mux.Handle("GET /api/docs/{id}/activity", requireAuth(http.HandlerFunc(h.GetDocActivity)))
 
 	// Releases (The "Granary") routes
 	mux.Handle("GET /api/releases", requireAuth(http.HandlerFunc(h.ListReleases)))

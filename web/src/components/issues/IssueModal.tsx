@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import { Markdown } from '../ui/Markdown';
+import { ActivityHistory } from '../ui/ActivityHistory';
 import {
 	X,
 	ArrowRight,
@@ -742,6 +743,11 @@ export function IssueModal({
 							</div>
 						</div>
 					</div>
+
+					{/* Activity History - only shown in view mode for existing issues */}
+					{!isEditing && !isCreating && issue && (
+						<ActivityHistory entityType="issue" entityId={issue.id} />
+					)}
 				</div>
 
 				{/* Footer */}

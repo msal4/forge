@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { Markdown } from '../components/ui/Markdown';
+import { ActivityHistory } from '../components/ui/ActivityHistory';
 import { useQueryClient } from '@tanstack/react-query';
 import { 
   Plus, 
@@ -510,6 +511,9 @@ export function DocsPage() {
               <span>{t('docs.created', { date: formatDate(selectedDoc.createdAt) })}</span>
             </div>
           </div>
+
+          {/* Activity History */}
+          <ActivityHistory entityType="doc" entityId={selectedDoc.id} />
         </div>
       )}
 

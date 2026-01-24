@@ -8,10 +8,14 @@ import { useAuth } from '../context/AuthContext';
 // Modern Mesopotamian aesthetic with lapis & sand
 // ============================================
 
+// Check if we're in dev mode
+const isDev = import.meta.env.DEV;
+
 export function LoginPage() {
   const { t } = useTranslation();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  // Prefill credentials in dev mode for convenience
+  const [username, setUsername] = useState(isDev ? 'salman' : '');
+  const [password, setPassword] = useState(isDev ? 'admin' : '');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);

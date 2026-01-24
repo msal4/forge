@@ -112,6 +112,9 @@ func (h *Handlers) CreateDoc(w http.ResponseWriter, r *http.Request) {
 
 	docID, _ := result.LastInsertId()
 
+	// Log activity
+	h.logActivity(userID, "doc.created", "doc", docID, map[string]interface{}{})
+
 	// Broadcast WebSocket event
 	h.hub.Broadcast(websocket.Event{
 		Type:     websocket.EventDocCreated,
@@ -154,12 +157,29 @@ func (h *Handlers) UpdateDoc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fetch old values for change tracking
+	var oldTitle, oldContent string
+	var oldParentID *int64
+	err = h.db.QueryRow(`
+		SELECT title, content, parent_id FROM docs WHERE id = ?
+	`, id).Scan(&oldTitle, &oldContent, &oldParentID)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "not_found", "Doc not found")
+		return
+	}
+
 	updates := []string{}
 	args := []interface{}{}
+
+	// Track new values for change comparison
+	newTitle := oldTitle
+	newContent := oldContent
+	newParentID := oldParentID
 
 	if req.Title != nil {
 		updates = append(updates, "title = ?")
 		args = append(args, *req.Title)
+		newTitle = *req.Title
 		// Update slug when title changes
 		slug := generateSlug(*req.Title)
 		slug = h.ensureUniqueSlugExcluding(slug, id)
@@ -169,10 +189,12 @@ func (h *Handlers) UpdateDoc(w http.ResponseWriter, r *http.Request) {
 	if req.Content != nil {
 		updates = append(updates, "content = ?")
 		args = append(args, *req.Content)
+		newContent = *req.Content
 	}
 	if req.ParentID != nil {
 		updates = append(updates, "parent_id = ?")
 		args = append(args, *req.ParentID)
+		newParentID = req.ParentID
 	}
 
 	if len(updates) == 0 {
@@ -188,6 +210,12 @@ func (h *Handlers) UpdateDoc(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "db_error", "Failed to update doc")
 		return
+	}
+
+	// Log activity with changes
+	changes := buildDocChanges(oldTitle, newTitle, oldContent, newContent, oldParentID, newParentID)
+	if len(changes) > 0 {
+		h.logActivity(userID, "doc.updated", "doc", id, changes)
 	}
 
 	// Broadcast WebSocket event
@@ -212,6 +240,10 @@ func (h *Handlers) DeleteDoc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fetch doc title before deletion for activity log
+	var title string
+	h.db.QueryRow("SELECT title FROM docs WHERE id = ?", id).Scan(&title)
+
 	result, err := h.db.Exec("DELETE FROM docs WHERE id = ?", id)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "db_error", "Failed to delete doc")
@@ -223,6 +255,11 @@ func (h *Handlers) DeleteDoc(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "not_found", "Doc not found")
 		return
 	}
+
+	// Log activity
+	h.logActivity(userID, "doc.deleted", "doc", id, map[string]interface{}{
+		"title": title,
+	})
 
 	// Broadcast WebSocket event
 	h.hub.Broadcast(websocket.Event{
