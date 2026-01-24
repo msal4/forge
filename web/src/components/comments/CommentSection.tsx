@@ -23,7 +23,7 @@ interface CommentSectionProps {
 }
 
 // Number of comments to show initially
-const INITIAL_COMMENTS_SHOWN = 2;
+const INITIAL_COMMENTS_SHOWN = 3;
 
 // Get initials from name
 function getInitials(name: string): string {
