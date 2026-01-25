@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"runtime/debug"
+	"strings"
 	"time"
 )
 
@@ -157,8 +158,9 @@ func SPAHandler(staticDir string) http.Handler {
 	fs := http.FileServer(http.Dir(staticDir))
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// If this is an API route, let it 404 (shouldn't reach here normally)
-		if len(r.URL.Path) >= 4 && r.URL.Path[:4] == "/api" {
+		// If this is an API route or uploads route, let it 404
+		// (these should be handled by specific handlers, not the SPA)
+		if strings.HasPrefix(r.URL.Path, "/api") || strings.HasPrefix(r.URL.Path, "/uploads") {
 			http.NotFound(w, r)
 			return
 		}
