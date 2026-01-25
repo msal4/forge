@@ -68,3 +68,15 @@ WHERE id = ?;
 UPDATE users 
 SET telegram_chat_id = NULL, updated_at = CURRENT_TIMESTAMP
 WHERE id = ?;
+
+-- ============================================
+-- Language Preference
+-- ============================================
+
+-- name: GetUserLanguage :one
+SELECT language FROM users WHERE id = ?;
+
+-- name: SetUserLanguage :exec
+UPDATE users 
+SET language = ?, updated_at = CURRENT_TIMESTAMP
+WHERE id = ?;

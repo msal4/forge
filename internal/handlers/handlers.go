@@ -106,11 +106,11 @@ func (h *Handlers) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 
 	var user models.User
 	err := h.db.QueryRow(`
-		SELECT id, username, email, full_name, avatar_url, created_at, updated_at
+		SELECT id, username, email, full_name, avatar_url, language, created_at, updated_at
 		FROM users WHERE id = ?
 	`, userID).Scan(
 		&user.ID, &user.Username, &user.Email, &user.FullName,
-		&user.AvatarURL, &user.CreatedAt, &user.UpdatedAt,
+		&user.AvatarURL, &user.Language, &user.CreatedAt, &user.UpdatedAt,
 	)
 
 	if err != nil {
@@ -119,6 +119,41 @@ func (h *Handlers) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, user)
+}
+
+// UpdateUserLanguage handles PUT /api/users/me/language
+func (h *Handlers) UpdateUserLanguage(w http.ResponseWriter, r *http.Request) {
+	userID, _, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized", "Not authenticated")
+		return
+	}
+
+	var req struct {
+		Language string `json:"language"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", "Invalid request body")
+		return
+	}
+
+	// Validate language (only allow supported languages)
+	if req.Language != "en" && req.Language != "ar" {
+		writeError(w, http.StatusBadRequest, "invalid_language", "Unsupported language. Use 'en' or 'ar'")
+		return
+	}
+
+	_, err := h.db.Exec(`
+		UPDATE users SET language = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
+	`, req.Language, userID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "db_error", "Failed to update language")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{
+		"language": req.Language,
+	})
 }
 
 // ListUsers handles GET /api/users

@@ -142,6 +142,10 @@ type Querier interface {
 	// For @mention lookup - find user by username
 	GetUserIDByUsername(ctx context.Context, username string) (int64, error)
 	// ============================================
+	// Language Preference
+	// ============================================
+	GetUserLanguage(ctx context.Context, id int64) (string, error)
+	// ============================================
 	// Telegram Integration
 	// ============================================
 	GetUserTelegramChatID(ctx context.Context, id int64) (sql.NullString, error)
@@ -185,6 +189,7 @@ type Querier interface {
 	PublishRelease(ctx context.Context, id int64) (Release, error)
 	SearchDocs(ctx context.Context, arg SearchDocsParams) ([]SearchDocsRow, error)
 	SearchIssues(ctx context.Context, arg SearchIssuesParams) ([]SearchIssuesRow, error)
+	SetUserLanguage(ctx context.Context, arg SetUserLanguageParams) error
 	SetUserTelegramChatID(ctx context.Context, arg SetUserTelegramChatIDParams) error
 	UnarchiveProject(ctx context.Context, id int64) error
 	UnpublishRelease(ctx context.Context, id int64) error

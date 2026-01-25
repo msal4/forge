@@ -71,6 +71,7 @@ func main() {
 
 	// User routes
 	mux.Handle("GET /api/users/me", requireAuth(http.HandlerFunc(h.GetCurrentUser)))
+	mux.Handle("PUT /api/users/me/language", requireAuth(http.HandlerFunc(h.UpdateUserLanguage)))
 	mux.Handle("GET /api/users", requireAuth(http.HandlerFunc(h.ListUsers)))
 
 	// Global search

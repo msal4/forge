@@ -67,9 +67,18 @@ export function SettingsPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLanguageChange = (newLang: string) => {
+  const handleLanguageChange = async (newLang: string) => {
+    // Update UI immediately
     i18n.changeLanguage(newLang);
     setShowLanguageDropdown(false);
+    
+    // Save to backend (for Telegram notifications etc.)
+    try {
+      await usersApi.updateLanguage(newLang);
+    } catch (err) {
+      console.error('Failed to save language preference:', err);
+      // Don't revert UI - local language change still works
+    }
   };
 
   const languages = [

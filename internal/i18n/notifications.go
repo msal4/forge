@@ -13,13 +13,39 @@ var notificationMessages = map[string]map[string]string{
 		"assigned":            "{{actor}} assigned you",
 		"comment_on_owned":    "{{actor}} commented on your {{entityType}}",
 		"comment_on_assigned": "{{actor}} commented",
+		"entity_updated":      "{{actor}} updated your {{entityType}}",
+		"entity_deleted":      "{{actor}} deleted your {{entityType}}",
 	},
 	"ar": {
 		"mention":             "{{actor}} أشار إليك",
 		"assigned":            "{{actor}} أسند إليك",
 		"comment_on_owned":    "{{actor}} علّق على {{entityType}} الخاص بك",
 		"comment_on_assigned": "{{actor}} علّق",
+		"entity_updated":      "{{actor}} حدّث {{entityType}} الخاص بك",
+		"entity_deleted":      "{{actor}} حذف {{entityType}} الخاص بك",
 	},
+}
+
+// Telegram-specific strings
+var telegramStrings = map[string]map[string]string{
+	"en": {
+		"open_link": "Open in Sarray Forge",
+	},
+	"ar": {
+		"open_link": "فتح في سراي فورج",
+	},
+}
+
+// GetTelegramString returns a localized string for Telegram messages
+func GetTelegramString(lang, key string) string {
+	langMap, ok := telegramStrings[lang]
+	if !ok {
+		langMap = telegramStrings["en"]
+	}
+	if str, ok := langMap[key]; ok {
+		return str
+	}
+	return key
 }
 
 // Entity type translations

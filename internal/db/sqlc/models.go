@@ -164,4 +164,5 @@ type User struct {
 	CreatedAt      time.Time      `json:"createdAt"`
 	UpdatedAt      time.Time      `json:"updatedAt"`
 	TelegramChatID sql.NullString `json:"telegramChatId"`
+	Language       string         `json:"language"`
 }

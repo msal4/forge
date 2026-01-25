@@ -10,6 +10,7 @@ export interface User {
   email: string;
   fullName: string;
   avatarUrl?: string;
+  language: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -50,4 +51,12 @@ export const usersApi = {
   // Unlink Telegram account
   unlinkTelegram: (options?: RequestOptions) =>
     api.delete<{ status: string }>('/users/me/telegram', options),
+
+  // ============================================
+  // Language Preference
+  // ============================================
+
+  // Update user language preference
+  updateLanguage: (language: string, options?: RequestOptions) =>
+    api.put<{ language: string }>('/users/me/language', { language }, options),
 };
