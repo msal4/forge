@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { LoadingIndicator } from '../components/ui/LoadingIndicator';
 
 // ============================================
 // Auth Context - Global authentication state
@@ -191,7 +192,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       <div className="min-h-screen bg-parchment-100 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-lapis-500/10 mb-4">
-            <span className="text-3xl animate-pulse">𒀭</span>
+            <LoadingIndicator size="xl" inline />
           </div>
           <p className="text-lapis-500 animate-pulse">Loading...</p>
         </div>

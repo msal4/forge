@@ -15,7 +15,6 @@ import {
   ArrowLeft,
   Edit3,
   Trash2,
-  Loader2,
   User,
   Clock,
   X,
@@ -25,11 +24,12 @@ import {
   History,
   ChevronDown
 } from 'lucide-react';
+import { LoadingIndicator } from '../components/ui/LoadingIndicator';
 import { useWebSocket } from '../context/WebSocketContext';
 import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
 import { useConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useKeyboardShortcuts } from '../hooks/useKeyboard';
-import { useDocs, useDoc, useCreateDoc, useUpdateDoc, useDeleteDoc, queryKeys } from '../hooks/useApi';
+import { useDocs, useDoc, useCreateDoc, useUpdateDoc, useDeleteDoc, useUsers, queryKeys } from '../hooks/useApi';
 import type { Doc, CreateDocRequest, UpdateDocRequest } from '../api/docs';
 
 // ============================================
@@ -53,6 +53,7 @@ export function DocsPage() {
   // React Query hooks
   const { data: docs = [], isLoading, isError, error } = useDocs();
   const { data: selectedDocData } = useDoc(docId ? Number(docId) : undefined);
+  const { data: users = [] } = useUsers();
   const createDocMutation = useCreateDoc();
   const updateDocMutation = useUpdateDoc();
   const deleteDocMutation = useDeleteDoc();
@@ -535,7 +536,7 @@ export function DocsPage() {
                 hotkey="Ctrl+S"
               >
                 {isSaving ? (
-                  <Loader2 size={18} className="animate-spin" />
+                  <LoadingIndicator size="sm" inline />
                 ) : (
                   <Check size={18} />
                 )}
@@ -564,7 +565,7 @@ export function DocsPage() {
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-lapis-100 mb-4">
-              <span className="text-3xl animate-pulse">𒀭</span>
+              <LoadingIndicator size="xl" inline />
             </div>
             <p className="text-lapis-500 font-inscription">{t('docs.retrieving')}</p>
           </div>
@@ -576,7 +577,7 @@ export function DocsPage() {
         <div className="tablet-card p-6 transition-all duration-200">
           <div className="prose prose-mesopotamian max-w-none">
             {selectedDoc.content ? (
-              <Markdown>{selectedDoc.content}</Markdown>
+              <Markdown users={users}>{selectedDoc.content}</Markdown>
             ) : (
               <p className="text-stone-500 italic">{t('docs.noContent')}</p>
             )}
@@ -718,6 +719,7 @@ export function DocsPage() {
             onChange={setEditContent}
             textareaRef={textareaRef}
             placeholder={t('docs.contentPlaceholder')}
+            users={users}
           />
         </div>
       )}
@@ -784,6 +786,7 @@ interface InlineMarkdownEditorProps {
   onChange: (value: string) => void;
   textareaRef: React.RefObject<MentionInputRef>;
   placeholder?: string;
+  users?: Array<{ id: number; username: string }>;
 }
 
 type EditorViewMode = 'edit' | 'preview' | 'split';
@@ -792,7 +795,8 @@ function InlineMarkdownEditor({
   value, 
   onChange, 
   textareaRef,
-  placeholder
+  placeholder,
+  users,
 }: InlineMarkdownEditorProps) {
   const { t } = useTranslation();
   const [viewMode, setViewMode] = React.useState<EditorViewMode>('split');
@@ -900,7 +904,7 @@ function InlineMarkdownEditor({
           <div className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'} overflow-auto bg-parchment-50`}>
             <div className="p-4 prose prose-mesopotamian max-w-none">
               {value ? (
-                <Markdown>{value}</Markdown>
+                <Markdown users={users}>{value}</Markdown>
               ) : (
                 <p className="text-stone-500 italic">{t('docs.editor.previewPlaceholder')}</p>
               )}

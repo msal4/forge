@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Trash2, Send, Eye, Edit3, ChevronDown } from 'lucide-react';
+import { LoadingIndicator } from '../ui/LoadingIndicator';
 import { Markdown } from '../ui/Markdown';
 import { HotkeyBadge } from '../ui/HotkeyBadge';
 import { useConfirmDialog } from '../ui/ConfirmDialog';
@@ -49,6 +50,12 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
 	const { data: currentUser } = useQuery({
 		queryKey: ['users', 'me'],
 		queryFn: () => usersApi.me(),
+	});
+
+	// Fetch all users for @mention linking
+	const { data: users = [] } = useQuery({
+		queryKey: ['users'],
+		queryFn: () => usersApi.list(),
 	});
 
 	// Fetch comments
@@ -195,8 +202,8 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
 				{/* Comments list */}
 				<div className="divide-y divide-parchment-200">
 					{isLoading ? (
-						<div className="flex items-center justify-center py-8 text-stone-400">
-							<div className="w-5 h-5 border-2 border-lapis-300 border-t-transparent rounded-full animate-spin" />
+						<div className="py-8">
+							<LoadingIndicator size="md" className="text-lapis-400" />
 						</div>
 					) : totalComments === 0 ? (
 						<div className="text-center py-6 text-stone-500 text-sm italic">
@@ -229,6 +236,7 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
 									onDelete={() => handleDeleteComment(comment)}
 									isDeleting={deleteMutation.isPending && deleteMutation.variables === comment.id}
 									formatRelativeTime={formatRelativeTime}
+									users={users}
 								/>
 							))}
 						</>
@@ -241,7 +249,7 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
 						{isPreview ? (
 							<div className="min-h-[80px] p-3 rounded-lg bg-parchment-100/50 border border-parchment-300">
 								{newComment.trim() ? (
-									<Markdown>{newComment}</Markdown>
+									<Markdown users={users}>{newComment}</Markdown>
 								) : (
 									<span className="text-stone-500 italic text-sm">
 										{t('comments.previewEmpty', 'Nothing to preview')}
@@ -311,7 +319,7 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
               "
 						>
 							{createMutation.isPending ? (
-								<div className="w-4 h-4 border-2 border-parchment-200 border-t-transparent rounded-full animate-spin" />
+								<LoadingIndicator size="xs" className="text-parchment-200" inline />
 							) : (
 								<Send size={14} />
 							)}
@@ -335,9 +343,10 @@ interface CommentItemProps {
 	onDelete: () => void;
 	isDeleting: boolean;
 	formatRelativeTime: (date: string) => string;
+	users: Array<{ id: number; username: string }>;
 }
 
-function CommentItem({ comment, isOwn, onDelete, isDeleting, formatRelativeTime }: CommentItemProps) {
+function CommentItem({ comment, isOwn, onDelete, isDeleting, formatRelativeTime, users }: CommentItemProps) {
 	const authorName = comment.author?.fullName || comment.author?.username || 'Unknown';
 
 	return (
@@ -347,7 +356,8 @@ function CommentItem({ comment, isOwn, onDelete, isDeleting, formatRelativeTime 
 				<div className="flex-shrink-0 pt-0.5">
 					<Avatar 
 						name={authorName} 
-						avatarUrl={comment.author?.avatarUrl} 
+						avatarUrl={comment.author?.avatarUrl}
+						username={comment.author?.username}
 						size="sm" 
 					/>
 				</div>
@@ -377,7 +387,7 @@ function CommentItem({ comment, isOwn, onDelete, isDeleting, formatRelativeTime 
 								"
 							>
 								{isDeleting ? (
-									<div className="w-3 h-3 border-2 border-red-300 border-t-transparent rounded-full animate-spin" />
+									<LoadingIndicator size="xs" className="text-red-400" inline />
 								) : (
 									<Trash2 size={12} />
 								)}
@@ -386,7 +396,7 @@ function CommentItem({ comment, isOwn, onDelete, isDeleting, formatRelativeTime 
 					</div>
 
 					<div className="text-sm text-lapis-600 prose-sm prose-mesopotamian max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-						<Markdown>{comment.content}</Markdown>
+						<Markdown users={users}>{comment.content}</Markdown>
 					</div>
 				</div>
 			</div>

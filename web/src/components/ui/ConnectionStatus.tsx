@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Wifi, WifiOff, Loader2 } from 'lucide-react';
+import { Wifi, WifiOff } from 'lucide-react';
+import { LoadingIndicator } from './LoadingIndicator';
 import { useWebSocket, type ConnectionStatus as ConnectionStatusType } from '../../context/WebSocketContext';
 
 // ============================================
@@ -56,14 +57,14 @@ export function ConnectionStatus() {
         };
       case 'connecting':
         return {
-          icon: <Loader2 size={12} className="animate-spin" />,
+          icon: <LoadingIndicator size="xs" inline />,
           color: 'bg-gold-500',
           textColor: 'text-gold-600',
           label: t('ws.connecting'),
         };
       case 'reconnecting':
         return {
-          icon: <Loader2 size={12} className="animate-spin" />,
+          icon: <LoadingIndicator size="xs" inline />,
           color: 'bg-gold-500',
           textColor: 'text-gold-600',
           label: t('ws.reconnecting'),

@@ -9,9 +9,9 @@ import {
   Package,
   Home,
   Plus,
-  Loader2,
   Settings,
 } from 'lucide-react';
+import { LoadingIndicator } from './LoadingIndicator';
 import { useKeyboard } from '../../context/KeyboardContext';
 import { searchApi, type SearchResult } from '../../api';
 
@@ -124,7 +124,7 @@ export function CommandMenu() {
           {/* Search Input */}
           <div className="flex items-center border-b-2 border-parchment-300 px-4">
             {isSearching ? (
-              <Loader2 className="text-stone-400 animate-spin" size={20} />
+              <LoadingIndicator size="md" className="text-stone-400" inline />
             ) : (
               <Search className="text-stone-400" size={20} />
             )}

@@ -5,9 +5,9 @@ import {
   ChevronRight, 
   Clock,
   ArrowRight,
-  FileText,
-  Loader2
+  FileText
 } from 'lucide-react';
+import { LoadingIndicator } from './LoadingIndicator';
 import { 
   type ActivityLog, 
   type ChangeValue,
@@ -85,7 +85,7 @@ export function ActivityHistory({ entityType, entityId }: ActivityHistoryProps) 
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 text-sm text-stone-500 py-4">
-        <Loader2 size={14} className="animate-spin" />
+        <LoadingIndicator size="xs" className="text-stone-500" inline />
         {t('history.loading')}
       </div>
     );
@@ -177,7 +177,7 @@ export function ActivityHistory({ entityType, entityId }: ActivityHistoryProps) 
                       >
                         {isFetchingNextPage ? (
                           <span className="flex items-center gap-1">
-                            <Loader2 size={12} className="animate-spin" />
+                            <LoadingIndicator size="xs" inline />
                             {t('history.loading')}
                           </span>
                         ) : (

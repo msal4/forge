@@ -7,7 +7,6 @@ import {
   BookOpen, 
   Package, 
   ArrowRight, 
-  Loader2,
   Clock,
   CheckCircle2,
   Circle,
@@ -20,6 +19,7 @@ import { useIssues, useReleases, useDocs } from '../hooks/useApi';
 import { IssueStatus, type Issue } from '../api/issues';
 import { useAuth } from '../context/AuthContext';
 import { Avatar } from '../components/ui/Avatar';
+import { LoadingIndicator } from '../components/ui/LoadingIndicator';
 
 // ============================================
 // Home Page - Dashboard Overview
@@ -28,6 +28,12 @@ import { Avatar } from '../components/ui/Avatar';
 export function HomePage() {
   const { user } = useAuth();
   const { t } = useTranslation();
+
+  // Pick a random wisdom on mount (changes on page refresh)
+  const randomWisdom = React.useMemo(() => {
+    const wisdoms = t('home.wisdoms', { returnObjects: true }) as string[];
+    return wisdoms[Math.floor(Math.random() * wisdoms.length)];
+  }, [t]);
   
   // React Query hooks
   const { data: issues = [], isLoading: issuesLoading, isError: issuesError } = useIssues();
@@ -111,8 +117,8 @@ export function HomePage() {
         <h1 className="text-3xl font-inscription text-lapis-600">
           {t('home.welcome', { name: user?.fullName?.split(' ')[0] || user?.username })}
         </h1>
-        <p className="mt-2 text-lapis-500">
-          {t('home.tagline')}
+        <p className="mt-2 text-lapis-500 italic">
+          "{randomWisdom}"
         </p>
       </div>
 
@@ -201,8 +207,8 @@ export function HomePage() {
           </div>
           
           {issuesLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="animate-spin text-stone-400" size={24} />
+            <div className="py-8">
+              <LoadingIndicator size="lg" className="text-stone-400" />
             </div>
           ) : recentIssues.length === 0 ? (
             <EmptyState 
@@ -235,8 +241,8 @@ export function HomePage() {
             </div>
             
             {releasesLoading ? (
-              <div className="flex items-center justify-center py-4">
-                <Loader2 className="animate-spin text-stone-400" size={20} />
+              <div className="py-4">
+                <LoadingIndicator size="md" className="text-stone-400" />
               </div>
             ) : latestRelease ? (
               <Link 
@@ -285,8 +291,8 @@ export function HomePage() {
             </div>
             
             {docsLoading ? (
-              <div className="flex items-center justify-center py-4">
-                <Loader2 className="animate-spin text-stone-400" size={20} />
+              <div className="py-4">
+                <LoadingIndicator size="md" className="text-stone-400" />
               </div>
             ) : recentDocs.length === 0 ? (
               <EmptyState 
@@ -364,7 +370,7 @@ function StatCard({ icon, label, value, color, loading }: StatCardProps) {
       </div>
       {loading ? (
         <div className="h-8 flex items-center">
-          <Loader2 size={16} className="animate-spin opacity-50" />
+          <LoadingIndicator size="sm" className="opacity-50" inline />
         </div>
       ) : (
         <p className="text-2xl font-semibold">{value}</p>

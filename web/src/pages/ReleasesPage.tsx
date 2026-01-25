@@ -12,12 +12,12 @@ import {
   Upload, 
   Download, 
   Trash2,
-  Loader2,
   X,
   User,
   Calendar,
   HardDrive
 } from 'lucide-react';
+import { LoadingIndicator } from '../components/ui/LoadingIndicator';
 import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
 import { useConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useKeyboardShortcuts } from '../hooks/useKeyboard';
@@ -211,7 +211,7 @@ export function ReleasesPage() {
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-lapis-100 mb-4">
-              <span className="text-3xl animate-pulse">𒀭</span>
+              <LoadingIndicator size="xl" inline />
             </div>
             <p className="text-lapis-500 font-inscription">{t('releases.opening')}</p>
           </div>
@@ -313,7 +313,7 @@ export function ReleasesPage() {
                       disabled={isUploading}
                     >
                       {isUploading ? (
-                        <Loader2 size={16} className="animate-spin" />
+                        <LoadingIndicator size="sm" inline />
                       ) : (
                         <Upload size={16} />
                       )}
@@ -354,7 +354,7 @@ export function ReleasesPage() {
                   className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-tablet transition-colors disabled:opacity-50"
                 >
                   {deleteReleaseMutation.isPending ? (
-                    <Loader2 size={16} className="animate-spin" />
+                    <LoadingIndicator size="sm" inline />
                   ) : (
                     <Trash2 size={16} />
                   )}

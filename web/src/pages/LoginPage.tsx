@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { LoadingIndicator } from '../components/ui/LoadingIndicator';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 
@@ -292,7 +293,7 @@ export function LoginPage() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <LoadingIndicator size="md" inline className="text-white" />
                     <span>{t('login.signingIn')}</span>
                   </>
                 ) : (

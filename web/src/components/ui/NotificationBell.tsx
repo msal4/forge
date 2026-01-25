@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Bell, CheckCheck, FileText, BookOpen, Package, X } from 'lucide-react';
+import { LoadingIndicator } from './LoadingIndicator';
 import { notificationsApi, type Notification, type EntityType } from '../../api/notifications';
 import { useWebSocket } from '../../context/WebSocketContext';
 import { useToast } from '../../context/ToastContext';
@@ -276,8 +277,8 @@ export function NotificationBell() {
           {/* Notifications List */}
           <div className="flex-1 overflow-y-auto">
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="w-5 h-5 border-2 border-stone-300 border-t-transparent rounded-full animate-spin" />
+              <div className="py-8">
+                <LoadingIndicator size="md" className="text-stone-400" />
               </div>
             ) : notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-stone-400">
@@ -365,6 +366,7 @@ function NotificationItem({ notification, onClick, formatRelativeTime }: Notific
             <Avatar 
               name={actorName}
               avatarUrl={notification.actor?.avatarUrl}
+              username={notification.actor?.username}
               size="xs"
             />
             <span className={`text-xs ${notification.isRead ? 'text-stone-500' : 'text-lapis-500'}`}>

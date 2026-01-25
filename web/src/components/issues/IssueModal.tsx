@@ -21,6 +21,7 @@ import {
 	MessageSquare,
 	History
 } from 'lucide-react';
+import { LoadingIndicator } from '../ui/LoadingIndicator';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboard';
 import { useWebSocket } from '../../context/WebSocketContext';
 import { HotkeyBadge } from '../ui/HotkeyBadge';
@@ -82,7 +83,7 @@ export function IssueModal({
 }: IssueModalProps) {
 	const { t } = useTranslation();
 	const { syncVersion } = useWebSocket();
-	
+
 	// Form state
 	const [title, setTitle] = React.useState('');
 	const [description, setDescription] = React.useState('');
@@ -98,10 +99,10 @@ export function IssueModal({
 	const [showStatusDropdown, setShowStatusDropdown] = React.useState(false);
 	const [showPriorityDropdown, setShowPriorityDropdown] = React.useState(false);
 	const [showAssigneeDropdown, setShowAssigneeDropdown] = React.useState(false);
-	
+
 	// Tab state for Comments/Activity panel
 	const [activeTab, setActiveTab] = React.useState<TabType>(defaultTab);
-	
+
 	// Update active tab when defaultTab prop changes (e.g., from notification navigation)
 	React.useEffect(() => {
 		setActiveTab(defaultTab);
@@ -112,10 +113,10 @@ export function IssueModal({
 	const [canScrollDown, setCanScrollDown] = React.useState(false);
 	const isEditing = mode === 'edit' || mode === 'create';
 	const isCreating = mode === 'create';
-	
+
 	// Track if we're in the middle of an edit session (to prevent auto-refresh)
 	const [isEditSession, setIsEditSession] = React.useState(false);
-	
+
 	// Track the last sync version and the updatedAt when sync was requested
 	const lastSyncVersionRef = React.useRef(syncVersion);
 	const syncRequestedAtRef = React.useRef<string | null>(null);
@@ -183,12 +184,12 @@ export function IssueModal({
 			console.log('[IssueModal] Still waiting for fresh data, current:', issue?.updatedAt, 'waiting for change from:', syncRequestedAtRef.current);
 			return;
 		}
-		
+
 		// Don't auto-refresh during edit session
 		if (isEditSession) {
 			return;
 		}
-		
+
 		// Load issue data (initial load or view mode updates)
 		loadIssueIntoForm(issue);
 	}, [issue, isOpen, isEditSession, loadIssueIntoForm]);
@@ -213,13 +214,13 @@ export function IssueModal({
 	// Check scrollable state on mount, resize, and content changes
 	React.useEffect(() => {
 		if (!isOpen) return;
-		
+
 		// Initial check with slight delay to ensure content is rendered
 		const timeoutId = setTimeout(checkScrollable, 100);
-		
+
 		// Re-check on window resize
 		window.addEventListener('resize', checkScrollable);
-		
+
 		return () => {
 			clearTimeout(timeoutId);
 			window.removeEventListener('resize', checkScrollable);
@@ -247,7 +248,7 @@ export function IssueModal({
 	// Handle escape key - close dropdowns first, then cancel
 	React.useEffect(() => {
 		if (!isOpen) return;
-		
+
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.key === 'Escape') {
 				if (hasOpenDropdown) {
@@ -257,7 +258,7 @@ export function IssueModal({
 				}
 			}
 		};
-		
+
 		document.addEventListener('keydown', handleKeyDown, true);
 		return () => document.removeEventListener('keydown', handleKeyDown, true);
 	}, [isOpen, hasOpenDropdown, closeAllDropdowns]);
@@ -269,7 +270,7 @@ export function IssueModal({
 			closeAllDropdowns();
 			return;
 		}
-		
+
 		if (mode === 'edit') {
 			// Reset form to original issue values and go back to view
 			if (issue) {
@@ -379,7 +380,7 @@ export function IssueModal({
 			/>
 
 			{/* Modal - Full screen on mobile, centered with max-height on desktop */}
-			<div 
+			<div
 				className="
 					relative w-full h-full
 					sm:h-[80vh] sm:max-w-4xl sm:rounded-xl
@@ -396,8 +397,8 @@ export function IssueModal({
 			>
 				{/* Priority color bar */}
 				<div className={`flex-shrink-0 h-1.5 transition-colors duration-200 ${priority === 'critical' ? 'bg-red-500' :
-						priority === 'high' ? 'bg-clay-500' :
-							priority === 'medium' ? 'bg-gold-500' : 'bg-stone-400'
+					priority === 'high' ? 'bg-clay-500' :
+						priority === 'medium' ? 'bg-gold-500' : 'bg-stone-400'
 					}`} />
 
 				{/* Header */}
@@ -408,8 +409,8 @@ export function IssueModal({
 							{/* Status dropdown/badge */}
 							<div className="relative">
 								<button
-									onClick={(e) => { 
-										e.stopPropagation(); 
+									onClick={(e) => {
+										e.stopPropagation();
 										if (isEditing && !isCreating) {
 											setShowPriorityDropdown(false);
 											setShowAssigneeDropdown(false);
@@ -447,8 +448,8 @@ export function IssueModal({
 							{/* Priority dropdown/badge */}
 							<div className="relative">
 								<button
-									onClick={(e) => { 
-										e.stopPropagation(); 
+									onClick={(e) => {
+										e.stopPropagation();
 										if (isEditing) {
 											setShowStatusDropdown(false);
 											setShowAssigneeDropdown(false);
@@ -535,13 +536,12 @@ export function IssueModal({
 							</button>
 						)}
 						{/* Close/Back button - shows back arrow in edit mode to indicate returning to view */}
-						<button 
-							onClick={isEditing ? handleCancel : onClose} 
-							className={`p-2 rounded-lg transition-colors ${
-								isEditing && !isCreating
-									? 'hover:bg-lapis-100 text-lapis-600' 
-									: 'hover:bg-parchment-200 text-lapis-500'
-							}`}
+						<button
+							onClick={isEditing ? handleCancel : onClose}
+							className={`p-2 rounded-lg transition-colors ${isEditing && !isCreating
+								? 'hover:bg-lapis-100 text-lapis-600'
+								: 'hover:bg-parchment-200 text-lapis-500'
+								}`}
 							title={isEditing ? (isCreating ? t('common.close') : t('common.back')) + " (Esc)" : t('common.close') + " (Esc)"}
 							tabIndex={-1}
 						>
@@ -563,24 +563,24 @@ export function IssueModal({
 
 				{/* Content - Scrollable area with fade indicator */}
 				<div className="relative flex-1 min-h-0">
-					<div 
+					<div
 						ref={contentRef}
 						onScroll={checkScrollable}
 						className="h-full overflow-y-auto p-4 sm:p-6 space-y-5 scrollbar-stable scrollbar-thin"
 					>
-					{/* Description */}
-					<div>
-						<h3 className="flex items-center gap-2 text-sm font-semibold text-lapis-600 mb-3">
-							<FileText size={16} />
-							{t('issueModal.description')}
-						</h3>
-						{isEditing ? (
-							<MentionInput
-								value={description}
-								onChange={setDescription}
-								placeholder={t('issueModal.descriptionPlaceholder')}
-								rows={4}
-								className="
+						{/* Description */}
+						<div>
+							<h3 className="flex items-center gap-2 text-sm font-semibold text-lapis-600 mb-3">
+								<FileText size={16} />
+								{t('issueModal.description')}
+							</h3>
+							{isEditing ? (
+								<MentionInput
+									value={description}
+									onChange={setDescription}
+									placeholder={t('issueModal.descriptionPlaceholder')}
+									rows={4}
+									className="
                   w-full min-h-[100px] sm:min-h-[120px] p-3 sm:p-4 rounded-lg 
                   bg-parchment-100/50 text-lapis-700 resize-none
                   border border-parchment-300 
@@ -588,203 +588,207 @@ export function IssueModal({
                   placeholder:text-stone-500
                   transition-colors
                 "
-							/>
-						) : description ? (
-							<div className="min-h-[80px] sm:min-h-[100px] bg-parchment-100/30 rounded-lg p-3 sm:p-4 prose-mesopotamian">
-								<Markdown>{description}</Markdown>
-							</div>
-						) : (
-							<div className="min-h-[80px] sm:min-h-[100px] flex items-center justify-center text-stone-500 italic text-sm bg-parchment-100/30 rounded-lg">
-								{t('issueModal.noDescription')}
-							</div>
-						)}
-					</div>
+								/>
+							) : description ? (
+								<div className="min-h-[80px] sm:min-h-[100px] bg-parchment-100/30 rounded-lg p-3 sm:p-4 prose-mesopotamian">
+									<Markdown users={users}>{description}</Markdown>
+								</div>
+							) : (
+								<div className="min-h-[80px] sm:min-h-[100px] flex items-center justify-center text-stone-500 italic text-sm bg-parchment-100/30 rounded-lg">
+									{t('issueModal.noDescription')}
+								</div>
+							)}
+						</div>
 
-					{/* Details grid - Moved up before labels */}
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 p-3 sm:p-4 rounded-lg bg-parchment-100/60 border border-parchment-200">
-						{/* Assignee */}
-						<div>
-							<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 mb-2">
-								<User size={12} />
-								{t('issueModal.assignee')}
-							</h4>
-							<div className="h-10 flex items-center">
-								{isEditing ? (
-									<div className="relative w-full">
-										<button
-											onClick={(e) => { 
-												e.stopPropagation(); 
-												setShowStatusDropdown(false);
-												setShowPriorityDropdown(false);
-												setShowAssigneeDropdown(!showAssigneeDropdown); 
-											}}
-											className="
+						{/* Details grid - Moved up before labels */}
+						<div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 p-3 sm:p-4 rounded-lg bg-parchment-100/60 border border-parchment-200">
+							{/* Assignee */}
+							<div>
+								<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 mb-2">
+									<User size={12} />
+									{t('issueModal.assignee')}
+								</h4>
+								<div className="h-10 flex items-center">
+									{isEditing ? (
+										<div className="relative w-full">
+											<button
+												onClick={(e) => {
+													e.stopPropagation();
+													setShowStatusDropdown(false);
+													setShowPriorityDropdown(false);
+													setShowAssigneeDropdown(!showAssigneeDropdown);
+												}}
+												className="
                         w-full h-10 flex items-center gap-2 px-3 rounded-lg text-left
                         border border-parchment-300 bg-parchment-100/50
                         hover:border-lapis-400 hover:bg-parchment-100 transition-colors
                       "
-										>
-											{selectedAssignee ? (
-												<>
-													<Avatar 
-														name={selectedAssignee.fullName || selectedAssignee.username}
-														size="sm"
-													/>
-													<span className="text-sm text-lapis-700 truncate">{selectedAssignee.fullName || selectedAssignee.username}</span>
-												</>
-											) : (
-												<span className="text-sm text-stone-500">{t('issueModal.unassigned')}</span>
-											)}
-											<ChevronDown size={14} className="ml-auto text-stone-400 flex-shrink-0" />
-										</button>
-										{showAssigneeDropdown && (
-											<div className="absolute top-full left-0 right-0 mt-1 bg-parchment-50 border border-parchment-300 rounded-lg shadow-lg py-1 z-10 max-h-48 overflow-y-auto">
-												<button
-													onClick={() => { setAssigneeId(null); setShowAssigneeDropdown(false); }}
-													className={`w-full px-3 py-2 text-left text-sm hover:bg-parchment-200 ${!assigneeId ? 'bg-parchment-200' : ''}`}
-												>
-													<span className="text-stone-500">{t('issueModal.unassigned')}</span>
-												</button>
-												{users.map((user) => (
-													<button
-														key={user.id}
-														onClick={() => { setAssigneeId(user.id); setShowAssigneeDropdown(false); }}
-														className={`w-full px-3 py-2 text-left text-sm hover:bg-parchment-200 flex items-center gap-2
-                              ${assigneeId === user.id ? 'bg-parchment-200' : ''}`}
-													>
-														<Avatar 
-															name={user.fullName || user.username}
-															size="xs"
+											>
+												{selectedAssignee ? (
+													<>
+														<Avatar
+															name={selectedAssignee.fullName || selectedAssignee.username}
+															size="sm"
 														/>
-														{user.fullName || user.username}
+														<span className="text-sm text-lapis-700 truncate">{selectedAssignee.fullName || selectedAssignee.username}</span>
+													</>
+												) : (
+													<span className="text-sm text-stone-500">{t('issueModal.unassigned')}</span>
+												)}
+												<ChevronDown size={14} className="ltr:ml-auto rtl:mr-auto text-stone-400 flex-shrink-0" />
+											</button>
+											{showAssigneeDropdown && (
+												<div className="absolute top-full left-0 right-0 mt-1 bg-parchment-50 border border-parchment-300 rounded-lg shadow-lg py-1 z-10 max-h-48 overflow-y-auto">
+													<button
+														onClick={() => { setAssigneeId(null); setShowAssigneeDropdown(false); }}
+														className={`w-full px-3 py-2 text-sm hover:bg-parchment-200 flex items-center gap-2 ${!assigneeId ? 'bg-parchment-200' : ''}`}
+													>
+														<span className="text-stone-500">{t('issueModal.unassigned')}</span>
 													</button>
-												))}
-											</div>
-										)}
-									</div>
-								) : selectedAssignee ? (
-									<div className="flex items-center gap-2">
-										<Avatar 
-											name={selectedAssignee.fullName || selectedAssignee.username}
-											size="md"
-											className="ring-2 ring-parchment-200"
-										/>
-										<span className="text-sm text-lapis-700 font-medium">{selectedAssignee.fullName || selectedAssignee.username}</span>
-									</div>
-								) : (
-									<span className="text-sm text-stone-500 italic">{t('issueModal.unassigned')}</span>
-								)}
+													{users.map((user) => (
+														<button
+															key={user.id}
+															onClick={() => { setAssigneeId(user.id); setShowAssigneeDropdown(false); }}
+															className={`w-full px-3 py-2 text-left text-sm hover:bg-parchment-200 flex items-center gap-2
+                              ${assigneeId === user.id ? 'bg-parchment-200' : ''}`}
+														>
+															<Avatar
+																name={user.fullName || user.username}
+																size="xs"
+															/>
+															{user.fullName || user.username}
+														</button>
+													))}
+												</div>
+											)}
+										</div>
+									) : selectedAssignee ? (
+										<div className="flex items-center gap-2">
+											<Avatar
+												name={selectedAssignee.fullName || selectedAssignee.username}
+												avatarUrl={selectedAssignee.avatarUrl}
+												username={selectedAssignee.username}
+												size="md"
+												className="ring-2 ring-parchment-200"
+											/>
+											<span className="text-sm text-lapis-700 font-medium">{selectedAssignee.fullName || selectedAssignee.username}</span>
+										</div>
+									) : (
+										<span className="text-sm text-stone-500 italic">{t('issueModal.unassigned')}</span>
+									)}
+								</div>
 							</div>
-						</div>
 
-						{/* Reporter (view only) */}
-						<div>
-							<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 mb-2">
-								<User size={12} />
-								{t('issueModal.reporter')}
-							</h4>
-							<div className="h-10 flex items-center">
-								{issue?.reporter ? (
-									<div className="flex items-center gap-2">
-										<Avatar 
-											name={issue.reporter.fullName || issue.reporter.username}
-											size="md"
-											className="ring-2 ring-parchment-200"
-										/>
-										<span className="text-sm text-lapis-700 font-medium">{issue.reporter.fullName || issue.reporter.username}</span>
-									</div>
-								) : (
-									<span className="text-sm text-stone-500 italic">{isCreating ? t('issueModal.you') : t('issueModal.unknown')}</span>
-								)}
+							{/* Reporter (view only) */}
+							<div>
+								<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 mb-2">
+									<User size={12} />
+									{t('issueModal.reporter')}
+								</h4>
+								<div className="h-10 flex items-center">
+									{issue?.reporter ? (
+										<div className="flex items-center gap-2">
+											<Avatar
+												name={issue.reporter.fullName || issue.reporter.username}
+												avatarUrl={issue.reporter.avatarUrl}
+												username={issue.reporter.username}
+												size="md"
+												className="ring-2 ring-parchment-200"
+											/>
+											<span className="text-sm text-lapis-700 font-medium">{issue.reporter.fullName || issue.reporter.username}</span>
+										</div>
+									) : (
+										<span className="text-sm text-stone-500 italic">{isCreating ? t('issueModal.you') : t('issueModal.unknown')}</span>
+									)}
+								</div>
 							</div>
-						</div>
 
-						{/* Due Date */}
-						<div>
-							<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 mb-2">
-								<Calendar size={12} />
-								{t('issueModal.dueDate')}
-							</h4>
-							<div className="h-10 flex items-center">
-								{isEditing ? (
-									<input
-										type="date"
-										value={dueDate}
-										onChange={(e) => setDueDate(e.target.value)}
-										className="
+							{/* Due Date */}
+							<div>
+								<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 mb-2">
+									<Calendar size={12} />
+									{t('issueModal.dueDate')}
+								</h4>
+								<div className="h-10 flex items-center">
+									{isEditing ? (
+										<input
+											type="date"
+											value={dueDate}
+											onChange={(e) => setDueDate(e.target.value)}
+											className="
                       w-full h-10 px-3 rounded-lg text-sm
                       border border-parchment-300 bg-parchment-100/50 text-lapis-700
                       focus:ring-2 focus:ring-gold-400/30 focus:bg-parchment-100 outline-none transition-all
                     "
-									/>
-								) : dueDate ? (
-									<span className={`text-sm font-medium ${isDueOverdue ? 'text-red-600' : 'text-lapis-700'}`}>
-										{formatDate(dueDate)}
-										{isDueOverdue && <span className="ltr:ml-2 rtl:mr-2 text-xs text-red-500">({t('issueModal.overdue')})</span>}
+										/>
+									) : dueDate ? (
+										<span className={`text-sm font-medium ${isDueOverdue ? 'text-red-600' : 'text-lapis-700'}`}>
+											{formatDate(dueDate)}
+											{isDueOverdue && <span className="ltr:ml-2 rtl:mr-2 text-xs text-red-500">({t('issueModal.overdue')})</span>}
+										</span>
+									) : (
+										<span className="text-sm text-stone-500 italic">{t('issueModal.noDueDate')}</span>
+									)}
+								</div>
+							</div>
+
+							{/* Created (view only) */}
+							<div>
+								<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 mb-2">
+									<Clock size={12} />
+									{t('issueModal.created')}
+								</h4>
+								<div className="h-10 flex items-center">
+									<span
+										className="text-sm text-lapis-700 cursor-default"
+										title={issue?.createdAt ? formatDate(issue.createdAt) || '' : ''}
+									>
+										{issue?.createdAt ? formatRelativeTime(issue.createdAt) : t('issueModal.now')}
 									</span>
-								) : (
-									<span className="text-sm text-stone-500 italic">{t('issueModal.noDueDate')}</span>
-								)}
+								</div>
 							</div>
 						</div>
 
-						{/* Created (view only) */}
+						{/* Labels */}
 						<div>
-							<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 mb-2">
-								<Clock size={12} />
-								{t('issueModal.created')}
-							</h4>
-							<div className="h-10 flex items-center">
-								<span 
-									className="text-sm text-lapis-700 cursor-default"
-									title={issue?.createdAt ? formatDate(issue.createdAt) || '' : ''}
-								>
-									{issue?.createdAt ? formatRelativeTime(issue.createdAt) : t('issueModal.now')}
-								</span>
-							</div>
-						</div>
-					</div>
-
-					{/* Labels */}
-					<div>
-						<h3 className="flex items-center gap-2 text-sm font-semibold text-lapis-600 mb-3">
-							<Tag size={16} />
-							{t('issueModal.labels')}
-						</h3>
-						<div className="flex flex-wrap items-center gap-2">
-							{labels.map((label) => (
-								<span
-									key={label}
-									className="
+							<h3 className="flex items-center gap-2 text-sm font-semibold text-lapis-600 mb-3">
+								<Tag size={16} />
+								{t('issueModal.labels')}
+							</h3>
+							<div className="flex flex-wrap items-center gap-2">
+								{labels.map((label) => (
+									<span
+										key={label}
+										className="
                     inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg
                     bg-lapis-100 text-lapis-700 border border-lapis-200
                     text-sm font-medium
                   "
-								>
-									{label}
-									{isEditing && (
-										<button onClick={() => removeLabel(label)} className="hover:text-red-500">
-											<X size={14} />
-										</button>
-									)}
-								</span>
-							))}
-							{labels.length === 0 && !isEditing && (
-								<span className="text-stone-500 italic text-sm">{t('issueModal.noLabels')}</span>
-							)}
-							{isEditing && (
-								<input
-									type="text"
-									value={labelInput}
-									onChange={(e) => setLabelInput(e.target.value)}
-									onKeyDown={(e) => {
-										if (e.key === 'Enter') {
-											e.preventDefault();
-											addLabel();
-										}
-									}}
-									placeholder={`+ ${t('issueModal.labels')}`}
-									className="
+									>
+										{label}
+										{isEditing && (
+											<button onClick={() => removeLabel(label)} className="hover:text-red-500">
+												<X size={14} />
+											</button>
+										)}
+									</span>
+								))}
+								{labels.length === 0 && !isEditing && (
+									<span className="text-stone-500 italic text-sm">{t('issueModal.noLabels')}</span>
+								)}
+								{isEditing && (
+									<input
+										type="text"
+										value={labelInput}
+										onChange={(e) => setLabelInput(e.target.value)}
+										onKeyDown={(e) => {
+											if (e.key === 'Enter') {
+												e.preventDefault();
+												addLabel();
+											}
+										}}
+										placeholder={`+ ${t('issueModal.labels')}`}
+										className="
                     px-3 py-1.5 rounded-lg text-sm w-28
                     bg-transparent text-lapis-600
                     outline-none
@@ -792,68 +796,68 @@ export function IssueModal({
                     focus:bg-parchment-100 focus:w-40
                     transition-all
                   "
-								/>
-							)}
+									/>
+								)}
+							</div>
 						</div>
-					</div>
 
-					{/* Tabbed Panel for Comments & Activity - only in view mode */}
-					{mode === 'view' && issue && (
-						<div className="border border-parchment-200 rounded-lg bg-parchment-50 overflow-hidden">
-							{/* Tab Header */}
-							<div className="flex border-b border-parchment-200 bg-parchment-100/50">
-								<button
-									onClick={() => setActiveTab('comments')}
-									className={`
+						{/* Tabbed Panel for Comments & Activity - only in view mode */}
+						{mode === 'view' && issue && (
+							<div className="border border-parchment-200 rounded-lg bg-parchment-50 overflow-hidden">
+								{/* Tab Header */}
+								<div className="flex border-b border-parchment-200 bg-parchment-100/50">
+									<button
+										onClick={() => setActiveTab('comments')}
+										className={`
 										flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium
 										transition-colors relative
-										${activeTab === 'comments' 
-											? 'text-lapis-700 bg-parchment-50' 
-											: 'text-lapis-500 hover:text-lapis-600 hover:bg-parchment-100'
-										}
+										${activeTab === 'comments'
+												? 'text-lapis-700 bg-parchment-50'
+												: 'text-lapis-500 hover:text-lapis-600 hover:bg-parchment-100'
+											}
 									`}
-								>
-									<MessageSquare size={16} />
-									{t('issueModal.tabs.comments')}
+									>
+										<MessageSquare size={16} />
+										{t('issueModal.tabs.comments')}
+										{activeTab === 'comments' && (
+											<div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500" />
+										)}
+									</button>
+									<button
+										onClick={() => setActiveTab('activity')}
+										className={`
+										flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium
+										transition-colors relative
+										${activeTab === 'activity'
+												? 'text-lapis-700 bg-parchment-50'
+												: 'text-lapis-500 hover:text-lapis-600 hover:bg-parchment-100'
+											}
+									`}
+									>
+										<History size={16} />
+										{t('issueModal.tabs.activity')}
+										{activeTab === 'activity' && (
+											<div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500" />
+										)}
+									</button>
+								</div>
+
+								{/* Tab Content */}
+								<div className="p-4">
 									{activeTab === 'comments' && (
-										<div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500" />
+										<CommentSection resourceType="issue" resourceId={issue.id} />
 									)}
-								</button>
-								<button
-									onClick={() => setActiveTab('activity')}
-									className={`
-										flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium
-										transition-colors relative
-										${activeTab === 'activity' 
-											? 'text-lapis-700 bg-parchment-50' 
-											: 'text-lapis-500 hover:text-lapis-600 hover:bg-parchment-100'
-										}
-									`}
-								>
-									<History size={16} />
-									{t('issueModal.tabs.activity')}
 									{activeTab === 'activity' && (
-										<div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500" />
+										<ActivityHistory entityType="issue" entityId={issue.id} />
 									)}
-								</button>
+								</div>
 							</div>
-
-							{/* Tab Content */}
-							<div className="p-4">
-								{activeTab === 'comments' && (
-									<CommentSection resourceType="issue" resourceId={issue.id} />
-								)}
-								{activeTab === 'activity' && (
-									<ActivityHistory entityType="issue" entityId={issue.id} />
-								)}
-							</div>
-						</div>
-					)}
+						)}
 					</div>
 
 					{/* Scroll fade indicator */}
 					{canScrollDown && (
-						<div 
+						<div
 							className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none bg-gradient-to-t from-parchment-50 to-transparent"
 							aria-hidden="true"
 						/>
@@ -898,7 +902,7 @@ export function IssueModal({
                   "
 								>
 									{isLoading ? (
-										<span className="inline-block w-4 h-4 border-2 border-parchment-200 border-t-transparent rounded-full animate-spin" />
+										<LoadingIndicator size="sm" className="text-parchment-200" inline />
 									) : (
 										<Check size={16} />
 									)}
