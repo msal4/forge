@@ -35,9 +35,20 @@ func ExtractMentions(content string) []string {
 	return usernames
 }
 
+// TelegramNotificationParams holds data needed for localized Telegram notifications
+type TelegramNotificationParams struct {
+	UserID           int64
+	NotificationID   int64
+	NotificationType string
+	EntityType       string
+	EntityID         int64
+	Title            string
+	ActorName        string
+}
+
 // TelegramSender defines the interface for sending Telegram notifications
 type TelegramSender interface {
-	SendNotification(ctx context.Context, userID int64, notificationID int64, entityType string, entityID int64, title, message string)
+	SendNotification(ctx context.Context, params TelegramNotificationParams)
 	IsConfigured() bool
 }
 
@@ -65,6 +76,7 @@ func (s *Service) SetTelegram(tg TelegramSender) {
 type CreateParams struct {
 	UserID           int64
 	ActorID          int64
+	ActorName        string // Actor's display name for localized messages
 	NotificationType models.NotificationType
 	EntityType       string
 	EntityID         int64
@@ -113,7 +125,15 @@ func (s *Service) Create(ctx context.Context, params CreateParams) error {
 	// Send Telegram notification (async, don't block)
 	// Use background context since the request context may be cancelled
 	if s.telegram != nil && s.telegram.IsConfigured() {
-		go s.telegram.SendNotification(context.Background(), params.UserID, notification.ID, params.EntityType, params.EntityID, params.Title, params.Message)
+		go s.telegram.SendNotification(context.Background(), TelegramNotificationParams{
+			UserID:           params.UserID,
+			NotificationID:   notification.ID,
+			NotificationType: string(params.NotificationType),
+			EntityType:       params.EntityType,
+			EntityID:         params.EntityID,
+			Title:            params.Title,
+			ActorName:        params.ActorName,
+		})
 	}
 
 	return nil
@@ -186,6 +206,7 @@ func (s *Service) CreateForComment(
 		err = s.Create(ctx, CreateParams{
 			UserID:           userID,
 			ActorID:          actorID,
+			ActorName:        actorName,
 			NotificationType: models.NotificationTypeMention,
 			EntityType:       entityType,
 			EntityID:         entityID,
@@ -210,6 +231,7 @@ func (s *Service) CreateForComment(
 		_ = s.Create(ctx, CreateParams{
 			UserID:           ownerID,
 			ActorID:          actorID,
+			ActorName:        actorName,
 			NotificationType: models.NotificationTypeCommentOnOwned,
 			EntityType:       entityType,
 			EntityID:         entityID,
@@ -226,6 +248,7 @@ func (s *Service) CreateForComment(
 		_ = s.Create(ctx, CreateParams{
 			UserID:           *assigneeID,
 			ActorID:          actorID,
+			ActorName:        actorName,
 			NotificationType: models.NotificationTypeCommentOnAssigned,
 			EntityType:       entityType,
 			EntityID:         entityID,
@@ -257,6 +280,7 @@ func (s *Service) CreateForAssignment(
 	return s.Create(ctx, CreateParams{
 		UserID:           newAssigneeID,
 		ActorID:          actorID,
+		ActorName:        actorName,
 		NotificationType: models.NotificationTypeAssigned,
 		EntityType:       "issue",
 		EntityID:         issueID,
@@ -288,6 +312,7 @@ func (s *Service) CreateForEntityUpdate(
 		_ = s.Create(ctx, CreateParams{
 			UserID:           reporterID,
 			ActorID:          actorID,
+			ActorName:        actorName,
 			NotificationType: models.NotificationTypeEntityUpdated,
 			EntityType:       entityType,
 			EntityID:         entityID,
@@ -302,6 +327,7 @@ func (s *Service) CreateForEntityUpdate(
 		_ = s.Create(ctx, CreateParams{
 			UserID:           *assigneeID,
 			ActorID:          actorID,
+			ActorName:        actorName,
 			NotificationType: models.NotificationTypeEntityUpdated,
 			EntityType:       entityType,
 			EntityID:         entityID,
@@ -336,6 +362,7 @@ func (s *Service) CreateForEntityDeleted(
 		_ = s.Create(ctx, CreateParams{
 			UserID:           reporterID,
 			ActorID:          actorID,
+			ActorName:        actorName,
 			NotificationType: models.NotificationTypeEntityDeleted,
 			EntityType:       entityType,
 			EntityID:         entityID,
@@ -350,6 +377,7 @@ func (s *Service) CreateForEntityDeleted(
 		_ = s.Create(ctx, CreateParams{
 			UserID:           *assigneeID,
 			ActorID:          actorID,
+			ActorName:        actorName,
 			NotificationType: models.NotificationTypeEntityDeleted,
 			EntityType:       entityType,
 			EntityID:         entityID,
@@ -403,6 +431,7 @@ func (s *Service) CreateForContentMentions(
 		err = s.Create(ctx, CreateParams{
 			UserID:           userID,
 			ActorID:          actorID,
+			ActorName:        actorName,
 			NotificationType: models.NotificationTypeMention,
 			EntityType:       entityType,
 			EntityID:         entityID,

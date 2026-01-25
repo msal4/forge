@@ -15,6 +15,7 @@ import (
 
 	db "sarray-forge/internal/db/sqlc"
 	"sarray-forge/internal/i18n"
+	"sarray-forge/internal/notifications"
 )
 
 const (
@@ -178,7 +179,7 @@ func (s *Service) HandleStartCommand(ctx context.Context, chatID int64, token st
 
 // SendNotification sends a notification to a user via Telegram
 // Does nothing if user hasn't linked their Telegram
-func (s *Service) SendNotification(ctx context.Context, userID int64, notificationID int64, entityType string, entityID int64, title, message string) {
+func (s *Service) SendNotification(ctx context.Context, params notifications.TelegramNotificationParams) {
 	if !s.IsConfigured() {
 		log.Printf("[Telegram] Service not configured, skipping notification")
 		return
@@ -187,40 +188,43 @@ func (s *Service) SendNotification(ctx context.Context, userID int64, notificati
 	queries := db.New(s.database)
 
 	// Get user's Telegram chat ID
-	chatID, err := queries.GetUserTelegramChatID(ctx, userID)
+	chatID, err := queries.GetUserTelegramChatID(ctx, params.UserID)
 	if err != nil {
-		log.Printf("[Telegram] Failed to get chat ID for user %d: %v", userID, err)
+		log.Printf("[Telegram] Failed to get chat ID for user %d: %v", params.UserID, err)
 		return
 	}
 	if !chatID.Valid || chatID.String == "" {
-		log.Printf("[Telegram] User %d has no linked Telegram", userID)
+		log.Printf("[Telegram] User %d has no linked Telegram", params.UserID)
 		return
 	}
 
 	// Get user's language preference
 	lang := "en" // default
-	if userLang, err := queries.GetUserLanguage(ctx, userID); err == nil && userLang != "" {
+	if userLang, err := queries.GetUserLanguage(ctx, params.UserID); err == nil && userLang != "" {
 		lang = userLang
 	}
+
+	// Build localized notification message
+	message := i18n.GetNotificationMessage(lang, params.NotificationType, params.ActorName, params.EntityType)
 
 	// Get localized "Open" link text
 	openLinkText := i18n.GetTelegramString(lang, "open_link")
 
 	// Format the notification message with link
 	var text string
-	if s.baseURL != "" && entityType != "" && entityID > 0 {
+	if s.baseURL != "" && params.EntityType != "" && params.EntityID > 0 {
 		// Build entity URL based on type, include notification ID to mark as read
-		entityURL := s.buildEntityURL(entityType, entityID, notificationID)
-		text = fmt.Sprintf("*%s*\n%s\n\n[%s](%s)", escapeMarkdown(title), escapeMarkdown(message), openLinkText, entityURL)
+		entityURL := s.buildEntityURL(params.EntityType, params.EntityID, params.NotificationID)
+		text = fmt.Sprintf("*%s*\n%s\n\n[%s](%s)", escapeMarkdown(params.Title), escapeMarkdown(message), openLinkText, entityURL)
 	} else {
-		text = fmt.Sprintf("*%s*\n%s", escapeMarkdown(title), escapeMarkdown(message))
+		text = fmt.Sprintf("*%s*\n%s", escapeMarkdown(params.Title), escapeMarkdown(message))
 	}
 
-	log.Printf("[Telegram] Sending notification to user %d (chat %s, lang %s)", userID, chatID.String, lang)
+	log.Printf("[Telegram] Sending notification to user %d (chat %s, lang %s)", params.UserID, chatID.String, lang)
 	if err := s.SendMessage(chatID.String, text); err != nil {
-		log.Printf("[Telegram] Failed to send notification to user %d: %v", userID, err)
+		log.Printf("[Telegram] Failed to send notification to user %d: %v", params.UserID, err)
 	} else {
-		log.Printf("[Telegram] Successfully sent notification to user %d", userID)
+		log.Printf("[Telegram] Successfully sent notification to user %d", params.UserID)
 	}
 }
 

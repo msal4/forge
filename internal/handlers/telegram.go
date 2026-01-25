@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -156,14 +155,6 @@ func (h *Handlers) broadcastTelegramLinked(userID int64) {
 // formatChatID converts int64 chat ID to string
 func formatChatID(chatID int64) string {
 	return fmt.Sprintf("%d", chatID)
-}
-
-// SendTelegramNotification sends a notification to a user via Telegram
-// This is a convenience method to be called from the notification service
-func (h *Handlers) SendTelegramNotification(ctx context.Context, userID int64, notificationID int64, entityType string, entityID int64, title, message string) {
-	if h.telegram != nil {
-		h.telegram.SendNotification(ctx, userID, notificationID, entityType, entityID, title, message)
-	}
 }
 
 func max(a, b int) int {
