@@ -3,6 +3,10 @@
 // ============================================
 
 import { api, type RequestOptions } from './client';
+import type { Issue } from './issues';
+import type { Doc } from './docs';
+import type { Release } from './releases';
+import type { ActivityLog } from './activity';
 
 export interface User {
   id: number;
@@ -11,6 +15,28 @@ export interface User {
   fullName: string;
   avatarUrl?: string;
   language: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserProfileStats {
+  issuesAssigned: number;
+  issuesReported: number;
+  docsAuthored: number;
+  releases: number;
+  comments: number;
+}
+
+export interface UserProfile extends User {
+  stats: UserProfileStats;
+}
+
+export interface UserComment {
+  id: number;
+  content: string;
+  entityType: 'issue' | 'doc' | 'release';
+  entityId: number;
+  entityTitle: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -59,4 +85,72 @@ export const usersApi = {
   // Update user language preference
   updateLanguage: (language: string, options?: RequestOptions) =>
     api.put<{ language: string }>('/users/me/language', { language }, options),
+
+  // ============================================
+  // Profile Management
+  // ============================================
+
+  // Update profile (full name)
+  updateProfile: (fullName: string, options?: RequestOptions) =>
+    api.put<User>('/users/me/profile', { fullName }, options),
+
+  // Upload avatar
+  uploadAvatar: async (file: File, options?: RequestOptions): Promise<User> => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    
+    const response = await fetch('/api/users/me/avatar', {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+      signal: options?.signal,
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to upload avatar');
+    }
+    
+    return response.json();
+  },
+
+  // Delete avatar
+  deleteAvatar: (options?: RequestOptions) =>
+    api.delete<User>('/users/me/avatar', options),
+
+  // ============================================
+  // User Profile View (username-based endpoints)
+  // ============================================
+
+  // Get user profile with stats by username
+  getProfile: (username: string, options?: RequestOptions) =>
+    api.get<UserProfile>(`/profile/${username}`, options),
+
+  // Get user's issues by username
+  getUserIssues: (username: string, role?: 'assigned' | 'reported', options?: RequestOptions) =>
+    api.get<Issue[]>(`/profile/${username}/issues${role ? `?role=${role}` : ''}`, options),
+
+  // Get user's docs by username
+  getUserDocs: (username: string, options?: RequestOptions) =>
+    api.get<Doc[]>(`/profile/${username}/docs`, options),
+
+  // Get user's releases by username
+  getUserReleases: (username: string, options?: RequestOptions) =>
+    api.get<Release[]>(`/profile/${username}/releases`, options),
+
+  // Get user's comments by username
+  getUserComments: (username: string, options?: RequestOptions) =>
+    api.get<UserComment[]>(`/profile/${username}/comments`, options),
+
+  // Get user's activity by username
+  getUserActivity: (username: string, params?: { limit?: number; offset?: number }, options?: RequestOptions) => {
+    const searchParams = new URLSearchParams();
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.offset) searchParams.set('offset', params.offset.toString());
+    const queryString = searchParams.toString();
+    return api.get<{ activities: ActivityLog[]; hasMore: boolean }>(
+      `/profile/${username}/activity${queryString ? `?${queryString}` : ''}`,
+      options
+    );
+  },
 };

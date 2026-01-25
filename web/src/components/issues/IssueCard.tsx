@@ -215,6 +215,8 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
               <div className="flex items-center gap-1.5">
                 <Avatar 
                   name={issue.assignee.fullName || issue.assignee.username}
+                  avatarUrl={issue.assignee.avatarUrl}
+                  username={issue.assignee.username}
                   size="xs"
                   className="ring-1 ring-parchment-300"
                 />

@@ -130,6 +130,12 @@ func main() {
 	mux.Handle("POST /api/users/me/telegram/link", requireAuth(http.HandlerFunc(h.GenerateTelegramLink)))
 	mux.Handle("DELETE /api/users/me/telegram", requireAuth(http.HandlerFunc(h.UnlinkTelegram)))
 
+	// Debug routes (hidden, access via /debug URL only)
+	mux.Handle("GET /api/debug/status", requireAuth(http.HandlerFunc(h.GetDebugStatus)))
+	mux.Handle("GET /api/debug/tables", requireAuth(http.HandlerFunc(h.ListTables)))
+	mux.Handle("GET /api/debug/tables/{name}", requireAuth(http.HandlerFunc(h.GetTableData)))
+	mux.Handle("POST /api/debug/query", requireAuth(http.HandlerFunc(h.ExecuteQuery)))
+
 	// ============================================
 	// Static File Serving (React SPA)
 	// ============================================

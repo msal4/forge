@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
   Home, 
@@ -93,11 +93,15 @@ export function Layout() {
             
             {/* Current User */}
             {user && (
-              <div className="flex items-center gap-3 px-3 py-2">
+              <Link 
+                to={`/profile/${user.username}`}
+                className="flex items-center gap-3 px-3 py-2 rounded-tablet hover:bg-parchment-200 transition-colors"
+              >
                 <Avatar 
                   name={user.fullName || user.username}
                   avatarUrl={user.avatarUrl}
                   size="md"
+                  showHoverEffect={false}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-lapis-600 truncate">
@@ -107,7 +111,7 @@ export function Layout() {
                     {user.email}
                   </div>
                 </div>
-              </div>
+              </Link>
             )}
             
             {/* Logout Button */}

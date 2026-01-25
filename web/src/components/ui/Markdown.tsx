@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import mermaid from 'mermaid';
+import { useNavigate } from 'react-router-dom';
 
 // Initialize mermaid with theme settings
 mermaid.initialize({
@@ -68,13 +69,27 @@ function MermaidDiagram({ chart }: { chart: string }) {
   );
 }
 
-// Preprocess markdown to convert @mentions to styled HTML spans
-function preprocessMentions(text: string): string {
+// User type for mention linking
+interface MentionUser {
+  id: number;
+  username: string;
+}
+
+// Preprocess markdown to convert @mentions to clickable links
+function preprocessMentions(text: string, users?: MentionUser[]): string {
   // Match @username but not inside code blocks or inline code
   // This regex avoids matching inside backticks
   return text.replace(
     /(?<!`)@([a-zA-Z0-9_]+)(?!`)/g,
-    '<span class="mention">@$1</span>'
+    (_match, mentionedUsername) => {
+      // Try to find the user to verify they exist
+      const user = users?.find(u => u.username.toLowerCase() === mentionedUsername.toLowerCase());
+      if (user) {
+        return `<a href="/profile/${user.username}" class="mention" data-mention="${mentionedUsername}">@${mentionedUsername}</a>`;
+      }
+      // If user not found, just render as styled span
+      return `<span class="mention">@${mentionedUsername}</span>`;
+    }
   );
 }
 
@@ -101,14 +116,36 @@ function CodeBlock({ className, children, ...props }: React.HTMLAttributes<HTMLE
 interface MarkdownProps {
   children: string;
   className?: string;
+  /** Optional list of users for linking @mentions to profiles */
+  users?: MentionUser[];
 }
 
-export function Markdown({ children, className = '' }: MarkdownProps) {
-  // Preprocess to convert @mentions to styled spans
-  const processedContent = preprocessMentions(children);
+export function Markdown({ children, className = '', users }: MarkdownProps) {
+  const navigate = useNavigate();
+  
+  // Preprocess to convert @mentions to clickable links
+  const processedContent = preprocessMentions(children, users);
+
+  // Intercept clicks on internal links (mentions) to use React Router navigation
+  const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const anchor = target.closest('a');
+    
+    if (anchor) {
+      const href = anchor.getAttribute('href');
+      // Check if it's an internal link (starts with /)
+      if (href?.startsWith('/')) {
+        e.preventDefault();
+        navigate(href);
+      }
+    }
+  }, [navigate]);
   
   return (
-    <div className={`prose prose-lapis max-w-none ${className}`}>
+    <div 
+      className={`prose prose-lapis max-w-none ${className}`}
+      onClick={handleClick}
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw]}

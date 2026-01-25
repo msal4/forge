@@ -31,8 +31,9 @@ export interface ChangeValue {
 export interface ActivityLog {
   id: number;
   action: string;
-  entityType: 'issue' | 'doc';
+  entityType: 'issue' | 'doc' | 'release';
   entityId: number;
+  entityTitle?: string;
   user?: ActivityUser;
   changes?: Record<string, ChangeValue>;
   createdAt: string;

@@ -19,6 +19,8 @@ export default {
 		no: 'لا',
 		retry: 'إعادة المحاولة',
 		dismiss: 'إخفاء',
+		goBack: 'رجوع',
+		loadMore: 'تحميل المزيد',
 	},
 
 	// App
@@ -45,7 +47,18 @@ export default {
 	// Home Page
 	home: {
 		welcome: 'مرحباً بعودتك، {{name}}',
-		tagline: 'حيث تلتقي الحكمة القديمة بالتطوير الحديث.',
+		wisdoms: [
+			'حيث تلتقي الحكمة القديمة بالتطوير الحديث.',
+			'القصبة التي تنحني في العاصفة لا تنكسر.',
+			'رحلة الألف لوح تبدأ بنقش واحد.',
+			'الكاتب الحكيم يقيس مرتين، وينحت مرة.',
+			'حتى أعظم الزقورات بُنيت لبنة لبنة.',
+			'المعرفة المُشاركة معرفة مُضاعفة.',
+			'الطين يتذكر ما تنسى اليد.',
+			'الصبر يحوّل الطين الخام إلى صروح خالدة.',
+			'في مكتبة آشور بانيبال، كل المعرفة تجد موطنها.',
+			'النجوم هدت القدماء؛ فليهدِ الهدف عملك.',
+		],
 		toInscribe: 'للنقش',
 		carving: 'قيد النحت',
 		baked: 'مكتمل',
@@ -85,6 +98,11 @@ export default {
 		completionStatusFiltered: '{{completed}} من {{filtered}} نقش مفلتر مكتمل',
 		newInscription: 'نقش جديد',
 		unearthing: 'استخراج الألواح...',
+		status: {
+			to_inscribe: 'للنقش',
+			carving: 'قيد النحت',
+			baked: 'مكتمل',
+		},
 		columns: {
 			toInscribe: {
 				title: 'للنقش',
@@ -263,6 +281,21 @@ export default {
 	settings: {
 		title: 'الإعدادات',
 		tagline: 'تكوين ورشتك',
+		// Profile
+		profile: 'الملف الشخصي',
+		profileDescription: 'إدارة معلوماتك الشخصية والصورة الرمزية',
+		displayName: 'الاسم المعروض',
+		email: 'البريد الإلكتروني',
+		username: 'اسم المستخدم',
+		removePhoto: 'إزالة الصورة',
+		profileUpdated: 'تم تحديث الملف الشخصي بنجاح',
+		profileUpdateFailed: 'فشل تحديث الملف الشخصي',
+		nameRequired: 'الاسم مطلوب',
+		invalidImageType: 'يُسمح فقط بصور JPEG و PNG و WebP',
+		imageTooLarge: 'يجب أن يكون حجم الصورة أقل من 2 ميجابايت',
+		avatarUploadFailed: 'فشل رفع الصورة الرمزية',
+		avatarDeleteFailed: 'فشل إزالة الصورة الرمزية',
+		// Language
 		language: 'اللغة',
 		languageDescription: 'اختر لغتك المفضلة',
 		english: 'الإنجليزية',
@@ -292,6 +325,34 @@ export default {
 		unlinkTelegram: 'إلغاء ربط تيليجرام',
 		telegramLinkFailed: 'فشل إنشاء رابط تيليجرام. يرجى المحاولة مرة أخرى.',
 		telegramUnlinkFailed: 'فشل إلغاء ربط تيليجرام. يرجى المحاولة مرة أخرى.',
+	},
+
+	// Profile Page
+	profile: {
+		invalidUser: 'معرّف مستخدم غير صالح',
+		notFound: 'المستخدم غير موجود',
+		memberSince: 'عضو منذ {{date}}',
+		editProfile: 'تعديل الملف الشخصي',
+		// Stats
+		assigned: 'مُسندة',
+		reported: 'مُبلَّغة',
+		docsCount: 'وثائق',
+		releasesCount: 'إصدارات',
+		commentsCount: 'تعليقات',
+		// Tabs
+		issues: 'المهام',
+		docs: 'الوثائق',
+		releases: 'الإصدارات',
+		comments: 'التعليقات',
+		activity: 'النشاط',
+		// Tab content
+		assignedIssues: 'المهام المُسندة',
+		reportedIssues: 'المهام المُبلَّغة',
+		noIssues: 'لا توجد مهام بعد',
+		noDocs: 'لا توجد وثائق بعد',
+		noReleases: 'لا توجد إصدارات بعد',
+		noComments: 'لا توجد تعليقات بعد',
+		noActivity: 'لا يوجد نشاط بعد',
 	},
 
 	// Login Page
@@ -408,6 +469,26 @@ export default {
 			comment_on_assigned: '{{actor}} علّق',
 			entity_updated: '{{actor}} حدّث {{entityType}} الخاص بك',
 			entity_deleted: '{{actor}} حذف {{entityType}}',
+		},
+	},
+
+	// Activity (for profile page)
+	activity: {
+		issue: {
+			created: 'أنشأ مهمة',
+			updated: 'حدّث مهمة',
+			deleted: 'حذف مهمة',
+			status_changed: 'غيّر حالة المهمة',
+		},
+		doc: {
+			created: 'أنشأ وثيقة',
+			updated: 'حدّث وثيقة',
+			deleted: 'حذف وثيقة',
+		},
+		release: {
+			created: 'أنشأ إصدار',
+			updated: 'حدّث إصدار',
+			deleted: 'حذف إصدار',
 		},
 	},
 

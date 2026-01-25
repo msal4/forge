@@ -23,6 +23,7 @@ import { DocsPage } from './pages/DocsPage';
 import { ReleasesPage } from './pages/ReleasesPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { DebugPage } from './pages/DebugPage';
 
 // ============================================
 // Sarray Forge - Main Application
@@ -101,6 +102,7 @@ function AppRoutes() {
         <Route path="/releases/:releaseId" element={<ReleasesPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/profile/:username" element={<ProfilePage />} />
+        <Route path="/debug" element={<DebugPage />} />
       </Route>
       
       {/* Fallback */}

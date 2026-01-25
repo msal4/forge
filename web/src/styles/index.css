@@ -294,7 +294,11 @@
 
 /* @mention styling */
 .mention {
-  @apply text-lapis-500 font-semibold;
+  @apply text-lapis-500 font-semibold no-underline;
+}
+
+a.mention {
+  @apply hover:text-lapis-700 hover:underline cursor-pointer transition-colors;
 }
 
 /* ============================================

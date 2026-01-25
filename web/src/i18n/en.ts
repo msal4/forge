@@ -19,6 +19,8 @@ export default {
 		no: 'No',
 		retry: 'Retry',
 		dismiss: 'Dismiss',
+		goBack: 'Go back',
+		loadMore: 'Load more',
 	},
 
 	// App
@@ -45,7 +47,18 @@ export default {
 	// Home Page
 	home: {
 		welcome: 'Welcome back, {{name}}',
-		tagline: 'Where ancient wisdom meets modern development.',
+		wisdoms: [
+			'Where ancient wisdom meets modern development.',
+			'The reed that bends in the storm does not break.',
+			'A journey of a thousand tablets begins with a single inscription.',
+			'The wise scribe measures twice, carves once.',
+			'Even the mightiest ziggurat was built one brick at a time.',
+			'Knowledge shared is knowledge multiplied.',
+			'The clay remembers what the hand forgets.',
+			'Patience turns raw clay into lasting monuments.',
+			'In the library of Ashurbanipal, all knowledge finds its home.',
+			'The stars guided the ancients; let purpose guide your work.',
+		],
 		toInscribe: 'To Inscribe',
 		carving: 'Carving',
 		baked: 'Baked',
@@ -85,6 +98,11 @@ export default {
 		completionStatusFiltered: '{{completed}} of {{filtered}} filtered inscriptions complete',
 		newInscription: 'New Inscription',
 		unearthing: 'Unearthing the tablets...',
+		status: {
+			to_inscribe: 'To Inscribe',
+			carving: 'Carving',
+			baked: 'Baked',
+		},
 		columns: {
 			toInscribe: {
 				title: 'To Inscribe',
@@ -263,6 +281,21 @@ export default {
 	settings: {
 		title: 'Settings',
 		tagline: 'Configure your workshop',
+		// Profile
+		profile: 'Profile',
+		profileDescription: 'Manage your personal information and avatar',
+		displayName: 'Display Name',
+		email: 'Email',
+		username: 'Username',
+		removePhoto: 'Remove photo',
+		profileUpdated: 'Profile updated successfully',
+		profileUpdateFailed: 'Failed to update profile',
+		nameRequired: 'Name is required',
+		invalidImageType: 'Only JPEG, PNG, and WebP images are allowed',
+		imageTooLarge: 'Image must be less than 2MB',
+		avatarUploadFailed: 'Failed to upload avatar',
+		avatarDeleteFailed: 'Failed to remove avatar',
+		// Language
 		language: 'Language',
 		languageDescription: 'Choose your preferred language',
 		english: 'English',
@@ -292,6 +325,34 @@ export default {
 		unlinkTelegram: 'Unlink Telegram',
 		telegramLinkFailed: 'Failed to generate Telegram link. Please try again.',
 		telegramUnlinkFailed: 'Failed to unlink Telegram. Please try again.',
+	},
+
+	// Profile Page
+	profile: {
+		invalidUser: 'Invalid user ID',
+		notFound: 'User not found',
+		memberSince: 'Member since {{date}}',
+		editProfile: 'Edit Profile',
+		// Stats
+		assigned: 'Assigned',
+		reported: 'Reported',
+		docsCount: 'Docs',
+		releasesCount: 'Releases',
+		commentsCount: 'Comments',
+		// Tabs
+		issues: 'Issues',
+		docs: 'Docs',
+		releases: 'Releases',
+		comments: 'Comments',
+		activity: 'Activity',
+		// Tab content
+		assignedIssues: 'Assigned Issues',
+		reportedIssues: 'Reported Issues',
+		noIssues: 'No issues yet',
+		noDocs: 'No documents authored yet',
+		noReleases: 'No releases yet',
+		noComments: 'No comments yet',
+		noActivity: 'No activity yet',
 	},
 
 	// Login Page
@@ -408,6 +469,26 @@ export default {
 			comment_on_assigned: '{{actor}} commented',
 			entity_updated: '{{actor}} updated your {{entityType}}',
 			entity_deleted: '{{actor}} deleted {{entityType}}',
+		},
+	},
+
+	// Activity (for profile page)
+	activity: {
+		issue: {
+			created: 'Created issue',
+			updated: 'Updated issue',
+			deleted: 'Deleted issue',
+			status_changed: 'Changed issue status',
+		},
+		doc: {
+			created: 'Created document',
+			updated: 'Updated document',
+			deleted: 'Deleted document',
+		},
+		release: {
+			created: 'Created release',
+			updated: 'Updated release',
+			deleted: 'Deleted release',
 		},
 	},
 

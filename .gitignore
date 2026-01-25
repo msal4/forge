@@ -41,3 +41,4 @@ data/
 
 # TLS certificates
 certs/
+server

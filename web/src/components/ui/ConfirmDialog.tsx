@@ -32,8 +32,21 @@ export function ConfirmDialog({
   const { t } = useTranslation();
 
   // Handle keyboard shortcuts (Escape to cancel, Enter to confirm)
+  // Use a small delay before enabling to prevent the event that opened this dialog from also closing it
+  const [isReady, setIsReady] = React.useState(false);
+  
   React.useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setIsReady(false);
+      return;
+    }
+    // Small delay to prevent immediate closure from the same event
+    const timer = setTimeout(() => setIsReady(true), 50);
+    return () => clearTimeout(timer);
+  }, [isOpen]);
+
+  React.useEffect(() => {
+    if (!isOpen || !isReady) return;
     
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -47,9 +60,10 @@ export function ConfirmDialog({
       }
     };
 
+    // Add at capture phase with highest priority
     window.addEventListener('keydown', handleKeyDown, true);
     return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [isOpen, onCancel, onConfirm]);
+  }, [isOpen, isReady, onCancel, onConfirm]);
 
   if (!isOpen) return null;
 
@@ -71,7 +85,11 @@ export function ConfirmDialog({
   const styles = variantStyles[variant];
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+    <div 
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-lapis-900/60 backdrop-blur-sm animate-fade-in"
@@ -79,6 +97,7 @@ export function ConfirmDialog({
           e.stopPropagation();
           onCancel();
         }}
+        onMouseDown={(e) => e.stopPropagation()}
       />
 
       {/* Dialog */}

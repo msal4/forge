@@ -41,11 +41,13 @@ export interface Issue {
     id: number;
     username: string;
     fullName: string;
+    avatarUrl?: string;
   };
   reporter?: {
     id: number;
     username: string;
     fullName: string;
+    avatarUrl?: string;
   };
 }
 

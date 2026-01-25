@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useKeyboardShortcuts, useCommandPalette, formatShortcut, KeyBinding } from '../hooks/useKeyboard';
+import { useAuth } from './AuthContext';
 
 // ============================================
 // Keyboard Context - Global keyboard management
@@ -35,6 +36,7 @@ interface KeyboardProviderProps {
 
 export function KeyboardProvider({ children }: KeyboardProviderProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   
   const openCommandPalette = useCallback(() => setIsCommandPaletteOpen(true), []);
@@ -74,6 +76,16 @@ export function KeyboardProvider({ children }: KeyboardProviderProps) {
       keys: 'g+s',
       description: 'Go to Settings',
       handler: () => navigate('/settings'),
+      category: 'navigation',
+    },
+    {
+      keys: 'g+p',
+      description: 'Go to My Profile',
+      handler: () => {
+        if (user?.username) {
+          navigate(`/profile/${user.username}`);
+        }
+      },
       category: 'navigation',
     },
     
@@ -119,7 +131,7 @@ export function KeyboardProvider({ children }: KeyboardProviderProps) {
       global: true,
       category: 'general',
     },
-  ], [navigate, openCommandPalette]);
+  ], [navigate, openCommandPalette, user?.username]);
   
   // Register all shortcuts
   useKeyboardShortcuts(shortcuts);

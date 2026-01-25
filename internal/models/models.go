@@ -226,13 +226,14 @@ type ErrorResponse struct {
 
 // ActivityLog represents a modification history entry
 type ActivityLog struct {
-	ID         int64                  `json:"id"`
-	Action     string                 `json:"action"`
-	EntityType string                 `json:"entityType"`
-	EntityID   int64                  `json:"entityId"`
-	User       *User                  `json:"user,omitempty"`
-	Changes    map[string]interface{} `json:"changes,omitempty"`
-	CreatedAt  time.Time              `json:"createdAt"`
+	ID          int64                  `json:"id"`
+	Action      string                 `json:"action"`
+	EntityType  string                 `json:"entityType"`
+	EntityID    int64                  `json:"entityId"`
+	EntityTitle string                 `json:"entityTitle,omitempty"`
+	User        *User                  `json:"user,omitempty"`
+	Changes     map[string]interface{} `json:"changes,omitempty"`
+	CreatedAt   time.Time              `json:"createdAt"`
 }
 
 // ActivityLogResponse is the response for activity log endpoints
