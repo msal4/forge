@@ -145,14 +145,23 @@ type Session struct {
 	CreatedAt time.Time      `json:"createdAt"`
 }
 
+type TelegramLinkToken struct {
+	ID        int64     `json:"id"`
+	UserID    int64     `json:"userId"`
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expiresAt"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
 type User struct {
-	ID           int64          `json:"id"`
-	Username     string         `json:"username"`
-	Email        string         `json:"email"`
-	PasswordHash string         `json:"passwordHash"`
-	FullName     string         `json:"fullName"`
-	AvatarUrl    sql.NullString `json:"avatarUrl"`
-	IsActive     bool           `json:"isActive"`
-	CreatedAt    time.Time      `json:"createdAt"`
-	UpdatedAt    time.Time      `json:"updatedAt"`
+	ID             int64          `json:"id"`
+	Username       string         `json:"username"`
+	Email          string         `json:"email"`
+	PasswordHash   string         `json:"passwordHash"`
+	FullName       string         `json:"fullName"`
+	AvatarUrl      sql.NullString `json:"avatarUrl"`
+	IsActive       bool           `json:"isActive"`
+	CreatedAt      time.Time      `json:"createdAt"`
+	UpdatedAt      time.Time      `json:"updatedAt"`
+	TelegramChatID sql.NullString `json:"telegramChatId"`
 }

@@ -6,31 +6,20 @@ import (
 	"os"
 
 	"sarray-forge/internal/auth"
+	"sarray-forge/internal/config"
 	"sarray-forge/internal/db"
 	"sarray-forge/internal/handlers"
 	"sarray-forge/internal/middleware"
+	"sarray-forge/internal/telegram"
 	"sarray-forge/internal/websocket"
 )
 
 func main() {
-	// Initialize configuration
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	// Load configuration
+	cfg := config.Load()
 
 	// Initialize database with migrations
-	migrationsDir := os.Getenv("MIGRATIONS_DIR")
-	if migrationsDir == "" {
-		migrationsDir = "./migrations"
-	}
-
-	databasePath := os.Getenv("DATABASE_PATH")
-	if databasePath == "" {
-		databasePath = "./data/sarray-forge.db"
-	}
-
-	database, err := db.OpenAndMigrate(databasePath, migrationsDir)
+	database, err := db.OpenAndMigrate(cfg.DatabasePath, cfg.MigrationsDir)
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
@@ -40,8 +29,24 @@ func main() {
 	hub := websocket.NewHub()
 	go hub.Run()
 
+	// Initialize Telegram service (optional)
+	var tg *telegram.Service
+	if cfg.TelegramEnabled() {
+		tg = telegram.NewService(cfg.TelegramBotToken, cfg.TelegramBotUsername, database.DB)
+		log.Printf("Telegram notifications enabled (bot: @%s)", cfg.TelegramBotUsername)
+	} else {
+		log.Printf("Telegram notifications disabled (TELEGRAM_BOT_TOKEN or TELEGRAM_BOT_USERNAME not set)")
+	}
+
 	// Create handler dependencies
 	h := handlers.New(database, hub)
+	h.SetTelegram(tg)
+
+	// Connect telegram to notification service
+	if tg != nil {
+		h.Notification.SetTelegram(tg)
+	}
+
 	authHandler := auth.NewHandler(database)
 
 	// Create the main router using Go 1.22 http.NewServeMux
@@ -115,16 +120,17 @@ func main() {
 	mux.Handle("POST /api/notifications/{id}/read", requireAuth(http.HandlerFunc(h.MarkNotificationRead)))
 	mux.Handle("POST /api/notifications/read-all", requireAuth(http.HandlerFunc(h.MarkAllNotificationsRead)))
 
+	// Telegram routes
+	mux.HandleFunc("POST /api/telegram/webhook", h.TelegramWebhook) // Public - called by Telegram
+	mux.Handle("GET /api/users/me/telegram", requireAuth(http.HandlerFunc(h.GetTelegramStatus)))
+	mux.Handle("POST /api/users/me/telegram/link", requireAuth(http.HandlerFunc(h.GenerateTelegramLink)))
+	mux.Handle("DELETE /api/users/me/telegram", requireAuth(http.HandlerFunc(h.UnlinkTelegram)))
+
 	// ============================================
 	// Static File Serving (React SPA)
 	// ============================================
-	staticDir := os.Getenv("STATIC_DIR")
-	if staticDir == "" {
-		staticDir = "./web/dist"
-	}
-
 	// Check if static directory exists
-	if _, err := os.Stat(staticDir); os.IsNotExist(err) {
+	if _, err := os.Stat(cfg.StaticDir); os.IsNotExist(err) {
 		// Serve a placeholder during development
 		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/html")
@@ -140,7 +146,7 @@ func main() {
 		})
 	} else {
 		// Serve static files with SPA routing
-		mux.Handle("/", middleware.SPAHandler(staticDir))
+		mux.Handle("/", middleware.SPAHandler(cfg.StaticDir))
 	}
 
 	// ============================================
@@ -157,27 +163,17 @@ func main() {
 	)
 
 	// Start server with TLS
-	certFile := os.Getenv("TLS_CERT")
-	keyFile := os.Getenv("TLS_KEY")
-
-	if certFile == "" {
-		certFile = "./certs/cert.pem"
-	}
-	if keyFile == "" {
-		keyFile = "./certs/key.pem"
-	}
-
 	// Check if TLS certs exist
-	if _, err := os.Stat(certFile); err == nil {
-		log.Printf("Sarray Forge starting on https://localhost:%s", port)
+	if _, err := os.Stat(cfg.TLSCert); err == nil {
+		log.Printf("Sarray Forge starting on https://localhost:%s", cfg.Port)
 		log.Printf("The ancient tablets await your commands...")
-		if err := http.ListenAndServeTLS(":"+port, certFile, keyFile, handler); err != nil {
+		if err := http.ListenAndServeTLS(":"+cfg.Port, cfg.TLSCert, cfg.TLSKey, handler); err != nil {
 			log.Fatalf("Server failed: %v", err)
 		}
 	} else {
-		log.Printf("Sarray Forge starting on http://localhost:%s (no TLS certs found)", port)
+		log.Printf("Sarray Forge starting on http://localhost:%s (no TLS certs found)", cfg.Port)
 		log.Printf("The ancient tablets await your commands...")
-		if err := http.ListenAndServe(":"+port, handler); err != nil {
+		if err := http.ListenAndServe(":"+cfg.Port, handler); err != nil {
 			log.Fatalf("Server failed: %v", err)
 		}
 	}

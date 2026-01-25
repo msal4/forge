@@ -35,10 +35,17 @@ func ExtractMentions(content string) []string {
 	return usernames
 }
 
+// TelegramSender defines the interface for sending Telegram notifications
+type TelegramSender interface {
+	SendNotification(ctx context.Context, userID int64, title, message string)
+	IsConfigured() bool
+}
+
 // Service handles notification creation
 type Service struct {
-	db  *sql.DB
-	hub *websocket.Hub
+	db       *sql.DB
+	hub      *websocket.Hub
+	telegram TelegramSender
 }
 
 // NewService creates a new notification service
@@ -47,6 +54,11 @@ func NewService(database *sql.DB, hub *websocket.Hub) *Service {
 		db:  database,
 		hub: hub,
 	}
+}
+
+// SetTelegram sets the Telegram service for sending notifications
+func (s *Service) SetTelegram(tg TelegramSender) {
+	s.telegram = tg
 }
 
 // CreateParams holds the parameters for creating a notification
@@ -97,6 +109,12 @@ func (s *Service) Create(ctx context.Context, params CreateParams) error {
 		ID:       notification.ID,
 		UserID:   params.ActorID,
 	})
+
+	// Send Telegram notification (async, don't block)
+	// Use background context since the request context may be cancelled
+	if s.telegram != nil && s.telegram.IsConfigured() {
+		go s.telegram.SendNotification(context.Background(), params.UserID, params.Title, params.Message)
+	}
 
 	return nil
 }

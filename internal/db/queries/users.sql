@@ -51,3 +51,20 @@ DELETE FROM users WHERE id = ?;
 
 -- name: CountUsers :one
 SELECT COUNT(*) FROM users WHERE is_active = 1;
+
+-- ============================================
+-- Telegram Integration
+-- ============================================
+
+-- name: GetUserTelegramChatID :one
+SELECT telegram_chat_id FROM users WHERE id = ?;
+
+-- name: SetUserTelegramChatID :exec
+UPDATE users 
+SET telegram_chat_id = ?, updated_at = CURRENT_TIMESTAMP
+WHERE id = ?;
+
+-- name: ClearUserTelegramChatID :exec
+UPDATE users 
+SET telegram_chat_id = NULL, updated_at = CURRENT_TIMESTAMP
+WHERE id = ?;

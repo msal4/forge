@@ -282,6 +282,16 @@ export default {
 		passwordTooShort: 'Password must be at least 4 characters',
 		currentPasswordIncorrect: 'Current password is incorrect',
 		passwordChangeFailed: 'Failed to change password',
+		// Telegram
+		telegram: 'Telegram Notifications',
+		telegramDescription: 'Receive notifications via Telegram messenger',
+		telegramNotConfigured: 'Telegram notifications are not configured on this server.',
+		telegramLinked: 'Telegram linked',
+		telegramInstructions: 'Click the button below to open Telegram and link your account. You will receive all notifications via Telegram.',
+		linkTelegram: 'Link Telegram',
+		unlinkTelegram: 'Unlink Telegram',
+		telegramLinkFailed: 'Failed to generate Telegram link. Please try again.',
+		telegramUnlinkFailed: 'Failed to unlink Telegram. Please try again.',
 	},
 
 	// Login Page

@@ -282,6 +282,16 @@ export default {
 		passwordTooShort: 'يجب أن تتكون كلمة المرور من 4 أحرف على الأقل',
 		currentPasswordIncorrect: 'كلمة المرور الحالية غير صحيحة',
 		passwordChangeFailed: 'فشل تغيير كلمة المرور',
+		// Telegram
+		telegram: 'إشعارات تيليجرام',
+		telegramDescription: 'استلم الإشعارات عبر تيليجرام',
+		telegramNotConfigured: 'إشعارات تيليجرام غير مُعدّة على هذا الخادم.',
+		telegramLinked: 'تيليجرام مرتبط',
+		telegramInstructions: 'انقر على الزر أدناه لفتح تيليجرام وربط حسابك. ستستلم جميع الإشعارات عبر تيليجرام.',
+		linkTelegram: 'ربط تيليجرام',
+		unlinkTelegram: 'إلغاء ربط تيليجرام',
+		telegramLinkFailed: 'فشل إنشاء رابط تيليجرام. يرجى المحاولة مرة أخرى.',
+		telegramUnlinkFailed: 'فشل إلغاء ربط تيليجرام. يرجى المحاولة مرة أخرى.',
 	},
 
 	// Login Page

@@ -10,6 +10,7 @@ import (
 	"sarray-forge/internal/middleware"
 	"sarray-forge/internal/models"
 	"sarray-forge/internal/notifications"
+	"sarray-forge/internal/telegram"
 	"sarray-forge/internal/websocket"
 
 	gorillaws "github.com/gorilla/websocket"
@@ -20,6 +21,7 @@ type Handlers struct {
 	db           *db.DB
 	hub          *websocket.Hub
 	Notification *notifications.Service
+	telegram     *telegram.Service
 }
 
 // New creates a new Handlers instance
@@ -29,6 +31,11 @@ func New(database *db.DB, hub *websocket.Hub) *Handlers {
 		hub:          hub,
 		Notification: notifications.NewService(database.DB, hub),
 	}
+}
+
+// SetTelegram sets the Telegram service (optional, may be nil if not configured)
+func (h *Handlers) SetTelegram(tg *telegram.Service) {
+	h.telegram = tg
 }
 
 // WebSocket upgrader

@@ -32,6 +32,9 @@ const (
 
 	// Notifications
 	EventNotificationCreated = "notification_created"
+
+	// Telegram
+	EventTelegramLinked = "telegram_linked"
 )
 
 // Resource types

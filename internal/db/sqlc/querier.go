@@ -12,6 +12,7 @@ import (
 type Querier interface {
 	ActivateUser(ctx context.Context, id int64) error
 	ArchiveProject(ctx context.Context, id int64) error
+	ClearUserTelegramChatID(ctx context.Context, id int64) error
 	CountActivityByUser(ctx context.Context, userID sql.NullInt64) (int64, error)
 	CountCommentsByDoc(ctx context.Context, docID int64) (int64, error)
 	CountCommentsByIssue(ctx context.Context, issueID int64) (int64, error)
@@ -41,6 +42,10 @@ type Querier interface {
 	CreateReleaseComment(ctx context.Context, arg CreateReleaseCommentParams) (ReleaseComment, error)
 	CreateReleaseFile(ctx context.Context, arg CreateReleaseFileParams) (ReleaseFile, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
+	// ============================================
+	// Telegram Link Token Queries
+	// ============================================
+	CreateTelegramLinkToken(ctx context.Context, arg CreateTelegramLinkTokenParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeactivateUser(ctx context.Context, id int64) error
 	DeleteComment(ctx context.Context, id int64) error
@@ -51,6 +56,7 @@ type Querier interface {
 	// Only allow author to delete their own comment
 	DeleteDocCommentByAuthor(ctx context.Context, arg DeleteDocCommentByAuthorParams) (int64, error)
 	DeleteExpiredSessions(ctx context.Context) error
+	DeleteExpiredTelegramLinkTokens(ctx context.Context) error
 	DeleteIssue(ctx context.Context, id int64) error
 	DeleteNotification(ctx context.Context, arg DeleteNotificationParams) error
 	// Clean up activity logs older than N days
@@ -65,6 +71,7 @@ type Querier interface {
 	DeleteReleaseFile(ctx context.Context, id int64) error
 	DeleteReleaseFiles(ctx context.Context, releaseID int64) error
 	DeleteSession(ctx context.Context, token string) error
+	DeleteTelegramLinkToken(ctx context.Context, userID int64) error
 	DeleteUser(ctx context.Context, id int64) error
 	DeleteUserSessions(ctx context.Context, userID int64) error
 	// ============================================
@@ -121,6 +128,7 @@ type Querier interface {
 	// Session Queries
 	// ============================================
 	GetSessionByToken(ctx context.Context, token string) (GetSessionByTokenRow, error)
+	GetTelegramLinkToken(ctx context.Context, token string) (TelegramLinkToken, error)
 	GetTotalDownloads(ctx context.Context, releaseID int64) (interface{}, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	// ============================================
@@ -133,6 +141,10 @@ type Querier interface {
 	GetUserByUsernameOrEmail(ctx context.Context, arg GetUserByUsernameOrEmailParams) (User, error)
 	// For @mention lookup - find user by username
 	GetUserIDByUsername(ctx context.Context, username string) (int64, error)
+	// ============================================
+	// Telegram Integration
+	// ============================================
+	GetUserTelegramChatID(ctx context.Context, id int64) (sql.NullString, error)
 	ListActivityByEntity(ctx context.Context, arg ListActivityByEntityParams) ([]ListActivityByEntityRow, error)
 	ListActivityByUser(ctx context.Context, arg ListActivityByUserParams) ([]ListActivityByUserRow, error)
 	// Include unpublished (for admin)
@@ -173,6 +185,7 @@ type Querier interface {
 	PublishRelease(ctx context.Context, id int64) (Release, error)
 	SearchDocs(ctx context.Context, arg SearchDocsParams) ([]SearchDocsRow, error)
 	SearchIssues(ctx context.Context, arg SearchIssuesParams) ([]SearchIssuesRow, error)
+	SetUserTelegramChatID(ctx context.Context, arg SetUserTelegramChatIDParams) error
 	UnarchiveProject(ctx context.Context, id int64) error
 	UnpublishRelease(ctx context.Context, id int64) error
 	UpdateComment(ctx context.Context, arg UpdateCommentParams) (IssueComment, error)

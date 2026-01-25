@@ -19,6 +19,17 @@ func (q *Queries) ActivateUser(ctx context.Context, id int64) error {
 	return err
 }
 
+const clearUserTelegramChatID = `-- name: ClearUserTelegramChatID :exec
+UPDATE users 
+SET telegram_chat_id = NULL, updated_at = CURRENT_TIMESTAMP
+WHERE id = ?
+`
+
+func (q *Queries) ClearUserTelegramChatID(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, clearUserTelegramChatID, id)
+	return err
+}
+
 const countUsers = `-- name: CountUsers :one
 SELECT COUNT(*) FROM users WHERE is_active = 1
 `
@@ -33,7 +44,7 @@ func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (username, email, password_hash, full_name, avatar_url, is_active)
 VALUES (?, ?, ?, ?, ?, ?)
-RETURNING id, username, email, password_hash, full_name, avatar_url, is_active, created_at, updated_at
+RETURNING id, username, email, password_hash, full_name, avatar_url, is_active, created_at, updated_at, telegram_chat_id
 `
 
 type CreateUserParams struct {
@@ -65,6 +76,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.IsActive,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.TelegramChatID,
 	)
 	return i, err
 }
@@ -88,7 +100,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, username, email, password_hash, full_name, avatar_url, is_active, created_at, updated_at FROM users WHERE email = ? COLLATE NOCASE LIMIT 1
+SELECT id, username, email, password_hash, full_name, avatar_url, is_active, created_at, updated_at, telegram_chat_id FROM users WHERE email = ? COLLATE NOCASE LIMIT 1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -104,13 +116,14 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.IsActive,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.TelegramChatID,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
 
-SELECT id, username, email, password_hash, full_name, avatar_url, is_active, created_at, updated_at FROM users WHERE id = ? LIMIT 1
+SELECT id, username, email, password_hash, full_name, avatar_url, is_active, created_at, updated_at, telegram_chat_id FROM users WHERE id = ? LIMIT 1
 `
 
 // ============================================
@@ -129,12 +142,13 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
 		&i.IsActive,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.TelegramChatID,
 	)
 	return i, err
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, username, email, password_hash, full_name, avatar_url, is_active, created_at, updated_at FROM users WHERE username = ? COLLATE NOCASE LIMIT 1
+SELECT id, username, email, password_hash, full_name, avatar_url, is_active, created_at, updated_at, telegram_chat_id FROM users WHERE username = ? COLLATE NOCASE LIMIT 1
 `
 
 // Smart login: find user by username (case-insensitive)
@@ -151,12 +165,13 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.IsActive,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.TelegramChatID,
 	)
 	return i, err
 }
 
 const getUserByUsernameOrEmail = `-- name: GetUserByUsernameOrEmail :one
-SELECT id, username, email, password_hash, full_name, avatar_url, is_active, created_at, updated_at FROM users 
+SELECT id, username, email, password_hash, full_name, avatar_url, is_active, created_at, updated_at, telegram_chat_id FROM users 
 WHERE username = ? COLLATE NOCASE OR email = ? COLLATE NOCASE 
 LIMIT 1
 `
@@ -180,12 +195,28 @@ func (q *Queries) GetUserByUsernameOrEmail(ctx context.Context, arg GetUserByUse
 		&i.IsActive,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.TelegramChatID,
 	)
 	return i, err
 }
 
+const getUserTelegramChatID = `-- name: GetUserTelegramChatID :one
+
+SELECT telegram_chat_id FROM users WHERE id = ?
+`
+
+// ============================================
+// Telegram Integration
+// ============================================
+func (q *Queries) GetUserTelegramChatID(ctx context.Context, id int64) (sql.NullString, error) {
+	row := q.db.QueryRowContext(ctx, getUserTelegramChatID, id)
+	var telegram_chat_id sql.NullString
+	err := row.Scan(&telegram_chat_id)
+	return telegram_chat_id, err
+}
+
 const listAllUsers = `-- name: ListAllUsers :many
-SELECT id, username, email, password_hash, full_name, avatar_url, is_active, created_at, updated_at FROM users ORDER BY username
+SELECT id, username, email, password_hash, full_name, avatar_url, is_active, created_at, updated_at, telegram_chat_id FROM users ORDER BY username
 `
 
 func (q *Queries) ListAllUsers(ctx context.Context) ([]User, error) {
@@ -207,6 +238,7 @@ func (q *Queries) ListAllUsers(ctx context.Context) ([]User, error) {
 			&i.IsActive,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.TelegramChatID,
 		); err != nil {
 			return nil, err
 		}
@@ -222,7 +254,7 @@ func (q *Queries) ListAllUsers(ctx context.Context) ([]User, error) {
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, username, email, password_hash, full_name, avatar_url, is_active, created_at, updated_at FROM users WHERE is_active = 1 ORDER BY username
+SELECT id, username, email, password_hash, full_name, avatar_url, is_active, created_at, updated_at, telegram_chat_id FROM users WHERE is_active = 1 ORDER BY username
 `
 
 func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
@@ -244,6 +276,7 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 			&i.IsActive,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.TelegramChatID,
 		); err != nil {
 			return nil, err
 		}
@@ -258,11 +291,27 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
+const setUserTelegramChatID = `-- name: SetUserTelegramChatID :exec
+UPDATE users 
+SET telegram_chat_id = ?, updated_at = CURRENT_TIMESTAMP
+WHERE id = ?
+`
+
+type SetUserTelegramChatIDParams struct {
+	TelegramChatID sql.NullString `json:"telegramChatId"`
+	ID             int64          `json:"id"`
+}
+
+func (q *Queries) SetUserTelegramChatID(ctx context.Context, arg SetUserTelegramChatIDParams) error {
+	_, err := q.db.ExecContext(ctx, setUserTelegramChatID, arg.TelegramChatID, arg.ID)
+	return err
+}
+
 const updateUser = `-- name: UpdateUser :one
 UPDATE users 
 SET full_name = ?, avatar_url = ?, updated_at = CURRENT_TIMESTAMP
 WHERE id = ?
-RETURNING id, username, email, password_hash, full_name, avatar_url, is_active, created_at, updated_at
+RETURNING id, username, email, password_hash, full_name, avatar_url, is_active, created_at, updated_at, telegram_chat_id
 `
 
 type UpdateUserParams struct {
@@ -284,6 +333,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.IsActive,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.TelegramChatID,
 	)
 	return i, err
 }
