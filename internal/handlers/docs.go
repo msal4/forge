@@ -164,12 +164,13 @@ func (h *Handlers) UpdateDoc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch old values for change tracking
+	// Fetch old values for change tracking (including author_id for notifications)
 	var oldTitle, oldContent string
 	var oldParentID *int64
+	var authorID int64
 	err = h.db.QueryRow(`
-		SELECT title, content, parent_id FROM docs WHERE id = ?
-	`, id).Scan(&oldTitle, &oldContent, &oldParentID)
+		SELECT title, content, parent_id, author_id FROM docs WHERE id = ?
+	`, id).Scan(&oldTitle, &oldContent, &oldParentID, &authorID)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "not_found", "Doc not found")
 		return
@@ -225,11 +226,18 @@ func (h *Handlers) UpdateDoc(w http.ResponseWriter, r *http.Request) {
 		h.logActivity(userID, "doc.updated", "doc", id, changes)
 	}
 
+	// Get actor name for notifications
+	var actorName string
+	h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+
 	// Process @mentions in content if it changed
 	if req.Content != nil && oldContent != newContent {
-		var actorName string
-		h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
 		h.Notification.CreateForContentMentions(r.Context(), userID, actorName, "doc", id, newTitle, oldContent, newContent)
+	}
+
+	// Notify author about the update (docs don't have assignees, so pass nil)
+	if len(changes) > 0 {
+		h.Notification.CreateForEntityUpdate(r.Context(), userID, actorName, "doc", id, newTitle, authorID, nil)
 	}
 
 	// Broadcast WebSocket event
@@ -254,9 +262,21 @@ func (h *Handlers) DeleteDoc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch doc title before deletion for activity log
+	// Fetch doc info before deletion for activity log and notifications
 	var title string
-	h.db.QueryRow("SELECT title FROM docs WHERE id = ?", id).Scan(&title)
+	var authorID int64
+	err = h.db.QueryRow("SELECT title, author_id FROM docs WHERE id = ?", id).Scan(&title, &authorID)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "not_found", "Doc not found")
+		return
+	}
+
+	// Get actor name for notifications
+	var actorName string
+	h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+
+	// Create deletion notification BEFORE deleting (docs don't have assignees, so pass nil)
+	h.Notification.CreateForEntityDeleted(r.Context(), userID, actorName, "doc", id, title, authorID, nil)
 
 	result, err := h.db.Exec("DELETE FROM docs WHERE id = ?", id)
 	if err != nil {

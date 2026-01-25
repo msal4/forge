@@ -386,11 +386,18 @@ export default {
 		title: 'Notifications',
 		empty: 'No notifications',
 		markAllRead: 'Mark all read',
+		itemDeleted: 'This item has been deleted',
+		tags: {
+			modified: 'Modified',
+			deleted: 'Deleted',
+		},
 		types: {
 			mention: '{{actor}} mentioned you',
 			assigned: '{{actor}} assigned you',
 			comment_on_owned: '{{actor}} commented on your {{entityType}}',
 			comment_on_assigned: '{{actor}} commented',
+			entity_updated: '{{actor}} updated your {{entityType}}',
+			entity_deleted: '{{actor}} deleted {{entityType}}',
 		},
 	},
 

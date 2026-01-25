@@ -38,11 +38,11 @@ export function ConfirmDialog({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        e.stopPropagation();
+        e.stopImmediatePropagation();
         onCancel();
       } else if (e.key === 'Enter') {
         e.preventDefault();
-        e.stopPropagation();
+        e.stopImmediatePropagation();
         onConfirm();
       }
     };
@@ -75,7 +75,10 @@ export function ConfirmDialog({
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-lapis-900/60 backdrop-blur-sm animate-fade-in"
-        onClick={onCancel}
+        onClick={(e) => {
+          e.stopPropagation();
+          onCancel();
+        }}
       />
 
       {/* Dialog */}

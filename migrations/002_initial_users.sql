@@ -14,8 +14,8 @@
 
 INSERT INTO users (username, email, password_hash, full_name, is_active) VALUES
     (
-        'salman',
-        'salman@sarray.de',
+        'Mohammed',
+        'mohammed@sarray.de',
         '$2a$10$PySSJxw1iG6Yk0CvoIORh.66//qS9Pnaw9iVN6MrD7sImieSKlVg2',
         'Salman Sarray',
         1

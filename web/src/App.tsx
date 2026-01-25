@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { AuthProvider, ProtectedRoute } from './context/AuthContext';
 import { KeyboardProvider } from './context/KeyboardContext';
 import { WebSocketProvider } from './context/WebSocketContext';
+import { ToastProvider } from './context/ToastContext';
 import { CommandMenu } from './components/ui/CommandMenu';
 import { Layout } from './components/layout/Layout';
 import { ConflictWarning } from './components/ui/ConflictWarning';
@@ -83,10 +84,12 @@ function App() {
         <AuthProvider>
           <WebSocketProvider>
             <KeyboardProvider>
-              <GlobalLoadingIndicator />
-              <CommandMenu />
-              <ConflictWarning />
-              <AppRoutes />
+              <ToastProvider>
+                <GlobalLoadingIndicator />
+                <CommandMenu />
+                <ConflictWarning />
+                <AppRoutes />
+              </ToastProvider>
             </KeyboardProvider>
           </WebSocketProvider>
         </AuthProvider>

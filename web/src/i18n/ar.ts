@@ -386,11 +386,18 @@ export default {
 		title: 'الإشعارات',
 		empty: 'لا توجد إشعارات',
 		markAllRead: 'تعليم الكل كمقروء',
+		itemDeleted: 'تم حذف هذا العنصر',
+		tags: {
+			modified: 'معدّل',
+			deleted: 'محذوف',
+		},
 		types: {
 			mention: '{{actor}} أشار إليك',
 			assigned: '{{actor}} أسند إليك',
 			comment_on_owned: '{{actor}} علّق على {{entityType}} الخاص بك',
 			comment_on_assigned: '{{actor}} علّق',
+			entity_updated: '{{actor}} حدّث {{entityType}} الخاص بك',
+			entity_deleted: '{{actor}} حذف {{entityType}}',
 		},
 	},
 

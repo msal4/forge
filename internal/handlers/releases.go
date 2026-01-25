@@ -168,6 +168,22 @@ func (h *Handlers) DeleteRelease(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fetch release info before deletion for notifications
+	var title string
+	var authorID int64
+	err = h.db.QueryRow("SELECT title, author_id FROM releases WHERE id = ?", id).Scan(&title, &authorID)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "not_found", "Release not found")
+		return
+	}
+
+	// Get actor name for notifications
+	var actorName string
+	h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+
+	// Create deletion notification BEFORE deleting (releases don't have assignees, so pass nil)
+	h.Notification.CreateForEntityDeleted(r.Context(), userID, actorName, "release", id, title, authorID, nil)
+
 	// Delete release files from disk
 	releaseDir := filepath.Join(ReleasesDir, fmt.Sprintf("v%d", id))
 	os.RemoveAll(releaseDir)

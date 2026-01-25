@@ -335,18 +335,19 @@ func (h *Handlers) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch old values for change tracking (including assignee name)
+	// Fetch old values for change tracking (including assignee name and reporter_id)
 	var oldTitle, oldDescription, oldStatus, oldPriority, oldLabelsJSON string
 	var oldAssigneeID *int64
 	var oldAssigneeName *string
 	var oldDueDate *string
+	var reporterID int64
 	err = h.db.QueryRow(`
 		SELECT i.title, i.description, i.status, i.priority, i.assignee_id, i.labels, i.due_date,
-		       COALESCE(u.full_name, u.username)
+		       COALESCE(u.full_name, u.username), i.reporter_id
 		FROM issues i
 		LEFT JOIN users u ON i.assignee_id = u.id
 		WHERE i.id = ?
-	`, id).Scan(&oldTitle, &oldDescription, &oldStatus, &oldPriority, &oldAssigneeID, &oldLabelsJSON, &oldDueDate, &oldAssigneeName)
+	`, id).Scan(&oldTitle, &oldDescription, &oldStatus, &oldPriority, &oldAssigneeID, &oldLabelsJSON, &oldDueDate, &oldAssigneeName, &reporterID)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "not_found", "Issue not found")
 		return
@@ -459,6 +460,11 @@ func (h *Handlers) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 		h.Notification.CreateForContentMentions(r.Context(), userID, actorName, "issue", id, newTitle, oldDescription, newDescription)
 	}
 
+	// Notify reporter and assignee about the update
+	if len(changes) > 0 {
+		h.Notification.CreateForEntityUpdate(r.Context(), userID, actorName, "issue", id, newTitle, reporterID, newAssigneeID)
+	}
+
 	// Broadcast WebSocket event
 	h.hub.Broadcast(websocket.Event{
 		Type:     websocket.EventIssueUpdated,
@@ -481,9 +487,22 @@ func (h *Handlers) DeleteIssue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch issue title before deletion for activity log
+	// Fetch issue info before deletion for activity log and notifications
 	var title string
-	h.db.QueryRow("SELECT title FROM issues WHERE id = ?", id).Scan(&title)
+	var reporterID int64
+	var assigneeID *int64
+	err = h.db.QueryRow("SELECT title, reporter_id, assignee_id FROM issues WHERE id = ?", id).Scan(&title, &reporterID, &assigneeID)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "not_found", "Issue not found")
+		return
+	}
+
+	// Get actor name for notifications
+	var actorName string
+	h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+
+	// Create deletion notifications BEFORE deleting
+	h.Notification.CreateForEntityDeleted(r.Context(), userID, actorName, "issue", id, title, reporterID, assigneeID)
 
 	result, err := h.db.Exec("DELETE FROM issues WHERE id = ?", id)
 	if err != nil {
@@ -539,9 +558,11 @@ func (h *Handlers) UpdateIssueStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch old status for change tracking
-	var oldStatus string
-	err = h.db.QueryRow("SELECT status FROM issues WHERE id = ?", id).Scan(&oldStatus)
+	// Fetch old status and issue info for change tracking and notifications
+	var oldStatus, title string
+	var reporterID int64
+	var assigneeID *int64
+	err = h.db.QueryRow("SELECT status, title, reporter_id, assignee_id FROM issues WHERE id = ?", id).Scan(&oldStatus, &title, &reporterID, &assigneeID)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "not_found", "Issue not found")
 		return
@@ -570,6 +591,11 @@ func (h *Handlers) UpdateIssueStatus(w http.ResponseWriter, r *http.Request) {
 				"new": newStatus,
 			},
 		})
+
+		// Get actor name and notify reporter/assignee about the update
+		var actorName string
+		h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+		h.Notification.CreateForEntityUpdate(r.Context(), userID, actorName, "issue", id, title, reporterID, assigneeID)
 	}
 
 	// Broadcast WebSocket event
@@ -600,18 +626,19 @@ func (h *Handlers) PatchIssue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch old values for change tracking (including assignee name)
+	// Fetch old values for change tracking (including assignee name and reporter_id)
 	var oldTitle, oldDescription, oldStatus, oldPriority, oldLabelsJSON string
 	var oldAssigneeID *int64
 	var oldAssigneeName *string
 	var oldDueDate *string
+	var reporterID int64
 	err = h.db.QueryRow(`
 		SELECT i.title, i.description, i.status, i.priority, i.assignee_id, i.labels, i.due_date,
-		       COALESCE(u.full_name, u.username)
+		       COALESCE(u.full_name, u.username), i.reporter_id
 		FROM issues i
 		LEFT JOIN users u ON i.assignee_id = u.id
 		WHERE i.id = ?
-	`, id).Scan(&oldTitle, &oldDescription, &oldStatus, &oldPriority, &oldAssigneeID, &oldLabelsJSON, &oldDueDate, &oldAssigneeName)
+	`, id).Scan(&oldTitle, &oldDescription, &oldStatus, &oldPriority, &oldAssigneeID, &oldLabelsJSON, &oldDueDate, &oldAssigneeName, &reporterID)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "not_found", "Issue not found")
 		return
@@ -723,11 +750,18 @@ func (h *Handlers) PatchIssue(w http.ResponseWriter, r *http.Request) {
 		h.logActivity(userID, "issue.updated", "issue", id, changes)
 	}
 
+	// Get actor name for notifications
+	var actorName string
+	h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+
 	// Create notification if assignee changed
 	if newAssigneeID != nil && (oldAssigneeID == nil || *oldAssigneeID != *newAssigneeID) {
-		var actorName string
-		h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
 		h.Notification.CreateForAssignment(r.Context(), userID, actorName, id, *newAssigneeID)
+	}
+
+	// Notify reporter and assignee about the update
+	if len(changes) > 0 {
+		h.Notification.CreateForEntityUpdate(r.Context(), userID, actorName, "issue", id, newTitle, reporterID, newAssigneeID)
 	}
 
 	// Broadcast WebSocket event

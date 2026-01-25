@@ -46,6 +46,7 @@ interface IssueModalProps {
 	onDelete?: (issue: Issue) => void;
 	onModeChange: (mode: 'view' | 'edit') => void;
 	isLoading?: boolean;
+	defaultTab?: TabType;  // Which tab to show by default (comments or activity)
 }
 
 // Priority config (labels will be translated in component)
@@ -76,7 +77,8 @@ export function IssueModal({
 	onSave,
 	onDelete,
 	onModeChange,
-	isLoading
+	isLoading,
+	defaultTab = 'comments'
 }: IssueModalProps) {
 	const { t } = useTranslation();
 	const { syncVersion } = useWebSocket();
@@ -98,7 +100,12 @@ export function IssueModal({
 	const [showAssigneeDropdown, setShowAssigneeDropdown] = React.useState(false);
 	
 	// Tab state for Comments/Activity panel
-	const [activeTab, setActiveTab] = React.useState<TabType>('comments');
+	const [activeTab, setActiveTab] = React.useState<TabType>(defaultTab);
+	
+	// Update active tab when defaultTab prop changes (e.g., from notification navigation)
+	React.useEffect(() => {
+		setActiveTab(defaultTab);
+	}, [defaultTab]);
 
 	const titleInputRef = React.useRef<HTMLInputElement>(null);
 	const contentRef = React.useRef<HTMLDivElement>(null);
@@ -511,6 +518,7 @@ export function IssueModal({
 								onClick={() => onModeChange('edit')}
 								className="p-2 rounded-lg hover:bg-parchment-200 text-lapis-500 transition-colors"
 								title="Edit (e)"
+								tabIndex={-1}
 							>
 								<Edit3 size={18} />
 							</button>
@@ -521,6 +529,7 @@ export function IssueModal({
 								onClick={() => onDelete(issue)}
 								className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
 								title="Delete"
+								tabIndex={-1}
 							>
 								<Trash2 size={18} />
 							</button>
@@ -534,6 +543,7 @@ export function IssueModal({
 									: 'hover:bg-parchment-200 text-lapis-500'
 							}`}
 							title={isEditing ? (isCreating ? t('common.close') : t('common.back')) + " (Esc)" : t('common.close') + " (Esc)"}
+							tabIndex={-1}
 						>
 							{isEditing && !isCreating ? (
 								<ArrowRight size={20} className="rtl:rotate-180" />

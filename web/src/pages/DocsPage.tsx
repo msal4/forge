@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { Markdown } from '../components/ui/Markdown';
@@ -43,8 +43,12 @@ type DocTabType = 'comments' | 'activity';
 export function DocsPage() {
   const { t } = useTranslation();
   const { docId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  
+  // Get default tab from query params (for notification navigation)
+  const defaultTab = searchParams.get('tab') as DocTabType | null;
   
   // React Query hooks
   const { data: docs = [], isLoading, isError, error } = useDocs();
@@ -70,7 +74,14 @@ export function DocsPage() {
   const tabbedPanelRef = React.useRef<HTMLDivElement>(null);
   
   // Tab state for Comments/Activity panel
-  const [activeTab, setActiveTab] = React.useState<DocTabType>('comments');
+  const [activeTab, setActiveTab] = React.useState<DocTabType>(defaultTab || 'comments');
+  
+  // Update active tab when defaultTab changes (e.g., from notification navigation)
+  React.useEffect(() => {
+    if (defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
   
   // Confirm dialog
   const { confirm, DialogComponent: ConfirmDialogComponent } = useConfirmDialog();
@@ -179,6 +190,50 @@ export function DocsPage() {
     }
   }, [mode, editTitle, editContent, editParentId, selectedDoc]);
 
+  // Handle browser back button - go to view mode instead of navigating away when editing
+  const editHistoryPushedRef = React.useRef(false);
+  const ignoringPopStateRef = React.useRef(false);
+  
+  // Helper to clean up edit history entry when leaving edit mode normally
+  const cleanupEditHistory = React.useCallback(() => {
+    if (editHistoryPushedRef.current) {
+      editHistoryPushedRef.current = false;
+      ignoringPopStateRef.current = true;
+      window.history.back();
+      // Reset the ignore flag after a tick
+      setTimeout(() => { ignoringPopStateRef.current = false; }, 0);
+    }
+  }, []);
+  
+  React.useEffect(() => {
+    if (mode !== 'edit' || !selectedDoc) {
+      editHistoryPushedRef.current = false;
+      return;
+    }
+
+    // Push a dummy state so we can intercept the back button
+    if (!editHistoryPushedRef.current) {
+      window.history.pushState({ docEdit: true, docId: selectedDoc.id }, '');
+      editHistoryPushedRef.current = true;
+    }
+
+    const handlePopState = () => {
+      // Ignore if we're cleaning up from save/cancel
+      if (ignoringPopStateRef.current) return;
+      
+      // User pressed back while in edit mode - go to view mode
+      editHistoryPushedRef.current = false;
+      setEditingItem(null, null);
+      setMode('view');
+      setHasUnsavedChanges(false);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [mode, selectedDoc, setEditingItem]);
+
   // Helper to select doc and update URL
   const selectDoc = React.useCallback((doc: Doc | null) => {
     if (doc) {
@@ -237,10 +292,11 @@ export function DocsPage() {
       setMode('list');
       navigate('/docs');
     } else {
+      cleanupEditHistory();
       setMode('view');
     }
     setHasUnsavedChanges(false);
-  }, [mode, hasUnsavedChanges, navigate, confirm, t, setEditingItem]);
+  }, [mode, hasUnsavedChanges, navigate, confirm, t, setEditingItem, cleanupEditHistory]);
 
   // Save document
   const saveDocument = React.useCallback(async () => {
@@ -261,6 +317,7 @@ export function DocsPage() {
         data: data as UpdateDocRequest 
       });
       setSelectedDoc(updated);
+      cleanupEditHistory();
       setMode('view');
       setEditingItem(null, null);
     } else if (mode === 'create') {
@@ -270,7 +327,7 @@ export function DocsPage() {
       setMode('view');
     }
     setHasUnsavedChanges(false);
-  }, [editTitle, editContent, editParentId, mode, selectedDoc, navigate, updateDocMutation, createDocMutation, setEditingItem]);
+  }, [editTitle, editContent, editParentId, mode, selectedDoc, navigate, updateDocMutation, createDocMutation, setEditingItem, cleanupEditHistory]);
 
   // Delete document
   const handleDeleteDoc = async (doc: Doc) => {
@@ -379,22 +436,20 @@ export function DocsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          {(mode === 'view' || mode === 'edit') && (
+          {mode === 'view' && (
             <button
-              onClick={async () => {
-                if (mode === 'edit' && hasUnsavedChanges) {
-                  const shouldDiscard = await confirm({
-                    title: t('common.confirm'),
-                    message: t('docs.discardChanges'),
-                    confirmLabel: t('common.yes'),
-                    cancelLabel: t('common.no'),
-                    variant: 'warning',
-                  });
-                  if (!shouldDiscard) return;
-                }
+              onClick={() => {
                 selectDoc(null);
                 setMode('list');
               }}
+              className="p-2 rounded-tablet hover:bg-parchment-200 text-lapis-500 transition-colors"
+            >
+              <ArrowLeft size={20} className="rtl:rotate-180" />
+            </button>
+          )}
+          {mode === 'edit' && (
+            <button
+              onClick={cancelEdit}
               className="p-2 rounded-tablet hover:bg-parchment-200 text-lapis-500 transition-colors"
             >
               <ArrowLeft size={20} className="rtl:rotate-180" />

@@ -247,6 +247,102 @@ func (s *Service) CreateForAssignment(
 	})
 }
 
+// CreateForEntityUpdate creates notifications when an entity is updated
+// For issues: notifies reporter and assignee (excluding actor)
+// For docs/releases: notifies author (excluding actor)
+func (s *Service) CreateForEntityUpdate(
+	ctx context.Context,
+	actorID int64,
+	actorName string,
+	entityType string,
+	entityID int64,
+	entityTitle string,
+	reporterID int64,
+	assigneeID *int64,
+) error {
+	// Track who we've already notified to avoid duplicates
+	notified := make(map[int64]bool)
+	notified[actorID] = true // Don't notify the actor
+
+	// Notify reporter/author
+	if !notified[reporterID] {
+		notified[reporterID] = true
+		_ = s.Create(ctx, CreateParams{
+			UserID:           reporterID,
+			ActorID:          actorID,
+			NotificationType: models.NotificationTypeEntityUpdated,
+			EntityType:       entityType,
+			EntityID:         entityID,
+			Title:            entityTitle,
+			Message:          fmt.Sprintf("%s updated your %s", actorName, entityType),
+		})
+	}
+
+	// Notify assignee (issues only)
+	if assigneeID != nil && *assigneeID != 0 && !notified[*assigneeID] {
+		notified[*assigneeID] = true
+		_ = s.Create(ctx, CreateParams{
+			UserID:           *assigneeID,
+			ActorID:          actorID,
+			NotificationType: models.NotificationTypeEntityUpdated,
+			EntityType:       entityType,
+			EntityID:         entityID,
+			Title:            entityTitle,
+			Message:          fmt.Sprintf("%s updated %s", actorName, entityTitle),
+		})
+	}
+
+	return nil
+}
+
+// CreateForEntityDeleted creates notifications when an entity is deleted
+// For issues: notifies reporter and assignee (excluding actor)
+// For docs/releases: notifies author (excluding actor)
+func (s *Service) CreateForEntityDeleted(
+	ctx context.Context,
+	actorID int64,
+	actorName string,
+	entityType string,
+	entityID int64,
+	entityTitle string,
+	reporterID int64,
+	assigneeID *int64,
+) error {
+	// Track who we've already notified to avoid duplicates
+	notified := make(map[int64]bool)
+	notified[actorID] = true // Don't notify the actor
+
+	// Notify reporter/author
+	if !notified[reporterID] {
+		notified[reporterID] = true
+		_ = s.Create(ctx, CreateParams{
+			UserID:           reporterID,
+			ActorID:          actorID,
+			NotificationType: models.NotificationTypeEntityDeleted,
+			EntityType:       entityType,
+			EntityID:         entityID,
+			Title:            entityTitle,
+			Message:          fmt.Sprintf("%s deleted %s \"%s\"", actorName, entityType, entityTitle),
+		})
+	}
+
+	// Notify assignee (issues only)
+	if assigneeID != nil && *assigneeID != 0 && !notified[*assigneeID] {
+		notified[*assigneeID] = true
+		_ = s.Create(ctx, CreateParams{
+			UserID:           *assigneeID,
+			ActorID:          actorID,
+			NotificationType: models.NotificationTypeEntityDeleted,
+			EntityType:       entityType,
+			EntityID:         entityID,
+			Title:            entityTitle,
+			Message:          fmt.Sprintf("%s deleted %s \"%s\"", actorName, entityType, entityTitle),
+		})
+	}
+
+	return nil
+}
+
 // CreateForContentMentions creates notifications for @mentions in entity content
 // (issue description, doc content, release description)
 // It compares old and new content to only notify for new mentions

@@ -22,8 +22,10 @@ CREATE TABLE IF NOT EXISTS notifications (
     -- 'assigned' - Issue assigned to user
     -- 'comment_on_owned' - Comment on entity user created
     -- 'comment_on_assigned' - Comment on issue user is assigned to
+    -- 'entity_updated' - Someone updated your issue/doc/release
+    -- 'entity_deleted' - Someone deleted your issue/doc/release
     notification_type TEXT NOT NULL
-        CHECK(notification_type IN ('mention', 'assigned', 'comment_on_owned', 'comment_on_assigned')),
+        CHECK(notification_type IN ('mention', 'assigned', 'comment_on_owned', 'comment_on_assigned', 'entity_updated', 'entity_deleted')),
     
     -- What entity this notification relates to
     entity_type TEXT NOT NULL  -- 'issue', 'doc', 'release'

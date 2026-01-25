@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -66,9 +66,13 @@ const COLUMNS = [
 
 export function IssuesPage() {
   const { issueId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  
+  // Get default tab from query params (for notification navigation)
+  const defaultTab = searchParams.get('tab') as 'comments' | 'activity' | null;
   
   // React Query hooks
   const { data: issues = [], isLoading, isError, error } = useIssues();
@@ -442,6 +446,7 @@ export function IssuesPage() {
         onDelete={handleDeleteFromModal}
         onModeChange={handleModeChange}
         isLoading={isSaving}
+        defaultTab={defaultTab || 'comments'}
       />
 
       {/* Confirm Dialog */}

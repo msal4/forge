@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Globe, Palette, User, Check, AlertCircle } from 'lucide-react';
+import { Globe, Palette, User, Check, AlertCircle, ChevronDown } from 'lucide-react';
 import { usersApi } from '../api/users';
 
 // ============================================
@@ -12,6 +12,10 @@ export function SettingsPage() {
   
   const currentLanguage = i18n.language;
 
+  // Language dropdown state
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const languageRef = useRef<HTMLDivElement>(null);
+
   // Password change state
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -19,10 +23,27 @@ export function SettingsPage() {
   const [passwordSuccess, setPasswordSuccess] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newLang = e.target.value;
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (languageRef.current && !languageRef.current.contains(event.target as Node)) {
+        setShowLanguageDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLanguageChange = (newLang: string) => {
     i18n.changeLanguage(newLang);
+    setShowLanguageDropdown(false);
   };
+
+  const languages = [
+    { code: 'en', label: t('settings.english') },
+    { code: 'ar', label: t('settings.arabic') },
+  ];
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,17 +104,60 @@ export function SettingsPage() {
                 {t('settings.languageDescription')}
               </p>
               <div className="mt-4">
-                <select
-                  value={currentLanguage}
-                  onChange={handleLanguageChange}
-                  className="w-full max-w-xs px-4 py-2 rounded-tablet border border-parchment-300 
-                             bg-parchment-100 text-lapis-700
-                             focus:ring-2 focus:ring-gold-400/30 focus:outline-none
-                             transition-colors"
-                >
-                  <option value="en">{t('settings.english')}</option>
-                  <option value="ar">{t('settings.arabic')}</option>
-                </select>
+                <div ref={languageRef} className="relative w-full max-w-xs">
+                  <button
+                    onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
+                    className={`
+                      w-full h-10 px-4 flex items-center justify-between
+                      bg-parchment-100 text-lapis-700 text-sm
+                      border rounded-tablet
+                      transition-all
+                      ${showLanguageDropdown
+                        ? 'border-lapis-400 ring-2 ring-gold-400/30'
+                        : 'border-parchment-300 hover:border-lapis-300'
+                      }
+                    `}
+                  >
+                    <span>
+                      {languages.find(l => l.code === currentLanguage)?.label || currentLanguage}
+                    </span>
+                    <ChevronDown 
+                      size={16} 
+                      className={`text-lapis-400 transition-transform ${showLanguageDropdown ? 'rotate-180' : ''}`} 
+                    />
+                  </button>
+
+                  {showLanguageDropdown && (
+                    <div className="
+                      absolute top-full left-0 right-0 mt-1 z-20
+                      bg-parchment-50 border border-parchment-300 
+                      rounded-tablet shadow-tablet
+                      py-1
+                      animate-fade-in
+                    ">
+                      {languages.map(lang => (
+                        <button
+                          key={lang.code}
+                          onClick={() => handleLanguageChange(lang.code)}
+                          className={`
+                            w-full px-4 py-2 text-left text-sm 
+                            hover:bg-parchment-200 transition-colors
+                            flex items-center justify-between
+                            ${currentLanguage === lang.code 
+                              ? 'bg-parchment-200 text-lapis-700' 
+                              : 'text-lapis-600'
+                            }
+                          `}
+                        >
+                          <span>{lang.label}</span>
+                          {currentLanguage === lang.code && (
+                            <Check size={16} className="text-lapis-600" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

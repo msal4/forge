@@ -199,6 +199,10 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
               queryClient.invalidateQueries({ queryKey: queryKeys.releases.detail(data.id) });
             }
             break;
+          case 'notification':
+            // Refresh notification count and list
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+            break;
         }
       }
     } catch (err) {

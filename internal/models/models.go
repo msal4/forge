@@ -118,6 +118,8 @@ const (
 	NotificationTypeAssigned          NotificationType = "assigned"
 	NotificationTypeCommentOnOwned    NotificationType = "comment_on_owned"
 	NotificationTypeCommentOnAssigned NotificationType = "comment_on_assigned"
+	NotificationTypeEntityUpdated     NotificationType = "entity_updated" // Someone updated your issue/doc/release
+	NotificationTypeEntityDeleted     NotificationType = "entity_deleted" // Someone deleted your issue/doc/release
 )
 
 // Notification represents an in-app notification

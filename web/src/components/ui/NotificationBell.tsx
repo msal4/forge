@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Bell, CheckCheck, FileText, BookOpen, Package, X } from 'lucide-react';
 import { notificationsApi, type Notification, type EntityType } from '../../api/notifications';
 import { useWebSocket } from '../../context/WebSocketContext';
+import { useToast } from '../../context/ToastContext';
 import { Avatar } from './Avatar';
 
 // ============================================
@@ -61,15 +62,18 @@ function getEntityIcon(entityType: EntityType) {
 }
 
 // Get entity route
-function getEntityRoute(entityType: EntityType, entityId: number): string {
-  switch (entityType) {
-    case 'issue':
-      return `/issues/${entityId}`;
-    case 'doc':
-      return `/docs/${entityId}`;
-    case 'release':
-      return `/releases/${entityId}`;
-  }
+function getEntityRoute(entityType: EntityType, entityId: number, tab?: string): string {
+  const base = (() => {
+    switch (entityType) {
+      case 'issue':
+        return `/issues/${entityId}`;
+      case 'doc':
+        return `/docs/${entityId}`;
+      case 'release':
+        return `/releases/${entityId}`;
+    }
+  })();
+  return tab ? `${base}?tab=${tab}` : base;
 }
 
 export function NotificationBell() {
@@ -77,6 +81,7 @@ export function NotificationBell() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { lastEvent } = useWebSocket();
+  const { showToast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -129,7 +134,22 @@ export function NotificationBell() {
     if (!notification.isRead) {
       markReadMutation.mutate(notification.id);
     }
-    // Navigate to entity
+    
+    // For deleted entities, show toast instead of navigating
+    if (notification.notificationType === 'entity_deleted') {
+      showToast(t('notifications.itemDeleted'), 'info');
+      setIsOpen(false);
+      return;
+    }
+    
+    // For entity updates, navigate to activity tab
+    if (notification.notificationType === 'entity_updated') {
+      navigate(getEntityRoute(notification.entityType, notification.entityId, 'activity'));
+      setIsOpen(false);
+      return;
+    }
+    
+    // Navigate to entity (default - comments tab for comment notifications)
     navigate(getEntityRoute(notification.entityType, notification.entityId));
     setIsOpen(false);
   };
@@ -291,7 +311,12 @@ interface NotificationItemProps {
 }
 
 function NotificationItem({ notification, onClick, formatRelativeTime }: NotificationItemProps) {
+  const { t } = useTranslation();
   const actorName = notification.actor?.fullName || notification.actor?.username || 'Someone';
+  
+  // Determine if this is a modification or deletion notification
+  const isModification = notification.notificationType === 'entity_updated';
+  const isDeletion = notification.notificationType === 'entity_deleted';
   
   return (
     <li>
@@ -304,6 +329,7 @@ function NotificationItem({ notification, onClick, formatRelativeTime }: Notific
             ? 'opacity-60 hover:opacity-80 hover:bg-parchment-100/50' 
             : 'hover:bg-parchment-100'
           }
+          ${isDeletion ? 'bg-clay-50/50' : ''}
         `}
       >
         {/* Entity Icon */}
@@ -313,8 +339,19 @@ function NotificationItem({ notification, onClick, formatRelativeTime }: Notific
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {/* Entity title (primary) */}
+          {/* Entity title with action tag */}
           <div className="flex items-center gap-2">
+            {/* Action tag */}
+            {isModification && (
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-gold-100 text-gold-700 flex-shrink-0">
+                {t('notifications.tags.modified')}
+              </span>
+            )}
+            {isDeletion && (
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-clay-100 text-clay-700 flex-shrink-0">
+                {t('notifications.tags.deleted')}
+              </span>
+            )}
             <span className={`text-sm truncate ${notification.isRead ? 'text-lapis-600' : 'text-lapis-700 font-semibold'}`}>
               {notification.title}
             </span>

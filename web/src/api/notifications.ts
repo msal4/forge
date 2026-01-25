@@ -10,7 +10,9 @@ export type NotificationType =
   | 'mention'
   | 'assigned'
   | 'comment_on_owned'
-  | 'comment_on_assigned';
+  | 'comment_on_assigned'
+  | 'entity_updated'
+  | 'entity_deleted';
 
 export type EntityType = 'issue' | 'doc' | 'release';
 
