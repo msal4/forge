@@ -72,7 +72,16 @@ func main() {
 	// User routes
 	mux.Handle("GET /api/users/me", requireAuth(http.HandlerFunc(h.GetCurrentUser)))
 	mux.Handle("PUT /api/users/me/language", requireAuth(http.HandlerFunc(h.UpdateUserLanguage)))
+	mux.Handle("PUT /api/users/me/profile", requireAuth(http.HandlerFunc(h.UpdateProfile)))
+	mux.Handle("POST /api/users/me/avatar", requireAuth(http.HandlerFunc(h.UploadAvatar)))
+	mux.Handle("DELETE /api/users/me/avatar", requireAuth(http.HandlerFunc(h.DeleteAvatar)))
 	mux.Handle("GET /api/users", requireAuth(http.HandlerFunc(h.ListUsers)))
+	mux.Handle("GET /api/profile/{username}", requireAuth(http.HandlerFunc(h.GetUserProfileByUsername)))
+	mux.Handle("GET /api/profile/{username}/issues", requireAuth(http.HandlerFunc(h.GetUserIssuesByUsername)))
+	mux.Handle("GET /api/profile/{username}/docs", requireAuth(http.HandlerFunc(h.GetUserDocsByUsername)))
+	mux.Handle("GET /api/profile/{username}/releases", requireAuth(http.HandlerFunc(h.GetUserReleasesByUsername)))
+	mux.Handle("GET /api/profile/{username}/comments", requireAuth(http.HandlerFunc(h.GetUserCommentsByUsername)))
+	mux.Handle("GET /api/profile/{username}/activity", requireAuth(http.HandlerFunc(h.GetUserActivityByUsername)))
 
 	// Global search
 	mux.Handle("GET /api/search", requireAuth(http.HandlerFunc(h.GlobalSearch)))
@@ -135,6 +144,17 @@ func main() {
 	mux.Handle("GET /api/debug/tables", requireAuth(http.HandlerFunc(h.ListTables)))
 	mux.Handle("GET /api/debug/tables/{name}", requireAuth(http.HandlerFunc(h.GetTableData)))
 	mux.Handle("POST /api/debug/query", requireAuth(http.HandlerFunc(h.ExecuteQuery)))
+
+	// ============================================
+	// Static File Serving for Uploads
+	// ============================================
+	// Serve avatar uploads
+	avatarDir := "./data/uploads/avatars"
+	if dir := os.Getenv("AVATARS_DIR"); dir != "" {
+		avatarDir = dir
+	}
+	os.MkdirAll(avatarDir, 0755)
+	mux.Handle("GET /uploads/avatars/", http.StripPrefix("/uploads/avatars/", http.FileServer(http.Dir(avatarDir))))
 
 	// ============================================
 	// Static File Serving (React SPA)
