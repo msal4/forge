@@ -340,6 +340,17 @@ export function DocsPage() {
       category: 'actions',
       global: true,
     },
+    {
+      keys: 'Ctrl+Enter',
+      description: 'Save document',
+      handler: () => {
+        if (mode === 'edit' || mode === 'create') {
+          saveDocument();
+        }
+      },
+      category: 'actions',
+      global: true,
+    },
   ]);
 
   // Format date
