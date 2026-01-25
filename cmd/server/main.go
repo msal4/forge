@@ -146,15 +146,15 @@ func main() {
 	mux.Handle("POST /api/debug/query", requireAuth(http.HandlerFunc(h.ExecuteQuery)))
 
 	// ============================================
-	// Static File Serving for Uploads
+	// Static File Serving for Uploads (Protected)
 	// ============================================
-	// Serve avatar uploads
+	// Serve avatar uploads (requires auth)
 	avatarDir := "./data/uploads/avatars"
 	if dir := os.Getenv("AVATARS_DIR"); dir != "" {
 		avatarDir = dir
 	}
 	os.MkdirAll(avatarDir, 0755)
-	mux.Handle("GET /uploads/avatars/", http.StripPrefix("/uploads/avatars/", http.FileServer(http.Dir(avatarDir))))
+	mux.Handle("GET /uploads/avatars/", requireAuth(http.StripPrefix("/uploads/avatars/", http.FileServer(http.Dir(avatarDir)))))
 
 	// ============================================
 	// Static File Serving (React SPA)
