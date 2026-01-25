@@ -37,7 +37,7 @@ func ExtractMentions(content string) []string {
 
 // TelegramSender defines the interface for sending Telegram notifications
 type TelegramSender interface {
-	SendNotification(ctx context.Context, userID int64, title, message string)
+	SendNotification(ctx context.Context, userID int64, entityType string, entityID int64, title, message string)
 	IsConfigured() bool
 }
 
@@ -113,7 +113,7 @@ func (s *Service) Create(ctx context.Context, params CreateParams) error {
 	// Send Telegram notification (async, don't block)
 	// Use background context since the request context may be cancelled
 	if s.telegram != nil && s.telegram.IsConfigured() {
-		go s.telegram.SendNotification(context.Background(), params.UserID, params.Title, params.Message)
+		go s.telegram.SendNotification(context.Background(), params.UserID, params.EntityType, params.EntityID, params.Title, params.Message)
 	}
 
 	return nil

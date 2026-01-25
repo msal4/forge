@@ -26,6 +26,7 @@ Environment=MIGRATIONS_DIR=/opt/sarray-forge/migrations
 Environment=UPLOADS_DIR=/opt/sarray-forge/data/releases
 Environment=TELEGRAM_BOT_TOKEN=8312352263:AAENkuBFhVdPxAPrM4AN7o3_pYmCjOBG2w0
 Environment=TELEGRAM_BOT_USERNAME=SarrayForgeBot
+Environment=BASE_URL=https://forge.sarray.de
 
 # Security hardening (relaxed for compatibility)
 NoNewPrivileges=yes

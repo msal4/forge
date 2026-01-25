@@ -30,6 +30,7 @@ func Load() *Config {
 		StaticDir:     getEnv("STATIC_DIR", "./web/dist"),
 		DatabasePath:  getEnv("DATABASE_PATH", "./data/sarray-forge.db"),
 		MigrationsDir: getEnv("MIGRATIONS_DIR", "./migrations"),
+		BaseURL:       os.Getenv("BASE_URL"), // e.g., https://forge.sarray.de
 
 		// TLS
 		TLSCert: getEnv("TLS_CERT", "./certs/cert.pem"),

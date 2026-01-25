@@ -160,9 +160,9 @@ func formatChatID(chatID int64) string {
 
 // SendTelegramNotification sends a notification to a user via Telegram
 // This is a convenience method to be called from the notification service
-func (h *Handlers) SendTelegramNotification(ctx context.Context, userID int64, title, message string) {
+func (h *Handlers) SendTelegramNotification(ctx context.Context, userID int64, entityType string, entityID int64, title, message string) {
 	if h.telegram != nil {
-		h.telegram.SendNotification(ctx, userID, title, message)
+		h.telegram.SendNotification(ctx, userID, entityType, entityID, title, message)
 	}
 }
 

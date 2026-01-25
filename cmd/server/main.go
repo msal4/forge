@@ -32,8 +32,11 @@ func main() {
 	// Initialize Telegram service (optional)
 	var tg *telegram.Service
 	if cfg.TelegramEnabled() {
-		tg = telegram.NewService(cfg.TelegramBotToken, cfg.TelegramBotUsername, database.DB)
+		tg = telegram.NewService(cfg.TelegramBotToken, cfg.TelegramBotUsername, cfg.BaseURL, database.DB)
 		log.Printf("Telegram notifications enabled (bot: @%s)", cfg.TelegramBotUsername)
+		if cfg.BaseURL != "" {
+			log.Printf("Telegram notifications will include links to %s", cfg.BaseURL)
+		}
 	} else {
 		log.Printf("Telegram notifications disabled (TELEGRAM_BOT_TOKEN or TELEGRAM_BOT_USERNAME not set)")
 	}

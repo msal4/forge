@@ -25,13 +25,14 @@ const (
 type Service struct {
 	botToken    string
 	botUsername string
+	baseURL     string // Base URL for generating entity links
 	client      *http.Client
 	database    *sql.DB
 }
 
 // NewService creates a new Telegram service
 // Returns nil if bot token is not configured
-func NewService(botToken, botUsername string, database *sql.DB) *Service {
+func NewService(botToken, botUsername, baseURL string, database *sql.DB) *Service {
 	if botToken == "" || botUsername == "" {
 		return nil
 	}
@@ -39,6 +40,7 @@ func NewService(botToken, botUsername string, database *sql.DB) *Service {
 	return &Service{
 		botToken:    botToken,
 		botUsername: botUsername,
+		baseURL:     strings.TrimSuffix(baseURL, "/"),
 		client: &http.Client{
 			Timeout: 10 * time.Second,
 		},
@@ -175,7 +177,7 @@ func (s *Service) HandleStartCommand(ctx context.Context, chatID int64, token st
 
 // SendNotification sends a notification to a user via Telegram
 // Does nothing if user hasn't linked their Telegram
-func (s *Service) SendNotification(ctx context.Context, userID int64, title, message string) {
+func (s *Service) SendNotification(ctx context.Context, userID int64, entityType string, entityID int64, title, message string) {
 	if !s.IsConfigured() {
 		log.Printf("[Telegram] Service not configured, skipping notification")
 		return
@@ -194,14 +196,35 @@ func (s *Service) SendNotification(ctx context.Context, userID int64, title, mes
 		return
 	}
 
-	// Format the notification message
-	text := fmt.Sprintf("*%s*\n%s", escapeMarkdown(title), escapeMarkdown(message))
+	// Format the notification message with link
+	var text string
+	if s.baseURL != "" && entityType != "" && entityID > 0 {
+		// Build entity URL based on type
+		entityURL := s.buildEntityURL(entityType, entityID)
+		text = fmt.Sprintf("*%s*\n%s\n\n[Open in Sarray Forge](%s)", escapeMarkdown(title), escapeMarkdown(message), entityURL)
+	} else {
+		text = fmt.Sprintf("*%s*\n%s", escapeMarkdown(title), escapeMarkdown(message))
+	}
 
 	log.Printf("[Telegram] Sending notification to user %d (chat %s)", userID, chatID.String)
 	if err := s.SendMessage(chatID.String, text); err != nil {
 		log.Printf("[Telegram] Failed to send notification to user %d: %v", userID, err)
 	} else {
 		log.Printf("[Telegram] Successfully sent notification to user %d", userID)
+	}
+}
+
+// buildEntityURL constructs a URL for the given entity type and ID
+func (s *Service) buildEntityURL(entityType string, entityID int64) string {
+	switch entityType {
+	case "issue":
+		return fmt.Sprintf("%s/issues/%d", s.baseURL, entityID)
+	case "doc":
+		return fmt.Sprintf("%s/docs/%d", s.baseURL, entityID)
+	case "release":
+		return fmt.Sprintf("%s/releases/%d", s.baseURL, entityID)
+	default:
+		return s.baseURL
 	}
 }
 
