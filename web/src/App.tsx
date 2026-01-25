@@ -1,13 +1,15 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider, useIsFetching } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { AuthProvider, ProtectedRoute } from './context/AuthContext';
+import { AuthProvider, ProtectedRoute, useAuth } from './context/AuthContext';
 import { KeyboardProvider } from './context/KeyboardContext';
 import { WebSocketProvider } from './context/WebSocketContext';
 import { ToastProvider } from './context/ToastContext';
 import { CommandMenu } from './components/ui/CommandMenu';
 import { Layout } from './components/layout/Layout';
 import { ConflictWarning } from './components/ui/ConflictWarning';
+import { notificationsApi } from './api/notifications';
 
 // i18n
 import './i18n';
@@ -49,6 +51,33 @@ function GlobalLoadingIndicator() {
   );
 }
 
+// Handle ?notif= query param to mark notifications as read
+// This runs globally so clicking Telegram links auto-marks the notification
+function NotificationHandler() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const notifId = searchParams.get('notif');
+    if (notifId && user) {
+      const id = parseInt(notifId, 10);
+      if (!isNaN(id)) {
+        // Mark notification as read
+        notificationsApi.markRead(id).catch((err) => {
+          console.error('Failed to mark notification as read:', err);
+        });
+        
+        // Remove the notif param from URL (keep other params)
+        searchParams.delete('notif');
+        setSearchParams(searchParams, { replace: true });
+      }
+    }
+  }, [location.pathname, searchParams, setSearchParams, user]);
+
+  return null;
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -88,6 +117,7 @@ function App() {
                 <GlobalLoadingIndicator />
                 <CommandMenu />
                 <ConflictWarning />
+                <NotificationHandler />
                 <AppRoutes />
               </ToastProvider>
             </KeyboardProvider>
