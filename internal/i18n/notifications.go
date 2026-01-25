@@ -1,0 +1,79 @@
+package i18n
+
+import (
+	"net/http"
+	"strings"
+)
+
+// Notification message templates by language
+// Uses {{actor}} and {{entityType}} as placeholders
+var notificationMessages = map[string]map[string]string{
+	"en": {
+		"mention":             "{{actor}} mentioned you",
+		"assigned":            "{{actor}} assigned you",
+		"comment_on_owned":    "{{actor}} commented on your {{entityType}}",
+		"comment_on_assigned": "{{actor}} commented",
+	},
+	"ar": {
+		"mention":             "{{actor}} أشار إليك",
+		"assigned":            "{{actor}} أسند إليك",
+		"comment_on_owned":    "{{actor}} علّق على {{entityType}} الخاص بك",
+		"comment_on_assigned": "{{actor}} علّق",
+	},
+}
+
+// Entity type translations
+var entityTypes = map[string]map[string]string{
+	"en": {"issue": "issue", "doc": "document", "release": "release"},
+	"ar": {"issue": "المهمة", "doc": "الوثيقة", "release": "الإصدار"},
+}
+
+// GetNotificationMessage builds a localized notification message
+func GetNotificationMessage(lang, notifType, actorName, entityType string) string {
+	// Get language map, fallback to English
+	langMap, ok := notificationMessages[lang]
+	if !ok {
+		langMap = notificationMessages["en"]
+	}
+
+	// Get message template
+	template, ok := langMap[notifType]
+	if !ok {
+		return actorName // fallback to just actor name
+	}
+
+	// Replace {{actor}} placeholder
+	msg := strings.Replace(template, "{{actor}}", actorName, 1)
+
+	// Replace {{entityType}} placeholder if present
+	if strings.Contains(msg, "{{entityType}}") {
+		entityLangMap := entityTypes[lang]
+		if entityLangMap == nil {
+			entityLangMap = entityTypes["en"]
+		}
+		entityName := entityLangMap[entityType]
+		if entityName == "" {
+			entityName = entityType // fallback to raw type
+		}
+		msg = strings.Replace(msg, "{{entityType}}", entityName, 1)
+	}
+
+	return msg
+}
+
+// GetLanguageFromRequest extracts the language preference from the Accept-Language header
+// Returns "en" as default if not specified or not supported
+func GetLanguageFromRequest(r *http.Request) string {
+	lang := r.Header.Get("Accept-Language")
+
+	// Normalize: handle "ar-SA", "ar", "en-US", "en", etc.
+	lang = strings.ToLower(strings.TrimSpace(lang))
+
+	// Check for Arabic
+	if strings.HasPrefix(lang, "ar") {
+		return "ar"
+	}
+
+	// Default to English
+	return "en"
+}

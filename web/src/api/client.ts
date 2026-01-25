@@ -2,6 +2,8 @@
 // API Client - Centralized fetch wrapper
 // ============================================
 
+import i18n from '../i18n';
+
 const API_BASE = '/api';
 
 export class ApiError extends Error {
@@ -30,6 +32,7 @@ async function request<T>(
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      'Accept-Language': i18n.language || 'en',
       ...options.headers,
     },
   });

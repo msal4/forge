@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	db "sarray-forge/internal/db/sqlc"
+	"sarray-forge/internal/i18n"
 	"sarray-forge/internal/middleware"
 	"sarray-forge/internal/models"
 )
@@ -30,6 +31,9 @@ func (h *Handlers) ListNotifications(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Get language preference from request header
+	lang := i18n.GetLanguageFromRequest(r)
+
 	queries := db.New(h.db.DB)
 	rows, err := queries.ListNotificationsByUser(context.Background(), db.ListNotificationsByUserParams{
 		UserID: userID,
@@ -53,6 +57,13 @@ func (h *Handlers) ListNotifications(w http.ResponseWriter, r *http.Request) {
 			commentID = &row.CommentID.Int64
 		}
 
+		// Build localized message based on notification type and language
+		actorName := row.ActorFullName
+		if actorName == "" {
+			actorName = row.ActorUsername
+		}
+		localizedMessage := i18n.GetNotificationMessage(lang, row.NotificationType, actorName, row.EntityType)
+
 		notifications[i] = models.Notification{
 			ID:               row.ID,
 			UserID:           row.UserID,
@@ -62,7 +73,7 @@ func (h *Handlers) ListNotifications(w http.ResponseWriter, r *http.Request) {
 			EntityID:         row.EntityID,
 			CommentID:        commentID,
 			Title:            row.Title,
-			Message:          row.Message,
+			Message:          localizedMessage,
 			IsRead:           row.IsRead,
 			CreatedAt:        row.CreatedAt,
 			Actor: &models.User{
