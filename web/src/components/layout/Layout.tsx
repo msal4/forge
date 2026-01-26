@@ -18,6 +18,7 @@ import { HotkeyBadge } from '../ui/HotkeyBadge';
 import { ConnectionStatus } from '../ui/ConnectionStatus';
 import { NotificationBell } from '../ui/NotificationBell';
 import { Avatar } from '../ui/Avatar';
+import { ActiveUsers } from '../ui/ActiveUsers';
 
 // ============================================
 // Main Layout - Sidebar + Content
@@ -83,6 +84,11 @@ export function Layout() {
               <NavItem to="/settings" icon={<Settings size={18} />} label={t('nav.settings')} shortcut="g+s" />
             </div>
           </nav>
+          
+          {/* Active Users Widget */}
+          <div className="border-t border-parchment-300">
+            <ActiveUsers />
+          </div>
           
           {/* User Info & Logout */}
           <div className="p-3 border-t border-parchment-300 space-y-2">

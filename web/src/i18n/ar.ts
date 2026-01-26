@@ -426,6 +426,13 @@ export default {
 		disconnected: 'غير متصل',
 	},
 
+	// Active Users (Presence)
+	presence: {
+		onlineNow: 'متصلون الآن',
+		justYou: 'أنت فقط',
+		andMore: '+{{count}} آخرون',
+	},
+
 	// Conflict warnings
 	conflict: {
 		title: 'تم تحديث العنصر',

@@ -47,6 +47,11 @@ export interface TelegramStatus {
   chatId?: string; // Masked chat ID (e.g., "***1234")
 }
 
+export interface ActiveUsersResponse {
+  users: User[];
+  count: number;
+}
+
 export interface TelegramLinkResponse {
   linkUrl: string;
 }
@@ -57,6 +62,9 @@ export const usersApi = {
 
   // Get current user
   me: (options?: RequestOptions) => api.get<User>('/users/me', options),
+
+  // Get active (WebSocket-connected) users
+  getActive: (options?: RequestOptions) => api.get<ActiveUsersResponse>('/users/active', options),
 
   // Change password
   changePassword: (newPassword: string, options?: RequestOptions) =>

@@ -10,7 +10,7 @@ import { queryKeys } from '../hooks/useApi';
 // WebSocket event types from backend
 export interface WSEvent {
   type: string;
-  resource: 'issue' | 'doc' | 'release' | 'comment' | 'notification';
+  resource: 'issue' | 'doc' | 'release' | 'comment' | 'notification' | 'users';
   id: number;
   data?: unknown;
   userId: number;

@@ -76,6 +76,7 @@ func main() {
 	mux.Handle("POST /api/users/me/avatar", requireAuth(http.HandlerFunc(h.UploadAvatar)))
 	mux.Handle("DELETE /api/users/me/avatar", requireAuth(http.HandlerFunc(h.DeleteAvatar)))
 	mux.Handle("GET /api/users", requireAuth(http.HandlerFunc(h.ListUsers)))
+	mux.Handle("GET /api/users/active", requireAuth(http.HandlerFunc(h.GetActiveUsers)))
 	mux.Handle("GET /api/profile/{username}", requireAuth(http.HandlerFunc(h.GetUserProfileByUsername)))
 	mux.Handle("GET /api/profile/{username}/issues", requireAuth(http.HandlerFunc(h.GetUserIssuesByUsername)))
 	mux.Handle("GET /api/profile/{username}/docs", requireAuth(http.HandlerFunc(h.GetUserDocsByUsername)))

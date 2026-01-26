@@ -183,6 +183,63 @@ func (h *Handlers) ListUsers(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, users)
 }
 
+// GetActiveUsers handles GET /api/users/active - returns users with active WebSocket connections
+func (h *Handlers) GetActiveUsers(w http.ResponseWriter, r *http.Request) {
+	// Get unique user IDs from WebSocket hub
+	userIDs := h.hub.ConnectedUserIDs()
+
+	if len(userIDs) == 0 {
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"users": []models.User{},
+			"count": 0,
+		})
+		return
+	}
+
+	// Build query with placeholders for each ID
+	placeholders := "?"
+	args := []interface{}{userIDs[0]}
+	for i := 1; i < len(userIDs); i++ {
+		placeholders += ", ?"
+		args = append(args, userIDs[i])
+	}
+
+	query := `
+		SELECT id, username, email, full_name, avatar_url, created_at, updated_at
+		FROM users 
+		WHERE id IN (` + placeholders + `)
+		ORDER BY username
+	`
+
+	rows, err := h.db.Query(query, args...)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "db_error", "Failed to fetch active users")
+		return
+	}
+	defer rows.Close()
+
+	var users []models.User
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(
+			&user.ID, &user.Username, &user.Email, &user.FullName,
+			&user.AvatarURL, &user.CreatedAt, &user.UpdatedAt,
+		); err != nil {
+			continue
+		}
+		users = append(users, user)
+	}
+
+	if users == nil {
+		users = []models.User{}
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"users": users,
+		"count": len(users),
+	})
+}
+
 // ============================================
 // Issue Handlers (The Tablet)
 // ============================================

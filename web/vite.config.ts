@@ -28,6 +28,11 @@ export default defineConfig({
           });
         },
       },
+      '/uploads': {
+        target: 'https://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
   build: {

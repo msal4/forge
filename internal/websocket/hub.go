@@ -43,6 +43,8 @@ func (h *Hub) Run() {
 			h.clients[client] = true
 			h.mu.Unlock()
 			log.Printf("[WS Hub] Client registered (user: %d). Total: %d", client.userID, len(h.clients))
+			// Broadcast presence update
+			h.Broadcast(Event{Type: "presence.update", Resource: "users", ID: client.userID})
 
 		case client := <-h.unregister:
 			h.mu.Lock()
@@ -52,6 +54,8 @@ func (h *Hub) Run() {
 			}
 			h.mu.Unlock()
 			log.Printf("[WS Hub] Client unregistered (user: %d). Total: %d", client.userID, len(h.clients))
+			// Broadcast presence update
+			h.Broadcast(Event{Type: "presence.update", Resource: "users", ID: client.userID})
 
 		case message := <-h.broadcast:
 			h.mu.RLock()
@@ -87,6 +91,24 @@ func (h *Hub) ClientCount() int {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	return len(h.clients)
+}
+
+// ConnectedUserIDs returns unique user IDs of all connected clients
+func (h *Hub) ConnectedUserIDs() []int64 {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	seen := make(map[int64]bool)
+	var userIDs []int64
+
+	for client := range h.clients {
+		if !seen[client.userID] {
+			seen[client.userID] = true
+			userIDs = append(userIDs, client.userID)
+		}
+	}
+
+	return userIDs
 }
 
 // Register registers a client with the hub

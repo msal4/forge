@@ -426,6 +426,13 @@ export default {
 		disconnected: 'Offline',
 	},
 
+	// Active Users (Presence)
+	presence: {
+		onlineNow: 'Online Now',
+		justYou: 'Just you',
+		andMore: '+{{count}} more',
+	},
+
 	// Conflict warnings
 	conflict: {
 		title: 'Item Updated',
