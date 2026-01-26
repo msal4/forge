@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Wifi, WifiOff } from 'lucide-react';
 import { LoadingIndicator } from './LoadingIndicator';
@@ -7,44 +6,13 @@ import { useWebSocket, type ConnectionStatus as ConnectionStatusType } from '../
 // ============================================
 // Connection Status Indicator
 // Subtle dot that shows real-time connection status
+// Always visible - minimal when connected, prominent when not
 // ============================================
 
 export function ConnectionStatus() {
   const { t } = useTranslation();
   const { status } = useWebSocket();
-  const [visible, setVisible] = useState(false);
-  const [hideTimeout, setHideTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
-
-  // Show indicator briefly on connection, hide after stable connection
-  useEffect(() => {
-    // Clear any existing timeout
-    if (hideTimeout) {
-      clearTimeout(hideTimeout);
-      setHideTimeout(null);
-    }
-
-    if (status === 'connected') {
-      // Show briefly then hide
-      setVisible(true);
-      const timeout = setTimeout(() => setVisible(false), 3000);
-      setHideTimeout(timeout);
-    } else if (status === 'reconnecting' || status === 'connecting') {
-      // Always show when reconnecting
-      setVisible(true);
-    } else if (status === 'disconnected') {
-      // Show disconnected state
-      setVisible(true);
-    }
-
-    return () => {
-      if (hideTimeout) {
-        clearTimeout(hideTimeout);
-      }
-    };
-  }, [status]);
-
-  // Don't render if hidden
-  if (!visible) return null;
+  const isConnected = status === 'connected';
 
   const getStatusConfig = (s: ConnectionStatusType) => {
     switch (s) {
@@ -91,8 +59,12 @@ export function ConnectionStatus() {
       `}
       title={config.label}
     >
-      <span className={`w-2 h-2 rounded-full ${config.color} animate-pulse`} />
-      <span className="hidden sm:inline">{config.icon}</span>
+      {/* Dot - always shown, no pulse when connected for subtlety */}
+      <span className={`w-2 h-2 rounded-full ${config.color} ${!isConnected ? 'animate-pulse' : ''}`} />
+      {/* Icon - hidden when connected for minimal footprint */}
+      {!isConnected && (
+        <span className="hidden sm:inline">{config.icon}</span>
+      )}
     </div>
   );
 }
