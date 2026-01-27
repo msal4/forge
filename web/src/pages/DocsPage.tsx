@@ -6,6 +6,8 @@ import { Markdown } from '../components/ui/Markdown';
 import { CommentSection } from '../components/comments/CommentSection';
 import { ActivityHistory } from '../components/ui/ActivityHistory';
 import { MentionInput, type MentionInputRef } from '../components/comments/MentionInput';
+import { ReactionPicker } from '../components/reactions/ReactionPicker';
+import { useReactions } from '../hooks/useReactions';
 import { useQueryClient } from '@tanstack/react-query';
 import { 
   Plus, 
@@ -574,95 +576,15 @@ export function DocsPage() {
 
       {/* Document View Mode */}
       {mode === 'view' && selectedDoc && (
-        <div className="tablet-card p-6 transition-all duration-200">
-          <div className="prose prose-mesopotamian max-w-none">
-            {selectedDoc.content ? (
-              <Markdown users={users}>{selectedDoc.content}</Markdown>
-            ) : (
-              <p className="text-stone-500 italic">{t('docs.noContent')}</p>
-            )}
-          </div>
-          
-          {/* Document metadata + scroll to comments button */}
-          <div className="mt-6 pt-4 border-t border-parchment-300 flex items-center justify-between">
-            <div className="flex items-center gap-4 text-sm text-lapis-500">
-              {selectedDoc.author && (
-                <div className="flex items-center gap-1">
-                  <User size={14} />
-                  <span>{selectedDoc.author.fullName || selectedDoc.author.username}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-1">
-                <Clock size={14} />
-                <span>{t('docs.created', { date: formatDate(selectedDoc.createdAt) })}</span>
-              </div>
-            </div>
-            
-            {/* Scroll to comments button */}
-            <button
-              onClick={scrollToComments}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-lapis-500 hover:text-lapis-700 hover:bg-parchment-200 rounded-lg transition-colors"
-            >
-              <MessageSquare size={14} />
-              {t('docs.jumpToComments')}
-              <ChevronDown size={14} />
-            </button>
-          </div>
-
-          {/* Tabbed Panel for Comments & Activity */}
-          <div 
-            ref={tabbedPanelRef}
-            className="mt-6 border border-parchment-200 rounded-lg bg-parchment-50 overflow-hidden scroll-mt-4"
-          >
-            {/* Tab Header */}
-            <div className="flex border-b border-parchment-200 bg-parchment-100/50">
-              <button
-                onClick={() => setActiveTab('comments')}
-                className={`
-                  flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium
-                  transition-colors relative
-                  ${activeTab === 'comments' 
-                    ? 'text-lapis-700 bg-parchment-50' 
-                    : 'text-lapis-500 hover:text-lapis-600 hover:bg-parchment-100'
-                  }
-                `}
-              >
-                <MessageSquare size={16} />
-                {t('docs.tabs.comments')}
-                {activeTab === 'comments' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500" />
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab('activity')}
-                className={`
-                  flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium
-                  transition-colors relative
-                  ${activeTab === 'activity' 
-                    ? 'text-lapis-700 bg-parchment-50' 
-                    : 'text-lapis-500 hover:text-lapis-600 hover:bg-parchment-100'
-                  }
-                `}
-              >
-                <History size={16} />
-                {t('docs.tabs.activity')}
-                {activeTab === 'activity' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500" />
-                )}
-              </button>
-            </div>
-
-            {/* Tab Content */}
-            <div className="p-4">
-              {activeTab === 'comments' && (
-                <CommentSection resourceType="doc" resourceId={selectedDoc.id} />
-              )}
-              {activeTab === 'activity' && (
-                <ActivityHistory entityType="doc" entityId={selectedDoc.id} />
-              )}
-            </div>
-          </div>
-        </div>
+        <DocViewContent 
+          doc={selectedDoc}
+          users={users}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          tabbedPanelRef={tabbedPanelRef}
+          scrollToComments={scrollToComments}
+          formatDate={formatDate}
+        />
       )}
 
       {/* Document Edit/Create Mode */}
@@ -996,6 +918,139 @@ function DocCard({ doc, onClick, onEdit, onDelete }: DocCardProps) {
           >
             <Trash2 size={14} />
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================
+// Doc View Content Component
+// ============================================
+
+interface DocViewContentProps {
+  doc: Doc;
+  users: Array<{ id: number; username: string; fullName?: string }>;
+  activeTab: DocTabType;
+  setActiveTab: (tab: DocTabType) => void;
+  tabbedPanelRef: React.RefObject<HTMLDivElement>;
+  scrollToComments: () => void;
+  formatDate: (dateStr: string) => string;
+}
+
+function DocViewContent({
+  doc,
+  users,
+  activeTab,
+  setActiveTab,
+  tabbedPanelRef,
+  scrollToComments,
+  formatDate,
+}: DocViewContentProps) {
+  const { t } = useTranslation();
+  
+  // Doc reactions
+  const { reactions: docReactions, toggle: toggleDocReaction, isToggling: isTogglingReaction } = useReactions({
+    target: { type: 'doc', id: doc.id },
+    enabled: true,
+  });
+
+  return (
+    <div className="tablet-card p-6 transition-all duration-200">
+      <div className="prose prose-mesopotamian max-w-none">
+        {doc.content ? (
+          <Markdown users={users}>{doc.content}</Markdown>
+        ) : (
+          <p className="text-stone-500 italic">{t('docs.noContent')}</p>
+        )}
+      </div>
+      
+      {/* Reactions */}
+      <div className="mt-4">
+        <ReactionPicker
+          reactions={docReactions}
+          onToggle={toggleDocReaction}
+          isLoading={isTogglingReaction}
+        />
+      </div>
+      
+      {/* Document metadata + scroll to comments button */}
+      <div className="mt-6 pt-4 border-t border-parchment-300 flex items-center justify-between">
+        <div className="flex items-center gap-4 text-sm text-lapis-500">
+          {doc.author && (
+            <div className="flex items-center gap-1">
+              <User size={14} />
+              <span>{doc.author.fullName || doc.author.username}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-1">
+            <Clock size={14} />
+            <span>{t('docs.created', { date: formatDate(doc.createdAt) })}</span>
+          </div>
+        </div>
+        
+        {/* Scroll to comments button */}
+        <button
+          onClick={scrollToComments}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-lapis-500 hover:text-lapis-700 hover:bg-parchment-200 rounded-lg transition-colors"
+        >
+          <MessageSquare size={14} />
+          {t('docs.jumpToComments')}
+          <ChevronDown size={14} />
+        </button>
+      </div>
+
+      {/* Tabbed Panel for Comments & Activity */}
+      <div 
+        ref={tabbedPanelRef}
+        className="mt-6 border border-parchment-200 rounded-lg bg-parchment-50 overflow-hidden scroll-mt-4"
+      >
+        {/* Tab Header */}
+        <div className="flex border-b border-parchment-200 bg-parchment-100/50">
+          <button
+            onClick={() => setActiveTab('comments')}
+            className={`
+              flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium
+              transition-colors relative
+              ${activeTab === 'comments' 
+                ? 'text-lapis-700 bg-parchment-50' 
+                : 'text-lapis-500 hover:text-lapis-600 hover:bg-parchment-100'
+              }
+            `}
+          >
+            <MessageSquare size={16} />
+            {t('docs.tabs.comments')}
+            {activeTab === 'comments' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500" />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('activity')}
+            className={`
+              flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium
+              transition-colors relative
+              ${activeTab === 'activity' 
+                ? 'text-lapis-700 bg-parchment-50' 
+                : 'text-lapis-500 hover:text-lapis-600 hover:bg-parchment-100'
+              }
+            `}
+          >
+            <History size={16} />
+            {t('docs.tabs.activity')}
+            {activeTab === 'activity' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500" />
+            )}
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        <div className="p-4">
+          {activeTab === 'comments' && (
+            <CommentSection resourceType="doc" resourceId={doc.id} />
+          )}
+          {activeTab === 'activity' && (
+            <ActivityHistory entityType="doc" entityId={doc.id} />
+          )}
         </div>
       </div>
     </div>

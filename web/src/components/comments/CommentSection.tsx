@@ -12,6 +12,9 @@ import { commentsApi, type Comment } from '../../api/comments';
 import { usersApi } from '../../api/users';
 import { useWebSocket } from '../../context/WebSocketContext';
 import { MentionInput } from './MentionInput';
+import { InlineReactions } from '../reactions/ReactionPicker';
+import { useReactions } from '../../hooks/useReactions';
+import type { ReactionTarget } from '../../api/reactions';
 
 // ============================================
 // Comment Section Component
@@ -232,6 +235,8 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
 								<CommentItem
 									key={comment.id}
 									comment={comment}
+									resourceType={resourceType}
+									resourceId={resourceId}
 									isOwn={currentUser?.id === comment.authorId}
 									onDelete={() => handleDeleteComment(comment)}
 									isDeleting={deleteMutation.isPending && deleteMutation.variables === comment.id}
@@ -339,6 +344,8 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
 // Individual comment item
 interface CommentItemProps {
 	comment: Comment;
+	resourceType: ResourceType;
+	resourceId: number;
 	isOwn: boolean;
 	onDelete: () => void;
 	isDeleting: boolean;
@@ -346,8 +353,22 @@ interface CommentItemProps {
 	users: Array<{ id: number; username: string }>;
 }
 
-function CommentItem({ comment, isOwn, onDelete, isDeleting, formatRelativeTime, users }: CommentItemProps) {
+function CommentItem({ comment, resourceType, resourceId, isOwn, onDelete, isDeleting, formatRelativeTime, users }: CommentItemProps) {
 	const authorName = comment.author?.fullName || comment.author?.username || 'Unknown';
+
+	// Build reaction target based on resource type
+	const reactionTarget: ReactionTarget = React.useMemo(() => {
+		switch (resourceType) {
+			case 'issue':
+				return { type: 'issue_comment', issueId: resourceId, commentId: comment.id };
+			case 'doc':
+				return { type: 'doc_comment', docId: resourceId, commentId: comment.id };
+			case 'release':
+				return { type: 'release_comment', releaseId: resourceId, commentId: comment.id };
+		}
+	}, [resourceType, resourceId, comment.id]);
+
+	const { reactions, toggle, isToggling } = useReactions({ target: reactionTarget });
 
 	return (
 		<div className="group relative py-2 hover:bg-parchment-100/30 transition-colors">
@@ -397,6 +418,15 @@ function CommentItem({ comment, isOwn, onDelete, isDeleting, formatRelativeTime,
 
 					<div className="text-sm text-lapis-600 prose-sm prose-mesopotamian max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
 						<Markdown users={users}>{comment.content}</Markdown>
+					</div>
+
+					{/* Reactions */}
+					<div className="mt-1.5">
+						<InlineReactions
+							reactions={reactions}
+							onToggle={toggle}
+							isLoading={isToggling}
+						/>
 					</div>
 				</div>
 			</div>

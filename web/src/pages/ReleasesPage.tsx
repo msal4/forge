@@ -5,6 +5,8 @@ import i18n from '../i18n';
 import { Markdown } from '../components/ui/Markdown';
 import { CommentSection } from '../components/comments/CommentSection';
 import { MentionInput } from '../components/comments/MentionInput';
+import { ReactionPicker } from '../components/reactions/ReactionPicker';
+import { useReactions } from '../hooks/useReactions';
 import { useQueryClient } from '@tanstack/react-query';
 import { 
   Plus, 
@@ -48,6 +50,12 @@ export function ReleasesPage() {
   
   // Confirm dialog
   const { confirm, DialogComponent: ConfirmDialogComponent } = useConfirmDialog();
+
+  // Release reactions
+  const { reactions: releaseReactions, toggle: toggleReleaseReaction, isToggling: isTogglingReaction } = useReactions({
+    target: { type: 'release', id: selectedRelease?.id ?? 0 },
+    enabled: !!selectedRelease,
+  });
 
   // Helper to select release and update URL
   const selectRelease = React.useCallback((release: Release | null) => {
@@ -283,6 +291,15 @@ export function ReleasesPage() {
                       <Calendar size={14} />
                       {formatDate(selectedRelease.createdAt)}
                     </span>
+                  </div>
+                  
+                  {/* Reactions */}
+                  <div className="mt-3">
+                    <ReactionPicker
+                      reactions={releaseReactions}
+                      onToggle={toggleReleaseReaction}
+                      isLoading={isTogglingReaction}
+                    />
                   </div>
                 </div>
                 <button

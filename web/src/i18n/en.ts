@@ -501,6 +501,12 @@ export default {
 		},
 	},
 
+	// Reactions
+	reactions: {
+		addReaction: 'Add reaction',
+		reacted: '{{actor}} reacted to your {{entityType}}',
+	},
+
 	// Activity History
 	history: {
 		title: 'History',

@@ -121,6 +121,7 @@ const (
 	NotificationTypeCommentOnAssigned NotificationType = "comment_on_assigned"
 	NotificationTypeEntityUpdated     NotificationType = "entity_updated" // Someone updated your issue/doc/release
 	NotificationTypeEntityDeleted     NotificationType = "entity_deleted" // Someone deleted your issue/doc/release
+	NotificationTypeReaction          NotificationType = "reaction"       // Someone reacted to your content
 )
 
 // Notification represents an in-app notification
@@ -262,4 +263,42 @@ type SearchResult struct {
 // SearchResponse is the response body for global search
 type SearchResponse struct {
 	Results []SearchResult `json:"results"`
+}
+
+// ============================================
+// Reactions
+// ============================================
+
+// Reaction represents an emoji reaction to content
+type Reaction struct {
+	ID               int64     `json:"id"`
+	UserID           int64     `json:"userId"`
+	User             *User     `json:"user,omitempty"`
+	Emoji            string    `json:"emoji"`
+	IssueID          *int64    `json:"issueId,omitempty"`
+	DocID            *int64    `json:"docId,omitempty"`
+	ReleaseID        *int64    `json:"releaseId,omitempty"`
+	IssueCommentID   *int64    `json:"issueCommentId,omitempty"`
+	DocCommentID     *int64    `json:"docCommentId,omitempty"`
+	ReleaseCommentID *int64    `json:"releaseCommentId,omitempty"`
+	CreatedAt        time.Time `json:"createdAt"`
+}
+
+// ReactionSummary for displaying aggregated reactions
+type ReactionSummary struct {
+	Emoji   string  `json:"emoji"`
+	Count   int     `json:"count"`
+	UserIDs []int64 `json:"userIds"` // Who reacted with this emoji
+	Reacted bool    `json:"reacted"` // Did current user react?
+}
+
+// ToggleReactionRequest for adding/removing reactions
+type ToggleReactionRequest struct {
+	Emoji string `json:"emoji"`
+}
+
+// ToggleReactionResponse for toggle reaction endpoint
+type ToggleReactionResponse struct {
+	Added    bool      `json:"added"`    // true if added, false if removed
+	Reaction *Reaction `json:"reaction"` // The reaction (only if added)
 }

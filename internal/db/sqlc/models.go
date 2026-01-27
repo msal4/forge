@@ -99,6 +99,19 @@ type Project struct {
 	UpdatedAt   time.Time      `json:"updatedAt"`
 }
 
+type Reaction struct {
+	ID               int64         `json:"id"`
+	UserID           int64         `json:"userId"`
+	Emoji            string        `json:"emoji"`
+	IssueID          sql.NullInt64 `json:"issueId"`
+	DocID            sql.NullInt64 `json:"docId"`
+	ReleaseID        sql.NullInt64 `json:"releaseId"`
+	IssueCommentID   sql.NullInt64 `json:"issueCommentId"`
+	DocCommentID     sql.NullInt64 `json:"docCommentId"`
+	ReleaseCommentID sql.NullInt64 `json:"releaseCommentId"`
+	CreatedAt        time.Time     `json:"createdAt"`
+}
+
 type Release struct {
 	ID           int64          `json:"id"`
 	ProjectID    sql.NullInt64  `json:"projectId"`

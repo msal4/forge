@@ -38,6 +38,12 @@ type Querier interface {
 	CreateIssue(ctx context.Context, arg CreateIssueParams) (Issue, error)
 	CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error)
 	CreateProject(ctx context.Context, arg CreateProjectParams) (Project, error)
+	CreateReactionOnDoc(ctx context.Context, arg CreateReactionOnDocParams) (Reaction, error)
+	CreateReactionOnDocComment(ctx context.Context, arg CreateReactionOnDocCommentParams) (Reaction, error)
+	CreateReactionOnIssue(ctx context.Context, arg CreateReactionOnIssueParams) (Reaction, error)
+	CreateReactionOnIssueComment(ctx context.Context, arg CreateReactionOnIssueCommentParams) (Reaction, error)
+	CreateReactionOnRelease(ctx context.Context, arg CreateReactionOnReleaseParams) (Reaction, error)
+	CreateReactionOnReleaseComment(ctx context.Context, arg CreateReactionOnReleaseCommentParams) (Reaction, error)
 	CreateRelease(ctx context.Context, arg CreateReleaseParams) (Release, error)
 	CreateReleaseComment(ctx context.Context, arg CreateReleaseCommentParams) (ReleaseComment, error)
 	CreateReleaseFile(ctx context.Context, arg CreateReleaseFileParams) (ReleaseFile, error)
@@ -64,6 +70,12 @@ type Querier interface {
 	// Keep only the N most recent sessions per user
 	DeleteOldestUserSessions(ctx context.Context, arg DeleteOldestUserSessionsParams) error
 	DeleteProject(ctx context.Context, id int64) error
+	DeleteReactionFromDoc(ctx context.Context, arg DeleteReactionFromDocParams) (int64, error)
+	DeleteReactionFromDocComment(ctx context.Context, arg DeleteReactionFromDocCommentParams) (int64, error)
+	DeleteReactionFromIssue(ctx context.Context, arg DeleteReactionFromIssueParams) (int64, error)
+	DeleteReactionFromIssueComment(ctx context.Context, arg DeleteReactionFromIssueCommentParams) (int64, error)
+	DeleteReactionFromRelease(ctx context.Context, arg DeleteReactionFromReleaseParams) (int64, error)
+	DeleteReactionFromReleaseComment(ctx context.Context, arg DeleteReactionFromReleaseCommentParams) (int64, error)
 	DeleteRelease(ctx context.Context, id int64) error
 	DeleteReleaseComment(ctx context.Context, id int64) error
 	// Only allow author to delete their own comment
@@ -98,6 +110,7 @@ type Querier interface {
 	GetIssueByProjectAndNumber(ctx context.Context, arg GetIssueByProjectAndNumberParams) (GetIssueByProjectAndNumberRow, error)
 	// Get reporter and assignee for an issue (for notification recipients)
 	GetIssueOwnerAndAssignee(ctx context.Context, id int64) (GetIssueOwnerAndAssigneeRow, error)
+	GetIssueReactionCounts(ctx context.Context, issueID sql.NullInt64) ([]GetIssueReactionCountsRow, error)
 	GetLatestRelease(ctx context.Context, projectID sql.NullInt64) (GetLatestReleaseRow, error)
 	// Get the highest rank in a status column for inserting at the end
 	GetMaxRankInStatus(ctx context.Context, arg GetMaxRankInStatusParams) (interface{}, error)
@@ -108,6 +121,12 @@ type Querier interface {
 	// ============================================
 	GetProjectByID(ctx context.Context, id int64) (GetProjectByIDRow, error)
 	GetProjectByKey(ctx context.Context, key string) (GetProjectByKeyRow, error)
+	GetReactionOnDoc(ctx context.Context, arg GetReactionOnDocParams) (Reaction, error)
+	GetReactionOnDocComment(ctx context.Context, arg GetReactionOnDocCommentParams) (Reaction, error)
+	GetReactionOnIssue(ctx context.Context, arg GetReactionOnIssueParams) (Reaction, error)
+	GetReactionOnIssueComment(ctx context.Context, arg GetReactionOnIssueCommentParams) (Reaction, error)
+	GetReactionOnRelease(ctx context.Context, arg GetReactionOnReleaseParams) (Reaction, error)
+	GetReactionOnReleaseComment(ctx context.Context, arg GetReactionOnReleaseCommentParams) (Reaction, error)
 	// ============================================
 	// Release Queries (The Granary)
 	// ============================================
@@ -177,6 +196,33 @@ type Querier interface {
 	// Includes actor information for display
 	ListNotificationsByUser(ctx context.Context, arg ListNotificationsByUserParams) ([]ListNotificationsByUserRow, error)
 	ListProjects(ctx context.Context) ([]ListProjectsRow, error)
+	// ============================================
+	// Doc Reactions
+	// ============================================
+	ListReactionsByDoc(ctx context.Context, docID sql.NullInt64) ([]ListReactionsByDocRow, error)
+	// ============================================
+	// Doc Comment Reactions
+	// ============================================
+	ListReactionsByDocComment(ctx context.Context, docCommentID sql.NullInt64) ([]ListReactionsByDocCommentRow, error)
+	// ============================================
+	// Reactions Queries
+	// ============================================
+	// ============================================
+	// Issue Reactions
+	// ============================================
+	ListReactionsByIssue(ctx context.Context, issueID sql.NullInt64) ([]ListReactionsByIssueRow, error)
+	// ============================================
+	// Issue Comment Reactions
+	// ============================================
+	ListReactionsByIssueComment(ctx context.Context, issueCommentID sql.NullInt64) ([]ListReactionsByIssueCommentRow, error)
+	// ============================================
+	// Release Reactions
+	// ============================================
+	ListReactionsByRelease(ctx context.Context, releaseID sql.NullInt64) ([]ListReactionsByReleaseRow, error)
+	// ============================================
+	// Release Comment Reactions
+	// ============================================
+	ListReactionsByReleaseComment(ctx context.Context, releaseCommentID sql.NullInt64) ([]ListReactionsByReleaseCommentRow, error)
 	ListRecentActivity(ctx context.Context, limit int64) ([]ListRecentActivityRow, error)
 	ListRecentIssues(ctx context.Context, limit int64) ([]ListRecentIssuesRow, error)
 	ListReleaseFiles(ctx context.Context, releaseID int64) ([]ReleaseFile, error)

@@ -6,6 +6,8 @@ import { CommentSection } from '../comments/CommentSection';
 import { ActivityHistory } from '../ui/ActivityHistory';
 import { Avatar } from '../ui/Avatar';
 import { MentionInput } from '../comments/MentionInput';
+import { ReactionPicker } from '../reactions/ReactionPicker';
+import { useReactions } from '../../hooks/useReactions';
 import {
 	X,
 	ArrowRight,
@@ -369,6 +371,12 @@ export function IssueModal({
 	const priorityStyle = priorityStyles[priority];
 	const statusStyle = statusStyles[status];
 
+	// Issue reactions
+	const { reactions: issueReactions, toggle: toggleIssueReaction, isToggling: isTogglingReaction } = useReactions({
+		target: { type: 'issue', id: issue?.id ?? 0 },
+		enabled: isOpen && !!issue && mode === 'view',
+	});
+
 	if (!isOpen) return null;
 
 	return (
@@ -596,6 +604,17 @@ export function IssueModal({
 							) : (
 								<div className="min-h-[80px] sm:min-h-[100px] flex items-center justify-center text-stone-500 italic text-sm bg-parchment-100/30 rounded-lg">
 									{t('issueModal.noDescription')}
+								</div>
+							)}
+
+							{/* Reactions - only in view mode */}
+							{mode === 'view' && issue && (
+								<div className="mt-3">
+									<ReactionPicker
+										reactions={issueReactions}
+										onToggle={toggleIssueReaction}
+										isLoading={isTogglingReaction}
+									/>
 								</div>
 							)}
 						</div>

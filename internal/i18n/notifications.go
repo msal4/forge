@@ -15,6 +15,7 @@ var notificationMessages = map[string]map[string]string{
 		"comment_on_assigned": "{{actor}} commented",
 		"entity_updated":      "{{actor}} updated your {{entityType}}",
 		"entity_deleted":      "{{actor}} deleted your {{entityType}}",
+		"reaction":            "{{actor}} reacted with {{emoji}}",
 	},
 	"ar": {
 		"mention":             "{{actor}} أشار إليك",
@@ -23,6 +24,7 @@ var notificationMessages = map[string]map[string]string{
 		"comment_on_assigned": "{{actor}} علّق",
 		"entity_updated":      "{{actor}} حدّث {{entityType}} الخاص بك",
 		"entity_deleted":      "{{actor}} حذف {{entityType}} الخاص بك",
+		"reaction":            "{{actor}} تفاعل بـ {{emoji}}",
 	},
 }
 
@@ -56,6 +58,11 @@ var entityTypes = map[string]map[string]string{
 
 // GetNotificationMessage builds a localized notification message
 func GetNotificationMessage(lang, notifType, actorName, entityType string) string {
+	return GetNotificationMessageWithEmoji(lang, notifType, actorName, entityType, "")
+}
+
+// GetNotificationMessageWithEmoji builds a localized notification message with optional emoji
+func GetNotificationMessageWithEmoji(lang, notifType, actorName, entityType, emoji string) string {
 	// Get language map, fallback to English
 	langMap, ok := notificationMessages[lang]
 	if !ok {
@@ -82,6 +89,11 @@ func GetNotificationMessage(lang, notifType, actorName, entityType string) strin
 			entityName = entityType // fallback to raw type
 		}
 		msg = strings.Replace(msg, "{{entityType}}", entityName, 1)
+	}
+
+	// Replace {{emoji}} placeholder if present
+	if strings.Contains(msg, "{{emoji}}") && emoji != "" {
+		msg = strings.Replace(msg, "{{emoji}}", emoji, 1)
 	}
 
 	return msg

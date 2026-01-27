@@ -501,6 +501,12 @@ export default {
 		},
 	},
 
+	// Reactions
+	reactions: {
+		addReaction: 'اضافة تفاعل',
+		reacted: '{{actor}} تفاعل مع {{entityType}} الخاص بك',
+	},
+
 	// Activity History
 	history: {
 		title: 'السجل',

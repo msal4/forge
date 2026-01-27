@@ -103,6 +103,12 @@ func main() {
 	mux.Handle("GET /api/issues/{id}/comments", requireAuth(http.HandlerFunc(h.ListIssueComments)))
 	mux.Handle("POST /api/issues/{id}/comments", requireAuth(http.HandlerFunc(h.CreateIssueComment)))
 	mux.Handle("DELETE /api/issues/{id}/comments/{commentId}", requireAuth(http.HandlerFunc(h.DeleteIssueComment)))
+	// Issue comment reactions
+	mux.Handle("GET /api/issues/{id}/comments/{commentId}/reactions", requireAuth(http.HandlerFunc(h.ListIssueCommentReactions)))
+	mux.Handle("POST /api/issues/{id}/comments/{commentId}/reactions", requireAuth(http.HandlerFunc(h.ToggleIssueCommentReaction)))
+	// Issue reactions
+	mux.Handle("GET /api/issues/{id}/reactions", requireAuth(http.HandlerFunc(h.ListIssueReactions)))
+	mux.Handle("POST /api/issues/{id}/reactions", requireAuth(http.HandlerFunc(h.ToggleIssueReaction)))
 
 	// Docs (The "Library") routes
 	mux.Handle("GET /api/docs", requireAuth(http.HandlerFunc(h.ListDocs)))
@@ -115,6 +121,12 @@ func main() {
 	mux.Handle("GET /api/docs/{id}/comments", requireAuth(http.HandlerFunc(h.ListDocComments)))
 	mux.Handle("POST /api/docs/{id}/comments", requireAuth(http.HandlerFunc(h.CreateDocComment)))
 	mux.Handle("DELETE /api/docs/{id}/comments/{commentId}", requireAuth(http.HandlerFunc(h.DeleteDocComment)))
+	// Doc comment reactions
+	mux.Handle("GET /api/docs/{id}/comments/{commentId}/reactions", requireAuth(http.HandlerFunc(h.ListDocCommentReactions)))
+	mux.Handle("POST /api/docs/{id}/comments/{commentId}/reactions", requireAuth(http.HandlerFunc(h.ToggleDocCommentReaction)))
+	// Doc reactions
+	mux.Handle("GET /api/docs/{id}/reactions", requireAuth(http.HandlerFunc(h.ListDocReactions)))
+	mux.Handle("POST /api/docs/{id}/reactions", requireAuth(http.HandlerFunc(h.ToggleDocReaction)))
 
 	// Releases (The "Granary") routes
 	mux.Handle("GET /api/releases", requireAuth(http.HandlerFunc(h.ListReleases)))
@@ -127,6 +139,12 @@ func main() {
 	mux.Handle("GET /api/releases/{id}/comments", requireAuth(http.HandlerFunc(h.ListReleaseComments)))
 	mux.Handle("POST /api/releases/{id}/comments", requireAuth(http.HandlerFunc(h.CreateReleaseComment)))
 	mux.Handle("DELETE /api/releases/{id}/comments/{commentId}", requireAuth(http.HandlerFunc(h.DeleteReleaseComment)))
+	// Release comment reactions
+	mux.Handle("GET /api/releases/{id}/comments/{commentId}/reactions", requireAuth(http.HandlerFunc(h.ListReleaseCommentReactions)))
+	mux.Handle("POST /api/releases/{id}/comments/{commentId}/reactions", requireAuth(http.HandlerFunc(h.ToggleReleaseCommentReaction)))
+	// Release reactions
+	mux.Handle("GET /api/releases/{id}/reactions", requireAuth(http.HandlerFunc(h.ListReleaseReactions)))
+	mux.Handle("POST /api/releases/{id}/reactions", requireAuth(http.HandlerFunc(h.ToggleReleaseReaction)))
 
 	// Notifications routes
 	mux.Handle("GET /api/notifications", requireAuth(http.HandlerFunc(h.ListNotifications)))

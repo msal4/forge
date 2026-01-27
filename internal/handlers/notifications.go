@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"strings"
 
 	db "sarray-forge/internal/db/sqlc"
 	"sarray-forge/internal/i18n"
@@ -14,6 +15,28 @@ import (
 // ============================================
 // Notification Handlers
 // ============================================
+
+// extractEmojiFromReactionMessage extracts the emoji from a reaction message
+// Message format: "Actor reacted with 🎉" or "Actor reacted with 🎉 to your comment"
+func extractEmojiFromReactionMessage(message string) string {
+	// Look for "reacted with " and extract the emoji after it
+	marker := "reacted with "
+	idx := strings.Index(message, marker)
+	if idx == -1 {
+		return ""
+	}
+
+	// Get everything after "reacted with "
+	rest := message[idx+len(marker):]
+
+	// The emoji is the first "word" (could be multi-rune emoji)
+	// Find the next space or end of string
+	spaceIdx := strings.Index(rest, " ")
+	if spaceIdx == -1 {
+		return rest // emoji is at the end
+	}
+	return rest[:spaceIdx]
+}
 
 // ListNotifications handles GET /api/notifications
 func (h *Handlers) ListNotifications(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +85,17 @@ func (h *Handlers) ListNotifications(w http.ResponseWriter, r *http.Request) {
 		if actorName == "" {
 			actorName = row.ActorUsername
 		}
-		localizedMessage := i18n.GetNotificationMessage(lang, row.NotificationType, actorName, row.EntityType)
+
+		// For reactions, extract emoji and build localized message
+		// For other types, use localized template
+		var localizedMessage string
+		if row.NotificationType == "reaction" {
+			// Extract emoji from stored message (format: "Actor reacted with 🎉")
+			emoji := extractEmojiFromReactionMessage(row.Message)
+			localizedMessage = i18n.GetNotificationMessageWithEmoji(lang, row.NotificationType, actorName, row.EntityType, emoji)
+		} else {
+			localizedMessage = i18n.GetNotificationMessage(lang, row.NotificationType, actorName, row.EntityType)
+		}
 
 		notifications[i] = models.Notification{
 			ID:               row.ID,

@@ -30,6 +30,10 @@ const (
 	EventCommentCreated = "comment_created"
 	EventCommentDeleted = "comment_deleted"
 
+	// Reactions
+	EventReactionAdded   = "reaction_added"
+	EventReactionRemoved = "reaction_removed"
+
 	// Notifications
 	EventNotificationCreated = "notification_created"
 
@@ -43,5 +47,6 @@ const (
 	ResourceDoc          = "doc"
 	ResourceRelease      = "release"
 	ResourceComment      = "comment"
+	ResourceReaction     = "reaction"
 	ResourceNotification = "notification"
 )
