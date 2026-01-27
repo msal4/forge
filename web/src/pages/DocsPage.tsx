@@ -248,11 +248,15 @@ export function DocsPage() {
     }
   }, [navigate]);
 
-  // Scroll to comments/activity panel
+  // Scroll to comments/activity panel - scroll to top of viewport
   const scrollToComments = React.useCallback(() => {
     setActiveTab('comments');
     setTimeout(() => {
-      tabbedPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (tabbedPanelRef.current) {
+        const yOffset = -20; // Small offset from top
+        const y = tabbedPanelRef.current.getBoundingClientRect().top + window.scrollY + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
     }, 100);
   }, []);
 

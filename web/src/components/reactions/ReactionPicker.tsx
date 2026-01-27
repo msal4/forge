@@ -86,8 +86,8 @@ export function ReactionPicker({
             border transition-colors
             disabled:opacity-50 disabled:cursor-not-allowed
             ${reacted
-              ? 'bg-lapis-100 border-lapis-300 text-lapis-700 hover:bg-lapis-200'
-              : 'bg-parchment-50 border-parchment-300 text-lapis-600 hover:border-lapis-300 hover:bg-parchment-100'
+              ? 'bg-lapis-100 dark:bg-lapis-700 border-lapis-300 dark:border-lapis-600 text-lapis-700 dark:text-parchment-200 hover:bg-lapis-200 dark:hover:bg-lapis-600'
+              : 'bg-parchment-50 dark:bg-lapis-800 border-parchment-300 dark:border-lapis-600 text-lapis-600 dark:text-parchment-300 hover:border-lapis-300 dark:hover:border-lapis-500 hover:bg-parchment-100 dark:hover:bg-lapis-700'
             }
             ${compact ? 'text-xs px-1.5 py-0.5' : ''}
           `}
@@ -103,9 +103,9 @@ export function ReactionPicker({
           onClick={() => setShowPicker(!showPicker)}
           disabled={disabled || isLoading}
           className={`
-            p-1 rounded hover:bg-parchment-100 transition-colors
+            p-1 rounded hover:bg-parchment-100 dark:hover:bg-lapis-700 transition-colors
             disabled:opacity-50 disabled:cursor-not-allowed
-            ${showPicker ? 'bg-parchment-100' : ''}
+            ${showPicker ? 'bg-parchment-100 dark:bg-lapis-700' : ''}
             ${compact ? 'p-0.5' : ''}
           `}
           title={t('reactions.addReaction', 'Add reaction')}
@@ -113,7 +113,7 @@ export function ReactionPicker({
           {isLoading ? (
             <LoadingIndicator size="xs" className="text-lapis-400" inline />
           ) : (
-            <SmilePlus className={`text-lapis-400 hover:text-lapis-600 ${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
+            <SmilePlus className={`text-lapis-400 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-200 ${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
           )}
         </button>
 
@@ -123,7 +123,7 @@ export function ReactionPicker({
             className="
               absolute z-50 bottom-full mb-1 
               ltr:left-0 rtl:right-0
-              bg-parchment-50 border border-parchment-300 rounded-lg shadow-lg
+              bg-parchment-50 dark:bg-lapis-800 border border-parchment-300 dark:border-lapis-600 rounded-lg shadow-lg dark:shadow-none
               p-2 animate-fade-in
             "
           >
@@ -140,10 +140,10 @@ export function ReactionPicker({
                     className={`
                       p-1.5 rounded text-lg transition-colors
                       ${hasReacted 
-                        ? 'bg-lapis-100 hover:bg-lapis-200' 
+                        ? 'bg-lapis-100 dark:bg-lapis-600 hover:bg-lapis-200 dark:hover:bg-lapis-500' 
                         : isActive 
-                          ? 'bg-parchment-100 hover:bg-parchment-200'
-                          : 'hover:bg-parchment-100'
+                          ? 'bg-parchment-100 dark:bg-lapis-700 hover:bg-parchment-200 dark:hover:bg-lapis-600'
+                          : 'hover:bg-parchment-100 dark:hover:bg-lapis-700'
                       }
                     `}
                     title={emoji}
