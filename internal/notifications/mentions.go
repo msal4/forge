@@ -44,6 +44,7 @@ type TelegramNotificationParams struct {
 	EntityID         int64
 	Title            string
 	ActorName        string
+	Emoji            string // For reaction notifications
 }
 
 // TelegramSender defines the interface for sending Telegram notifications
@@ -83,6 +84,7 @@ type CreateParams struct {
 	CommentID        *int64
 	Title            string
 	Message          string
+	Emoji            string // For reaction notifications
 }
 
 // Create creates a notification and broadcasts it via WebSocket
@@ -133,6 +135,7 @@ func (s *Service) Create(ctx context.Context, params CreateParams) error {
 			EntityID:         params.EntityID,
 			Title:            params.Title,
 			ActorName:        params.ActorName,
+			Emoji:            params.Emoji,
 		})
 	}
 

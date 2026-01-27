@@ -971,6 +971,7 @@ func (h *Handlers) notifyReaction(ctx context.Context, actorID int64, entityType
 		EntityID:         entityID,
 		Title:            entityTitle,
 		Message:          fmt.Sprintf("%s reacted with %s", actorName, emoji),
+		Emoji:            emoji,
 	})
 }
 
@@ -1040,5 +1041,6 @@ func (h *Handlers) notifyCommentReaction(ctx context.Context, actorID int64, com
 		CommentID:        &commentID,
 		Title:            entityTitle,
 		Message:          fmt.Sprintf("%s reacted with %s to your comment", actorName, emoji),
+		Emoji:            emoji,
 	})
 }

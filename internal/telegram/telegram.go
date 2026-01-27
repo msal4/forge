@@ -205,7 +205,12 @@ func (s *Service) SendNotification(ctx context.Context, params notifications.Tel
 	}
 
 	// Build localized notification message
-	message := i18n.GetNotificationMessage(lang, params.NotificationType, params.ActorName, params.EntityType)
+	var message string
+	if params.NotificationType == "reaction" && params.Emoji != "" {
+		message = i18n.GetNotificationMessageWithEmoji(lang, params.NotificationType, params.ActorName, params.EntityType, params.Emoji)
+	} else {
+		message = i18n.GetNotificationMessage(lang, params.NotificationType, params.ActorName, params.EntityType)
+	}
 
 	// Get localized "Open" link text
 	openLinkText := i18n.GetTelegramString(lang, "open_link")
