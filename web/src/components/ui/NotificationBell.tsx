@@ -43,20 +43,20 @@ function getEntityIcon(entityType: EntityType) {
   switch (entityType) {
     case 'issue':
       return (
-        <div className={`${iconClass} bg-lapis-100`}>
-          <FileText size={14} className="text-lapis-600" />
+        <div className={`${iconClass} bg-lapis-100 dark:bg-lapis-700`}>
+          <FileText size={14} className="text-lapis-600 dark:text-lapis-300" />
         </div>
       );
     case 'doc':
       return (
-        <div className={`${iconClass} bg-emerald-100`}>
-          <BookOpen size={14} className="text-emerald-600" />
+        <div className={`${iconClass} bg-emerald-100 dark:bg-emerald-900/50`}>
+          <BookOpen size={14} className="text-emerald-600 dark:text-emerald-400" />
         </div>
       );
     case 'release':
       return (
-        <div className={`${iconClass} bg-amber-100`}>
-          <Package size={14} className="text-amber-600" />
+        <div className={`${iconClass} bg-amber-100 dark:bg-amber-900/50`}>
+          <Package size={14} className="text-amber-600 dark:text-amber-400" />
         </div>
       );
   }
@@ -206,8 +206,8 @@ export function NotificationBell() {
           w-10 h-10 rounded-tablet
           transition-colors
           ${isOpen 
-            ? 'bg-lapis-100 text-lapis-700' 
-            : 'text-lapis-500 hover:bg-parchment-200 hover:text-lapis-600'
+            ? 'bg-lapis-100 dark:bg-lapis-700 text-lapis-700 dark:text-parchment-200' 
+            : 'text-lapis-500 dark:text-parchment-400 hover:bg-parchment-200 dark:hover:bg-lapis-800 hover:text-lapis-600 dark:hover:text-parchment-200'
           }
         `}
         aria-label={t('notifications.title')}
@@ -222,7 +222,7 @@ export function NotificationBell() {
             flex items-center justify-center
             text-[10px] font-bold text-parchment-50
             bg-clay-500 rounded-full
-            ring-2 ring-parchment-50
+            ring-2 ring-parchment-50 dark:ring-lapis-900
           ">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
@@ -236,15 +236,15 @@ export function NotificationBell() {
           className="
             absolute top-full ltr:left-0 rtl:right-0 mt-2
             w-96 max-h-[28rem]
-            bg-parchment-50 rounded-lg
-            shadow-lg border border-parchment-300
+            bg-parchment-50 dark:bg-lapis-800 rounded-lg
+            shadow-lg dark:shadow-none border border-parchment-300 dark:border-lapis-600
             flex flex-col
             z-50
           "
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-parchment-200">
-            <h3 className="font-semibold text-lapis-700">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-parchment-200 dark:border-lapis-700">
+            <h3 className="font-semibold text-lapis-700 dark:text-parchment-200">
               {t('notifications.title')}
             </h3>
             <div className="flex items-center gap-2">
@@ -255,7 +255,7 @@ export function NotificationBell() {
                   className="
                     flex items-center gap-1.5
                     px-2 py-1 rounded text-xs
-                    text-lapis-500 hover:text-lapis-700 hover:bg-parchment-100
+                    text-lapis-500 dark:text-parchment-400 hover:text-lapis-700 dark:hover:text-parchment-200 hover:bg-parchment-100 dark:hover:bg-lapis-700
                     disabled:opacity-50
                     transition-colors
                   "
@@ -267,7 +267,7 @@ export function NotificationBell() {
               )}
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1 rounded text-stone-400 hover:text-lapis-600 hover:bg-parchment-100"
+                className="p-1 rounded text-stone-400 dark:text-parchment-500 hover:text-lapis-600 dark:hover:text-parchment-200 hover:bg-parchment-100 dark:hover:bg-lapis-700"
               >
                 <X size={16} />
               </button>
@@ -278,15 +278,15 @@ export function NotificationBell() {
           <div className="flex-1 overflow-y-auto">
             {isLoading ? (
               <div className="py-8">
-                <LoadingIndicator size="md" className="text-stone-400" />
+                <LoadingIndicator size="md" className="text-stone-400 dark:text-parchment-500" />
               </div>
             ) : notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-stone-400">
+              <div className="flex flex-col items-center justify-center py-8 text-stone-400 dark:text-parchment-500">
                 <Bell size={32} className="mb-2 opacity-50" />
                 <span className="text-sm">{t('notifications.empty')}</span>
               </div>
             ) : (
-              <ul className="divide-y divide-parchment-100">
+              <ul className="divide-y divide-parchment-100 dark:divide-lapis-700">
                 {notifications.map((notification) => (
                   <NotificationItem
                     key={notification.id}
@@ -327,10 +327,10 @@ function NotificationItem({ notification, onClick, formatRelativeTime }: Notific
           w-full flex gap-3 px-4 py-3 text-left
           transition-colors
           ${notification.isRead 
-            ? 'opacity-60 hover:opacity-80 hover:bg-parchment-100/50' 
-            : 'hover:bg-parchment-100'
+            ? 'opacity-60 hover:opacity-80 hover:bg-parchment-100/50 dark:hover:bg-lapis-700/50' 
+            : 'hover:bg-parchment-100 dark:hover:bg-lapis-700'
           }
-          ${isDeletion ? 'bg-clay-50/50' : ''}
+          ${isDeletion ? 'bg-clay-50/50 dark:bg-clay-900/30' : ''}
         `}
       >
         {/* Entity Icon */}
@@ -344,19 +344,19 @@ function NotificationItem({ notification, onClick, formatRelativeTime }: Notific
           <div className="flex items-center gap-2">
             {/* Action tag */}
             {isModification && (
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-gold-100 text-gold-700 flex-shrink-0">
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-gold-100 dark:bg-gold-900/50 text-gold-700 dark:text-gold-400 flex-shrink-0">
                 {t('notifications.tags.modified')}
               </span>
             )}
             {isDeletion && (
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-clay-100 text-clay-700 flex-shrink-0">
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-clay-100 dark:bg-clay-900/50 text-clay-700 dark:text-clay-400 flex-shrink-0">
                 {t('notifications.tags.deleted')}
               </span>
             )}
-            <span className={`text-sm truncate ${notification.isRead ? 'text-lapis-600' : 'text-lapis-700 font-semibold'}`}>
+            <span className={`text-sm truncate ${notification.isRead ? 'text-lapis-600 dark:text-parchment-400' : 'text-lapis-700 dark:text-parchment-200 font-semibold'}`}>
               {notification.title}
             </span>
-            <span className="text-xs text-stone-500 flex-shrink-0">
+            <span className="text-xs text-stone-500 dark:text-parchment-500 flex-shrink-0">
               {formatRelativeTime(notification.createdAt)}
             </span>
           </div>
@@ -369,7 +369,7 @@ function NotificationItem({ notification, onClick, formatRelativeTime }: Notific
               username={notification.actor?.username}
               size="xs"
             />
-            <span className={`text-xs ${notification.isRead ? 'text-stone-500' : 'text-lapis-500'}`}>
+            <span className={`text-xs ${notification.isRead ? 'text-stone-500 dark:text-parchment-500' : 'text-lapis-500 dark:text-parchment-400'}`}>
               {notification.message}
             </span>
           </div>
