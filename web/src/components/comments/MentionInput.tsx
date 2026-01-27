@@ -14,6 +14,7 @@ interface MentionInputProps {
   value: string;
   onChange: (value: string) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  onImagePaste?: (file: File) => void;
   placeholder?: string;
   rows?: number;
   className?: string;
@@ -23,6 +24,8 @@ interface MentionInputProps {
 export interface MentionInputRef {
   focus: () => void;
   blur: () => void;
+  insertAtCursor: (text: string) => void;
+  getTextarea: () => HTMLTextAreaElement | null;
 }
 
 interface DropdownPosition {
@@ -34,6 +37,7 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
   value,
   onChange,
   onKeyDown,
+  onImagePaste,
   placeholder,
   rows = 3,
   className = '',
@@ -47,11 +51,32 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
   const [mentionStart, setMentionStart] = useState(-1);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ top: 0, left: 0 });
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
-  // Expose focus/blur methods
+  // Expose methods to parent
   useImperativeHandle(ref, () => ({
     focus: () => textareaRef.current?.focus(),
     blur: () => textareaRef.current?.blur(),
+    insertAtCursor: (text: string) => {
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+      
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const before = value.substring(0, start);
+      const after = value.substring(end);
+      
+      const newValue = before + text + after;
+      onChange(newValue);
+      
+      // Move cursor after inserted text
+      requestAnimationFrame(() => {
+        const newPos = start + text.length;
+        textarea.setSelectionRange(newPos, newPos);
+        textarea.focus();
+      });
+    },
+    getTextarea: () => textareaRef.current,
   }));
 
   // Fetch users list
@@ -296,6 +321,62 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
     };
   }, [showDropdown]);
 
+  // Handle paste - check for images
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    if (!onImagePaste) return;
+    
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          onImagePaste(file);
+        }
+        return;
+      }
+    }
+  }, [onImagePaste]);
+
+  // Handle drag events for image drop
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLTextAreaElement>) => {
+    if (!onImagePaste) return;
+    
+    // Check if dragging files
+    if (e.dataTransfer?.types?.includes('Files')) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDraggingOver(true);
+    }
+  }, [onImagePaste]);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+
+    if (!onImagePaste) return;
+
+    const files = e.dataTransfer?.files;
+    if (!files || files.length === 0) return;
+
+    // Find first image file
+    for (const file of files) {
+      if (file.type.startsWith('image/')) {
+        onImagePaste(file);
+        return;
+      }
+    }
+  }, [onImagePaste]);
+
   // Render dropdown using portal to avoid clipping
   const renderDropdown = () => {
     if (!showDropdown || filteredUsers.length === 0) return null;
@@ -357,6 +438,13 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
     );
   };
 
+  // Combine className with drag-over state
+  const textareaClassName = `${className} ${
+    isDraggingOver 
+      ? 'ring-2 ring-lapis-400 ring-offset-1 border-lapis-400' 
+      : ''
+  }`;
+
   return (
     <>
       <textarea
@@ -364,10 +452,14 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         placeholder={placeholder}
         rows={rows}
         disabled={disabled}
-        className={className}
+        className={textareaClassName}
       />
       {renderDropdown()}
     </>

@@ -6,8 +6,10 @@ import { Markdown } from '../components/ui/Markdown';
 import { CommentSection } from '../components/comments/CommentSection';
 import { ActivityHistory } from '../components/ui/ActivityHistory';
 import { MentionInput, type MentionInputRef } from '../components/comments/MentionInput';
+import { MarkdownToolbar } from '../components/ui/MarkdownToolbar';
 import { ReactionPicker } from '../components/reactions/ReactionPicker';
 import { useReactions } from '../hooks/useReactions';
+import { useImageUpload } from '../hooks/useImageUpload';
 import { useQueryClient } from '@tanstack/react-query';
 import { 
   Plus, 
@@ -723,6 +725,14 @@ function InlineMarkdownEditor({
   const { t } = useTranslation();
   const [viewMode, setViewMode] = React.useState<EditorViewMode>('split');
 
+  // Image upload
+  const { upload: uploadImage, uploading: uploadingImage } = useImageUpload({
+    onSuccess: (url, filename) => {
+      const markdown = `![${filename}](${url})`;
+      textareaRef.current?.insertAtCursor(markdown);
+    },
+  });
+
   // Handle keyboard shortcuts for editor
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -804,10 +814,16 @@ function InlineMarkdownEditor({
         {/* Editor */}
         {viewMode !== 'preview' && (
           <div className={`${viewMode === 'split' ? 'w-1/2 border-r border-parchment-200' : 'w-full'} flex flex-col`}>
+            <MarkdownToolbar
+              onImageSelect={uploadImage}
+              uploading={uploadingImage}
+              className="rounded-none border-x-0 border-t-0"
+            />
             <MentionInput
               ref={textareaRef}
               value={value}
               onChange={onChange}
+              onImagePaste={uploadImage}
               placeholder={placeholder}
               className="
                 flex-1 w-full p-4 resize-none

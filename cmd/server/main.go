@@ -164,6 +164,9 @@ func main() {
 	mux.Handle("GET /api/debug/tables/{name}", requireAuth(http.HandlerFunc(h.GetTableData)))
 	mux.Handle("POST /api/debug/query", requireAuth(http.HandlerFunc(h.ExecuteQuery)))
 
+	// Image uploads for markdown
+	mux.Handle("POST /api/uploads/images", requireAuth(http.HandlerFunc(h.UploadImage)))
+
 	// ============================================
 	// Static File Serving for Uploads (Protected)
 	// ============================================
@@ -174,6 +177,14 @@ func main() {
 	}
 	os.MkdirAll(avatarDir, 0755)
 	mux.Handle("GET /uploads/avatars/", requireAuth(http.StripPrefix("/uploads/avatars/", http.FileServer(http.Dir(avatarDir)))))
+
+	// Serve markdown image uploads (requires auth)
+	imageDir := "./data/uploads/images"
+	if dir := os.Getenv("IMAGES_DIR"); dir != "" {
+		imageDir = dir
+	}
+	os.MkdirAll(imageDir, 0755)
+	mux.Handle("GET /uploads/images/", requireAuth(http.StripPrefix("/uploads/images/", http.FileServer(http.Dir(imageDir)))))
 
 	// ============================================
 	// Static File Serving (React SPA)

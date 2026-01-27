@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { Markdown } from '../components/ui/Markdown';
 import { CommentSection } from '../components/comments/CommentSection';
-import { MentionInput } from '../components/comments/MentionInput';
+import { MentionInput, type MentionInputRef } from '../components/comments/MentionInput';
+import { MarkdownToolbar } from '../components/ui/MarkdownToolbar';
 import { ReactionPicker } from '../components/reactions/ReactionPicker';
 import { useReactions } from '../hooks/useReactions';
+import { useImageUpload } from '../hooks/useImageUpload';
 import { useQueryClient } from '@tanstack/react-query';
 import { 
   Plus, 
@@ -521,6 +523,15 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
   const [error, setError] = React.useState('');
   
   const versionInputRef = React.useRef<HTMLInputElement>(null);
+  const descriptionInputRef = useRef<MentionInputRef>(null);
+
+  // Image upload for description
+  const { upload: uploadImage, uploading: uploadingImage } = useImageUpload({
+    onSuccess: (url, filename) => {
+      const markdown = `![${filename}](${url})`;
+      descriptionInputRef.current?.insertAtCursor(markdown);
+    },
+  });
 
   // Reset form
   React.useEffect(() => {
@@ -619,16 +630,24 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
             <label className="block text-sm font-medium text-lapis-600 mb-1">
               {t('releases.modal.description')}
             </label>
-            <MentionInput
-              value={description}
-              onChange={setDescription}
-              placeholder={t('releases.modal.descriptionPlaceholder')}
-              rows={3}
-              className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
-                         bg-parchment-100 text-lapis-700 resize-none
-                         focus:ring-2 focus:ring-gold-400/30 focus:outline-none
-                         placeholder:text-stone-500"
-            />
+            <div>
+              <MarkdownToolbar
+                onImageSelect={uploadImage}
+                uploading={uploadingImage}
+              />
+              <MentionInput
+                ref={descriptionInputRef}
+                value={description}
+                onChange={setDescription}
+                onImagePaste={uploadImage}
+                placeholder={t('releases.modal.descriptionPlaceholder')}
+                rows={3}
+                className="w-full px-3 py-2 rounded-b-tablet border border-parchment-300 border-t-0
+                           bg-parchment-100 text-lapis-700 resize-none
+                           focus:ring-2 focus:ring-gold-400/30 focus:outline-none
+                           placeholder:text-stone-500"
+              />
+            </div>
           </div>
         </form>
 

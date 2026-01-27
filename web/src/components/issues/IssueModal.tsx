@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import { Markdown } from '../ui/Markdown';
 import { CommentSection } from '../comments/CommentSection';
 import { ActivityHistory } from '../ui/ActivityHistory';
 import { Avatar } from '../ui/Avatar';
-import { MentionInput } from '../comments/MentionInput';
+import { MentionInput, type MentionInputRef } from '../comments/MentionInput';
+import { MarkdownToolbar } from '../ui/MarkdownToolbar';
 import { ReactionPicker } from '../reactions/ReactionPicker';
 import { useReactions } from '../../hooks/useReactions';
+import { useImageUpload } from '../../hooks/useImageUpload';
 import {
 	X,
 	ArrowRight,
@@ -112,9 +114,18 @@ export function IssueModal({
 
 	const titleInputRef = React.useRef<HTMLInputElement>(null);
 	const contentRef = React.useRef<HTMLDivElement>(null);
+	const descriptionInputRef = useRef<MentionInputRef>(null);
 	const [canScrollDown, setCanScrollDown] = React.useState(false);
 	const isEditing = mode === 'edit' || mode === 'create';
 	const isCreating = mode === 'create';
+
+	// Image upload for description
+	const { upload: uploadImage, uploading: uploadingImage } = useImageUpload({
+		onSuccess: (url, filename) => {
+			const markdown = `![${filename}](${url})`;
+			descriptionInputRef.current?.insertAtCursor(markdown);
+		},
+	});
 
 	// Track if we're in the middle of an edit session (to prevent auto-refresh)
 	const [isEditSession, setIsEditSession] = React.useState(false);
@@ -583,20 +594,28 @@ export function IssueModal({
 								{t('issueModal.description')}
 							</h3>
 							{isEditing ? (
-								<MentionInput
-									value={description}
-									onChange={setDescription}
-									placeholder={t('issueModal.descriptionPlaceholder')}
-									rows={4}
-									className="
-                  w-full min-h-[100px] sm:min-h-[120px] p-3 sm:p-4 rounded-lg 
+								<div>
+									<MarkdownToolbar
+										onImageSelect={uploadImage}
+										uploading={uploadingImage}
+									/>
+									<MentionInput
+										ref={descriptionInputRef}
+										value={description}
+										onChange={setDescription}
+										onImagePaste={uploadImage}
+										placeholder={t('issueModal.descriptionPlaceholder')}
+										rows={4}
+										className="
+                  w-full min-h-[100px] sm:min-h-[120px] p-3 sm:p-4 rounded-b-lg 
                   bg-parchment-100/50 text-lapis-700 resize-none
-                  border border-parchment-300 
+                  border border-parchment-300 border-t-0
                   outline-none focus:ring-2 focus:ring-gold-400/30 focus:bg-parchment-100
                   placeholder:text-stone-500
                   transition-colors
                 "
-								/>
+									/>
+								</div>
 							) : description ? (
 								<div className="min-h-[80px] sm:min-h-[100px] bg-parchment-100/30 rounded-lg p-3 sm:p-4 prose-mesopotamian">
 									<Markdown users={users}>{description}</Markdown>

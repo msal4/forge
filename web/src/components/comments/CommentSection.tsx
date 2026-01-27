@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -11,9 +11,11 @@ import { Avatar } from '../ui/Avatar';
 import { commentsApi, type Comment } from '../../api/comments';
 import { usersApi } from '../../api/users';
 import { useWebSocket } from '../../context/WebSocketContext';
-import { MentionInput } from './MentionInput';
+import { MentionInput, type MentionInputRef } from './MentionInput';
+import { MarkdownToolbar } from '../ui/MarkdownToolbar';
 import { InlineReactions } from '../reactions/ReactionPicker';
 import { useReactions } from '../../hooks/useReactions';
+import { useImageUpload } from '../../hooks/useImageUpload';
 import type { ReactionTarget } from '../../api/reactions';
 
 // ============================================
@@ -42,6 +44,15 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
 	// Track the minimum number of comments to show (increases when user adds comments)
 	const [minCommentsToShow, setMinCommentsToShow] = React.useState(INITIAL_COMMENTS_SHOWN);
 	const [showAllComments, setShowAllComments] = React.useState(false);
+	const commentInputRef = useRef<MentionInputRef>(null);
+
+	// Image upload for comments
+	const { upload: uploadImage, uploading: uploadingImage } = useImageUpload({
+		onSuccess: (url, filename) => {
+			const markdown = `![${filename}](${url})`;
+			commentInputRef.current?.insertAtCursor(markdown);
+		},
+	});
 
 	// Query key based on resource type - memoized to prevent unnecessary re-renders
 	const queryKey = React.useMemo(
@@ -262,21 +273,29 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
 								)}
 							</div>
 						) : (
-							<MentionInput
-								value={newComment}
-								onChange={setNewComment}
-								onKeyDown={handleKeyDown}
-								placeholder={t('comments.placeholder', 'Add a comment... (Markdown supported)')}
-								rows={3}
-								className="
-                  w-full p-3 rounded-lg resize-none
+							<div>
+								<MarkdownToolbar
+									onImageSelect={uploadImage}
+									uploading={uploadingImage}
+								/>
+								<MentionInput
+									ref={commentInputRef}
+									value={newComment}
+									onChange={setNewComment}
+									onKeyDown={handleKeyDown}
+									onImagePaste={uploadImage}
+									placeholder={t('comments.placeholder', 'Add a comment... (Markdown supported)')}
+									rows={3}
+									className="
+                  w-full p-3 rounded-b-lg resize-none
                   bg-parchment-100/50 text-lapis-700
-                  border border-parchment-300
+                  border border-parchment-300 border-t-0
                   outline-none focus:ring-2 focus:ring-gold-400/30 focus:bg-parchment-100
                   placeholder:text-stone-500
                   transition-colors
                 "
-							/>
+								/>
+							</div>
 						)}
 					</div>
 
