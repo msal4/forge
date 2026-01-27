@@ -87,9 +87,11 @@ export default {
       // ============================================
       fontFamily: {
         // Serif for headers - evokes stone inscriptions
-        inscription: ['Crimson Pro', 'Crimson Text', 'Georgia', 'Times New Roman', 'serif'],
+        inscription: ['Crimson Pro', 'Noto Naskh Arabic', 'Crimson Text', 'Georgia', 'serif'],
         // Sans for body text - modern readability
-        body: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        body: ['Inter', 'Noto Naskh Arabic', 'system-ui', '-apple-system', 'sans-serif'],
+        // Arabic - Noto Naskh for authentic Mesopotamian feel
+        arabic: ['Noto Naskh Arabic', 'Amiri', 'serif'],
         // Monospace for code
         code: ['JetBrains Mono', 'Fira Code', 'Monaco', 'Consolas', 'monospace'],
       },
