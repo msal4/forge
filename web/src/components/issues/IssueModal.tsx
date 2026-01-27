@@ -17,7 +17,8 @@ import {
 	Trash2,
 	Check,
 	Clock,
-	User,
+	UserCheck,
+	UserPen,
 	Tag,
 	Calendar,
 	FileText,
@@ -643,7 +644,7 @@ export function IssueModal({
 							{/* Assignee */}
 							<div>
 								<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 dark:text-parchment-400 mb-2">
-									<User size={12} />
+									<UserCheck size={12} />
 									{t('issueModal.assignee')}
 								</h4>
 								<div className="h-10 flex items-center">
@@ -720,7 +721,7 @@ export function IssueModal({
 							{/* Reporter (view only) */}
 							<div>
 								<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 dark:text-parchment-400 mb-2">
-									<User size={12} />
+									<UserPen size={12} />
 									{t('issueModal.reporter')}
 								</h4>
 								<div className="h-10 flex items-center">
