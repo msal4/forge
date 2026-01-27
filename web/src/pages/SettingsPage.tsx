@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Globe, Palette, User, Check, AlertCircle, ChevronDown, Send, Link2, Unlink, ExternalLink, Camera, Trash2, Save } from 'lucide-react';
+import { Globe, Palette, User, Check, AlertCircle, ChevronDown, Send, Link2, Unlink, ExternalLink, Camera, Trash2, Save, Sun, Moon, Monitor } from 'lucide-react';
 import { LoadingIndicator } from '../components/ui/LoadingIndicator';
 import { usersApi, type TelegramStatus } from '../api/users';
 import { useWebSocket } from '../context/WebSocketContext';
 import { useAuth } from '../context/AuthContext';
+import { useTheme, type ThemeMode } from '../context/ThemeContext';
 import { Avatar } from '../components/ui/Avatar';
 import { useConfirmDialog } from '../components/ui/ConfirmDialog';
 
@@ -16,6 +17,7 @@ export function SettingsPage() {
 	const { t, i18n } = useTranslation();
 	const { lastEvent } = useWebSocket();
 	const { user, refreshUser } = useAuth();
+	const { theme, setTheme } = useTheme();
 
 	const currentLanguage = i18n.language;
 
@@ -259,10 +261,10 @@ export function SettingsPage() {
 		<div className="space-y-6 max-w-2xl">
 			{/* Header */}
 			<div>
-				<h1 className="text-2xl font-inscription text-lapis-600">
+				<h1 className="text-2xl font-inscription text-lapis-600 dark:text-parchment-200">
 					{t('settings.title')}
 				</h1>
-				<p className="text-lapis-500 text-sm mt-1">
+				<p className="text-lapis-500 dark:text-parchment-400 text-sm mt-1">
 					{t('settings.tagline')}
 				</p>
 			</div>
@@ -272,14 +274,14 @@ export function SettingsPage() {
 				{/* Profile Section */}
 				<div className="tablet-card p-6">
 					<div className="flex items-start gap-4">
-						<div className="p-3 rounded-tablet bg-lapis-100 text-lapis-600">
+						<div className="p-3 rounded-tablet bg-lapis-100 dark:bg-lapis-800 text-lapis-600 dark:text-parchment-300">
 							<User size={24} />
 						</div>
 						<div className="flex-1">
-							<h2 className="text-lg font-medium text-lapis-700">
+							<h2 className="text-lg font-medium text-lapis-700 dark:text-parchment-200">
 								{t('settings.profile')}
 							</h2>
-							<p className="text-sm text-lapis-500 mt-1">
+							<p className="text-sm text-lapis-500 dark:text-parchment-400 mt-1">
 								{t('settings.profileDescription')}
 							</p>
 
@@ -288,7 +290,7 @@ export function SettingsPage() {
 								<div className="flex flex-col items-center gap-3">
 									<div className="relative group">
 										{/* Large avatar display */}
-										<div className="w-24 h-24 rounded-full overflow-hidden bg-parchment-200">
+										<div className="w-24 h-24 rounded-full overflow-hidden bg-parchment-200 dark:bg-lapis-700">
 											{user?.avatarUrl ? (
 												<img
 													src={user.avatarUrl}
@@ -359,7 +361,7 @@ export function SettingsPage() {
 								{/* Name Section */}
 								<div className="flex-1 space-y-4">
 									<div>
-										<label className="block text-sm font-medium text-lapis-600 mb-1">
+										<label className="block text-sm font-medium text-lapis-600 dark:text-parchment-300 mb-1">
 											{t('settings.displayName')}
 										</label>
 										{isEditingName ? (
@@ -368,9 +370,9 @@ export function SettingsPage() {
 													type="text"
 													value={fullName}
 													onChange={(e) => setFullName(e.target.value)}
-													className="flex-1 px-4 py-2 rounded-tablet border border-parchment-300 
-                                     bg-parchment-100 text-lapis-700
-                                     focus:ring-2 focus:ring-gold-400/30 focus:outline-none
+													className="flex-1 px-4 py-2 rounded-tablet border border-parchment-300 dark:border-lapis-600
+                                     bg-parchment-100 dark:bg-lapis-800 text-lapis-700 dark:text-parchment-200
+                                     focus:ring-2 focus:ring-gold-400/30 dark:focus:ring-gold-500/40 focus:outline-none
                                      transition-colors"
 													maxLength={100}
 													autoFocus
@@ -378,8 +380,8 @@ export function SettingsPage() {
 												<button
 													onClick={handleSaveProfile}
 													disabled={isSavingProfile}
-													className="px-4 py-2 rounded-tablet bg-lapis-600 text-white
-                                     hover:bg-lapis-700 disabled:opacity-50 disabled:cursor-not-allowed
+													className="px-4 py-2 rounded-tablet bg-lapis-600 dark:bg-gold-600 text-white dark:text-lapis-950
+                                     hover:bg-lapis-700 dark:hover:bg-gold-500 disabled:opacity-50 disabled:cursor-not-allowed
                                      transition-colors flex items-center gap-2"
 												>
 													{isSavingProfile ? (
@@ -395,8 +397,8 @@ export function SettingsPage() {
 														setFullName(user?.fullName || '');
 														setProfileError('');
 													}}
-													className="px-4 py-2 rounded-tablet border border-parchment-300
-                                     text-lapis-600 hover:bg-parchment-200
+													className="px-4 py-2 rounded-tablet border border-parchment-300 dark:border-lapis-600
+                                     text-lapis-600 dark:text-parchment-300 hover:bg-parchment-200 dark:hover:bg-lapis-700
                                      transition-colors"
 												>
 													{t('common.cancel')}
@@ -404,10 +406,10 @@ export function SettingsPage() {
 											</div>
 										) : (
 											<div className="flex items-center gap-2">
-												<span className="text-lapis-700">{user?.fullName}</span>
+												<span className="text-lapis-700 dark:text-parchment-200">{user?.fullName}</span>
 												<button
 													onClick={() => setIsEditingName(true)}
-													className="text-sm text-lapis-500 hover:text-lapis-600 transition-colors"
+													className="text-sm text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-200 transition-colors"
 												>
 													{t('common.edit')}
 												</button>
@@ -416,28 +418,28 @@ export function SettingsPage() {
 									</div>
 
 									<div>
-										<label className="block text-sm font-medium text-lapis-600 mb-1">
+										<label className="block text-sm font-medium text-lapis-600 dark:text-parchment-300 mb-1">
 											{t('settings.email')}
 										</label>
-										<span className="text-lapis-500">{user?.email}</span>
+										<span className="text-lapis-500 dark:text-parchment-400">{user?.email}</span>
 									</div>
 
 									<div>
-										<label className="block text-sm font-medium text-lapis-600 mb-1">
+										<label className="block text-sm font-medium text-lapis-600 dark:text-parchment-300 mb-1">
 											{t('settings.username')}
 										</label>
-										<span className="text-lapis-500">@{user?.username}</span>
+										<span className="text-lapis-500 dark:text-parchment-400">@{user?.username}</span>
 									</div>
 
 									{/* Profile messages */}
 									{profileError && (
-										<div className="flex items-center gap-2 text-clay-600 text-sm">
+										<div className="flex items-center gap-2 text-clay-600 dark:text-clay-400 text-sm">
 											<AlertCircle size={16} />
 											<span>{profileError}</span>
 										</div>
 									)}
 									{profileSuccess && (
-										<div className="flex items-center gap-2 text-green-600 text-sm">
+										<div className="flex items-center gap-2 text-green-600 dark:text-green-400 text-sm">
 											<Check size={16} />
 											<span>{profileSuccess}</span>
 										</div>
@@ -451,14 +453,14 @@ export function SettingsPage() {
 				{/* Language Setting */}
 				<div className="tablet-card p-6">
 					<div className="flex items-start gap-4">
-						<div className="p-3 rounded-tablet bg-lapis-100 text-lapis-600">
+						<div className="p-3 rounded-tablet bg-lapis-100 dark:bg-lapis-800 text-lapis-600 dark:text-parchment-300">
 							<Globe size={24} />
 						</div>
 						<div className="flex-1">
-							<h2 className="text-lg font-medium text-lapis-700">
+							<h2 className="text-lg font-medium text-lapis-700 dark:text-parchment-200">
 								{t('settings.language')}
 							</h2>
-							<p className="text-sm text-lapis-500 mt-1">
+							<p className="text-sm text-lapis-500 dark:text-parchment-400 mt-1">
 								{t('settings.languageDescription')}
 							</p>
 							<div className="mt-4">
@@ -467,12 +469,12 @@ export function SettingsPage() {
 										onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
 										className={`
                       w-full h-10 px-4 flex items-center justify-between
-                      bg-parchment-100 text-lapis-700 text-sm
+                      bg-parchment-100 dark:bg-lapis-800 text-lapis-700 dark:text-parchment-200 text-sm
                       border rounded-tablet
                       transition-all
                       ${showLanguageDropdown
-												? 'border-lapis-400 ring-2 ring-gold-400/30'
-												: 'border-parchment-300 hover:border-lapis-300'
+												? 'border-lapis-400 dark:border-gold-500 ring-2 ring-gold-400/30 dark:ring-gold-500/40'
+												: 'border-parchment-300 dark:border-lapis-600 hover:border-lapis-300 dark:hover:border-lapis-500'
 											}
                     `}
 									>
@@ -481,15 +483,15 @@ export function SettingsPage() {
 										</span>
 										<ChevronDown
 											size={16}
-											className={`text-lapis-400 transition-transform ${showLanguageDropdown ? 'rotate-180' : ''}`}
+											className={`text-lapis-400 dark:text-parchment-400 transition-transform ${showLanguageDropdown ? 'rotate-180' : ''}`}
 										/>
 									</button>
 
 									{showLanguageDropdown && (
 										<div className="
                       absolute top-full left-0 right-0 mt-1 z-20
-                      bg-parchment-50 border border-parchment-300 
-                      rounded-tablet shadow-tablet
+                      bg-parchment-50 dark:bg-lapis-800 border border-parchment-300 dark:border-lapis-600
+                      rounded-tablet shadow-tablet dark:shadow-none
                       py-1
                       animate-fade-in
                     ">
@@ -499,17 +501,17 @@ export function SettingsPage() {
 													onClick={() => handleLanguageChange(lang.code)}
 													className={`
                             w-full px-4 py-2 text-left text-sm 
-                            hover:bg-parchment-200 transition-colors
+                            hover:bg-parchment-200 dark:hover:bg-lapis-700 transition-colors
                             flex items-center justify-between
                             ${currentLanguage === lang.code
-															? 'bg-parchment-200 text-lapis-700'
-															: 'text-lapis-600'
+															? 'bg-parchment-200 dark:bg-lapis-700 text-lapis-700 dark:text-parchment-200'
+															: 'text-lapis-600 dark:text-parchment-300'
 														}
                           `}
 												>
 													<span>{lang.label}</span>
 													{currentLanguage === lang.code && (
-														<Check size={16} className="text-lapis-600" />
+														<Check size={16} className="text-lapis-600 dark:text-gold-400" />
 													)}
 												</button>
 											))}
@@ -524,42 +526,42 @@ export function SettingsPage() {
 				{/* Telegram Notifications */}
 				<div className="tablet-card p-6">
 					<div className="flex items-start gap-4">
-						<div className="p-3 rounded-tablet bg-blue-100 text-blue-600">
+						<div className="p-3 rounded-tablet bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400">
 							<Send size={24} />
 						</div>
 						<div className="flex-1">
-							<h2 className="text-lg font-medium text-lapis-700">
+							<h2 className="text-lg font-medium text-lapis-700 dark:text-parchment-200">
 								{t('settings.telegram')}
 							</h2>
-							<p className="text-sm text-lapis-500 mt-1">
+							<p className="text-sm text-lapis-500 dark:text-parchment-400 mt-1">
 								{t('settings.telegramDescription')}
 							</p>
 
 							<div className="mt-4">
 								{isLoadingTelegram ? (
-									<div className="flex items-center gap-2 text-lapis-500">
+									<div className="flex items-center gap-2 text-lapis-500 dark:text-parchment-400">
 										<LoadingIndicator size="sm" inline />
 										<span>{t('common.loading')}</span>
 									</div>
 								) : !telegramStatus?.enabled ? (
-									<div className="text-sm text-lapis-500 bg-parchment-100 px-4 py-3 rounded-tablet">
+									<div className="text-sm text-lapis-500 dark:text-parchment-400 bg-parchment-100 dark:bg-lapis-800 px-4 py-3 rounded-tablet">
 										{t('settings.telegramNotConfigured')}
 									</div>
 								) : telegramStatus?.linked ? (
 									<div className="space-y-3">
-										<div className="flex items-center gap-2 text-green-600">
+										<div className="flex items-center gap-2 text-green-600 dark:text-green-400">
 											<Check size={16} />
 											<span className="text-sm font-medium">{t('settings.telegramLinked')}</span>
 											{telegramStatus.chatId && (
-												<span className="text-lapis-500 text-sm">({telegramStatus.chatId})</span>
+												<span className="text-lapis-500 dark:text-parchment-500 text-sm">({telegramStatus.chatId})</span>
 											)}
 										</div>
 										<button
 											onClick={handleUnlinkTelegram}
 											disabled={isUnlinkingTelegram}
 											className="flex items-center gap-2 px-4 py-2 rounded-tablet 
-                                 border border-clay-300 text-clay-600
-                                 hover:bg-clay-50 disabled:opacity-50 disabled:cursor-not-allowed
+                                 border border-clay-300 dark:border-clay-700 text-clay-600 dark:text-clay-400
+                                 hover:bg-clay-50 dark:hover:bg-clay-900/30 disabled:opacity-50 disabled:cursor-not-allowed
                                  transition-colors text-sm"
 										>
 											{isUnlinkingTelegram ? (
@@ -572,7 +574,7 @@ export function SettingsPage() {
 									</div>
 								) : (
 									<div className="space-y-3">
-										<p className="text-sm text-lapis-600">
+										<p className="text-sm text-lapis-600 dark:text-parchment-300">
 											{t('settings.telegramInstructions')}
 										</p>
 										<button
@@ -598,7 +600,7 @@ export function SettingsPage() {
 
 								{/* Error Message */}
 								{telegramError && (
-									<div className="flex items-center gap-2 text-clay-600 text-sm mt-3">
+									<div className="flex items-center gap-2 text-clay-600 dark:text-clay-400 text-sm mt-3">
 										<AlertCircle size={16} />
 										<span>{telegramError}</span>
 									</div>
@@ -608,19 +610,44 @@ export function SettingsPage() {
 					</div>
 				</div>
 
-				{/* Theme Setting (Coming Soon) */}
-				<div className="tablet-card p-6 opacity-60">
+				{/* Theme Setting */}
+				<div className="tablet-card p-6">
 					<div className="flex items-start gap-4">
-						<div className="p-3 rounded-tablet bg-gold-100 text-gold-600">
+						<div className="p-3 rounded-tablet bg-gold-100 text-gold-600 dark:bg-gold-900/50 dark:text-gold-400">
 							<Palette size={24} />
 						</div>
 						<div className="flex-1">
-							<h2 className="text-lg font-medium text-lapis-700">
+							<h2 className="text-lg font-medium text-lapis-700 dark:text-parchment-200">
 								{t('settings.theme')}
 							</h2>
-							<p className="text-sm text-lapis-500 mt-1">
+							<p className="text-sm text-lapis-500 dark:text-parchment-400 mt-1">
 								{t('settings.themeDescription')}
 							</p>
+
+							{/* Theme Toggle Buttons */}
+							<div className="mt-4 flex flex-wrap gap-2">
+								{([
+									{ value: 'light' as ThemeMode, icon: Sun, label: t('settings.themeLight') },
+									{ value: 'dark' as ThemeMode, icon: Moon, label: t('settings.themeDark') },
+									{ value: 'system' as ThemeMode, icon: Monitor, label: t('settings.themeSystem') },
+								]).map(({ value, icon: Icon, label }) => (
+									<button
+										key={value}
+										onClick={() => setTheme(value)}
+										className={`
+											flex items-center gap-2 px-4 py-2 rounded-tablet text-sm font-medium
+											transition-colors
+											${theme === value
+												? 'bg-lapis-500 text-parchment-100 dark:bg-gold-600 dark:text-lapis-950'
+												: 'bg-parchment-200 text-lapis-600 hover:bg-parchment-300 dark:bg-lapis-800 dark:text-parchment-300 dark:hover:bg-lapis-700'
+											}
+										`}
+									>
+										<Icon size={16} />
+										<span>{label}</span>
+									</button>
+								))}
+							</div>
 						</div>
 					</div>
 				</div>
@@ -628,30 +655,30 @@ export function SettingsPage() {
 				{/* Account Setting - Change Password */}
 				<div className="tablet-card p-6">
 					<div className="flex items-start gap-4">
-						<div className="p-3 rounded-tablet bg-clay-100 text-clay-600">
+						<div className="p-3 rounded-tablet bg-clay-100 dark:bg-clay-900/50 text-clay-600 dark:text-clay-400">
 							<User size={24} />
 						</div>
 						<div className="flex-1">
-							<h2 className="text-lg font-medium text-lapis-700">
+							<h2 className="text-lg font-medium text-lapis-700 dark:text-parchment-200">
 								{t('settings.changePassword')}
 							</h2>
-							<p className="text-sm text-lapis-500 mt-1">
+							<p className="text-sm text-lapis-500 dark:text-parchment-400 mt-1">
 								{t('settings.changePasswordDescription')}
 							</p>
 
 							<form onSubmit={handlePasswordChange} className="mt-4 space-y-4 max-w-sm">
 								{/* New Password */}
 								<div>
-									<label className="block text-sm font-medium text-lapis-600 mb-1">
+									<label className="block text-sm font-medium text-lapis-600 dark:text-parchment-300 mb-1">
 										{t('settings.newPassword')}
 									</label>
 									<input
 										type="password"
 										value={newPassword}
 										onChange={(e) => setNewPassword(e.target.value)}
-										className="w-full px-4 py-2 rounded-tablet border border-parchment-300 
-                               bg-parchment-100 text-lapis-700
-                               focus:ring-2 focus:ring-gold-400/30 focus:outline-none
+										className="w-full px-4 py-2 rounded-tablet border border-parchment-300 dark:border-lapis-600
+                               bg-parchment-100 dark:bg-lapis-800 text-lapis-700 dark:text-parchment-200
+                               focus:ring-2 focus:ring-gold-400/30 dark:focus:ring-gold-500/40 focus:outline-none
                                transition-colors"
 										required
 										minLength={4}
@@ -660,16 +687,16 @@ export function SettingsPage() {
 
 								{/* Confirm Password */}
 								<div>
-									<label className="block text-sm font-medium text-lapis-600 mb-1">
+									<label className="block text-sm font-medium text-lapis-600 dark:text-parchment-300 mb-1">
 										{t('settings.confirmPassword')}
 									</label>
 									<input
 										type="password"
 										value={confirmPassword}
 										onChange={(e) => setConfirmPassword(e.target.value)}
-										className="w-full px-4 py-2 rounded-tablet border border-parchment-300 
-                               bg-parchment-100 text-lapis-700
-                               focus:ring-2 focus:ring-gold-400/30 focus:outline-none
+										className="w-full px-4 py-2 rounded-tablet border border-parchment-300 dark:border-lapis-600
+                               bg-parchment-100 dark:bg-lapis-800 text-lapis-700 dark:text-parchment-200
+                               focus:ring-2 focus:ring-gold-400/30 dark:focus:ring-gold-500/40 focus:outline-none
                                transition-colors"
 										required
 										minLength={4}
@@ -678,7 +705,7 @@ export function SettingsPage() {
 
 								{/* Error Message */}
 								{passwordError && (
-									<div className="flex items-center gap-2 text-clay-600 text-sm">
+									<div className="flex items-center gap-2 text-clay-600 dark:text-clay-400 text-sm">
 										<AlertCircle size={16} />
 										<span>{passwordError}</span>
 									</div>
@@ -686,7 +713,7 @@ export function SettingsPage() {
 
 								{/* Success Message */}
 								{passwordSuccess && (
-									<div className="flex items-center gap-2 text-green-600 text-sm">
+									<div className="flex items-center gap-2 text-green-600 dark:text-green-400 text-sm">
 										<Check size={16} />
 										<span>{passwordSuccess}</span>
 									</div>
@@ -696,8 +723,8 @@ export function SettingsPage() {
 								<button
 									type="submit"
 									disabled={isChangingPassword || !newPassword || !confirmPassword}
-									className="px-4 py-2 rounded-tablet bg-lapis-600 text-white font-medium
-                             hover:bg-lapis-700 disabled:opacity-50 disabled:cursor-not-allowed
+									className="px-4 py-2 rounded-tablet bg-lapis-600 dark:bg-gold-600 text-white dark:text-lapis-950 font-medium
+                             hover:bg-lapis-700 dark:hover:bg-gold-500 disabled:opacity-50 disabled:cursor-not-allowed
                              transition-colors"
 								>
 									{isChangingPassword ? t('settings.changingPassword') : t('settings.changePassword')}

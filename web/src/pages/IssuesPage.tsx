@@ -41,8 +41,8 @@ const COLUMNS = [
     subtitleKey: 'issues.columns.toInscribe.subtitle',
     icon: '𒀭',
     borderColor: 'border-t-parchment-500',
-    headerBg: 'bg-parchment-200',
-    dropBg: 'bg-parchment-100',
+    headerBg: 'bg-parchment-200 dark:bg-lapis-800',
+    dropBg: 'bg-parchment-100 dark:bg-lapis-800/50',
   },
   { 
     id: IssueStatus.CARVING, 
@@ -50,8 +50,8 @@ const COLUMNS = [
     subtitleKey: 'issues.columns.carving.subtitle',
     icon: '𒁹',
     borderColor: 'border-t-clay-500',
-    headerBg: 'bg-clay-100',
-    dropBg: 'bg-clay-50',
+    headerBg: 'bg-clay-100 dark:bg-clay-900/50',
+    dropBg: 'bg-clay-50 dark:bg-clay-900/30',
   },
   { 
     id: IssueStatus.BAKED, 
@@ -59,8 +59,8 @@ const COLUMNS = [
     subtitleKey: 'issues.columns.baked.subtitle',
     icon: '𒂗',
     borderColor: 'border-t-gold-500',
-    headerBg: 'bg-gold-100',
-    dropBg: 'bg-gold-50',
+    headerBg: 'bg-gold-100 dark:bg-gold-900/50',
+    dropBg: 'bg-gold-50 dark:bg-gold-900/30',
   },
 ] as const;
 
@@ -333,11 +333,11 @@ export function IssuesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-inscription text-lapis-600 flex items-center gap-2">
+          <h1 className="text-2xl font-inscription text-lapis-600 dark:text-parchment-200 flex items-center gap-2">
             <span className="text-3xl">𒋰</span>
             {t('issues.title')}
           </h1>
-          <p className="text-lapis-500 text-sm mt-1">
+          <p className="text-lapis-500 dark:text-parchment-400 text-sm mt-1">
             {totalIssues === 0 
               ? t('issues.noInscriptions')
               : hasActiveFilters
@@ -381,7 +381,7 @@ export function IssuesPage() {
 
       {/* Error message */}
       {isError && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-tablet text-red-600 flex items-center justify-between">
+        <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-tablet text-red-600 dark:text-red-400 flex items-center justify-between">
           <span>{error instanceof Error ? error.message : 'Failed to load data'}</span>
           <button 
             onClick={() => queryClient.invalidateQueries({ queryKey: queryKeys.issues.all })} 
@@ -396,10 +396,10 @@ export function IssuesPage() {
       {isLoading && issues.length === 0 && (
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-lapis-100 mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-lapis-100 dark:bg-lapis-800 mb-4">
               <span className="text-3xl animate-pulse">𒀭</span>
             </div>
-            <p className="text-lapis-500 font-inscription">{t('issues.unearthing')}</p>
+            <p className="text-lapis-500 dark:text-parchment-400 font-inscription">{t('issues.unearthing')}</p>
           </div>
         </div>
       )}
@@ -508,30 +508,30 @@ function KanbanColumn({
     <div
       className={`
         flex flex-col
-        bg-parchment-50 rounded-tablet 
-        border border-parchment-300
+        bg-parchment-50 dark:bg-lapis-900 rounded-tablet 
+        border border-parchment-300 dark:border-lapis-700
         border-t-4 ${column.borderColor}
-        shadow-tablet
+        shadow-tablet dark:shadow-none
         transition-all duration-200
-        ${isDragOver ? 'ring-2 ring-lapis-400 ring-offset-2 scale-[1.01]' : ''}
+        ${isDragOver ? 'ring-2 ring-lapis-400 dark:ring-gold-500 ring-offset-2 dark:ring-offset-lapis-950 scale-[1.01]' : ''}
       `}
       onDragOver={(e) => onDragOver(e, column.id)}
       onDragLeave={onDragLeave}
       onDrop={(e) => onDrop(e, column.id)}
     >
       {/* Column Header */}
-      <div className={`px-4 py-3 ${column.headerBg} border-b border-parchment-200 rounded-t-tablet`}>
+      <div className={`px-4 py-3 ${column.headerBg} border-b border-parchment-200 dark:border-lapis-700 rounded-t-tablet`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xl opacity-60">{column.icon}</span>
             <div>
-              <h3 className="font-inscription text-lapis-600 text-lg">{t(column.titleKey)}</h3>
-              <p className="text-xs text-lapis-500">{t(column.subtitleKey)}</p>
+              <h3 className="font-inscription text-lapis-600 dark:text-parchment-200 text-lg">{t(column.titleKey)}</h3>
+              <p className="text-xs text-lapis-500 dark:text-parchment-400">{t(column.subtitleKey)}</p>
             </div>
           </div>
           <span className={`
             text-sm font-medium px-2.5 py-1 rounded-full
-            ${issues.length > 0 ? 'bg-lapis-500 text-parchment-100' : 'bg-parchment-300 text-lapis-500'}
+            ${issues.length > 0 ? 'bg-lapis-500 text-parchment-100 dark:bg-gold-600 dark:text-lapis-950' : 'bg-parchment-300 dark:bg-lapis-700 text-lapis-500 dark:text-parchment-400'}
           `}>
             {issues.length}
           </span>
@@ -619,24 +619,24 @@ function EmptyColumnState({ columnId, isDragOver, onCreateIssue, isFiltering = f
         border-2 border-dashed rounded-tablet
         transition-all duration-200
         ${isDragOver 
-          ? 'border-lapis-400 bg-lapis-50' 
-          : 'border-parchment-300'
+          ? 'border-lapis-400 dark:border-gold-500 bg-lapis-50 dark:bg-lapis-800' 
+          : 'border-parchment-300 dark:border-lapis-700'
         }
       `}
     >
       <span className={`text-4xl mb-3 ${isDragOver ? 'animate-bounce' : 'opacity-40'}`}>
         {message.icon}
       </span>
-      <p className={`text-sm font-medium ${isDragOver ? 'text-lapis-600' : 'text-lapis-500'}`}>
+      <p className={`text-sm font-medium ${isDragOver ? 'text-lapis-600 dark:text-gold-400' : 'text-lapis-500 dark:text-parchment-400'}`}>
         {isDragOver ? t('issues.dropHere') : t(message.titleKey)}
       </p>
-      <p className="text-xs text-stone-500 mt-1">
+      <p className="text-xs text-stone-500 dark:text-parchment-500 mt-1">
         {isDragOver ? t('issues.releaseToMove') : t(message.subtitleKey)}
       </p>
       {columnId === IssueStatus.TO_INSCRIBE && !isDragOver && !isFiltering && (
         <button
           onClick={onCreateIssue}
-          className="mt-4 text-xs text-lapis-500 hover:text-lapis-600 underline"
+          className="mt-4 text-xs text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-200 underline"
         >
           {t('issues.createNew')}
         </button>

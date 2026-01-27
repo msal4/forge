@@ -99,7 +99,7 @@ export function CommandMenu() {
     <div className="fixed inset-0 z-50">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-lapis-900/50 backdrop-blur-sm animate-fade-in"
+        className="fixed inset-0 bg-lapis-900/50 dark:bg-black/60 backdrop-blur-sm animate-fade-in"
         onClick={closeCommandPalette}
       />
 
@@ -108,8 +108,8 @@ export function CommandMenu() {
         <Command
           className="
             relative w-full max-w-xl
-            bg-parchment-100 
-            border-2 border-clay-500
+            bg-parchment-100 dark:bg-lapis-900
+            border-2 border-clay-500 dark:border-gold-600
             rounded-lg
             shadow-tablet
             overflow-hidden
@@ -122,11 +122,11 @@ export function CommandMenu() {
           }}
         >
           {/* Search Input */}
-          <div className="flex items-center border-b-2 border-parchment-300 px-4">
+          <div className="flex items-center border-b-2 border-parchment-300 dark:border-lapis-700 px-4">
             {isSearching ? (
-              <LoadingIndicator size="md" className="text-stone-400" inline />
+              <LoadingIndicator size="md" className="text-stone-400 dark:text-parchment-500" inline />
             ) : (
-              <Search className="text-stone-400" size={20} />
+              <Search className="text-stone-400 dark:text-parchment-500" size={20} />
             )}
             <Command.Input
               value={query}
@@ -134,7 +134,7 @@ export function CommandMenu() {
               placeholder={t('commandPalette.placeholder')}
               className="
                 w-full bg-transparent px-3 py-4
-                text-lapis-700 placeholder-stone-500
+                text-lapis-700 dark:text-parchment-200 placeholder-stone-500 dark:placeholder-parchment-500
                 outline-none border-none ring-0
                 focus:outline-none focus:border-none focus:ring-0
                 font-body
@@ -145,8 +145,8 @@ export function CommandMenu() {
             <kbd className="
               hidden sm:flex items-center gap-1
               px-2 py-1
-              bg-parchment-200 border border-parchment-400
-              rounded text-xs text-lapis-500
+              bg-parchment-200 dark:bg-lapis-800 border border-parchment-400 dark:border-lapis-600
+              rounded text-xs text-lapis-500 dark:text-parchment-400
               font-mono
             ">
               ESC
@@ -155,7 +155,7 @@ export function CommandMenu() {
 
           {/* Results List */}
           <Command.List className="max-h-80 overflow-y-auto p-2">
-            <Command.Empty className="px-4 py-8 text-center text-lapis-500">
+            <Command.Empty className="px-4 py-8 text-center text-lapis-500 dark:text-parchment-400">
               {query.trim() ? t('commandPalette.noResults') : t('commandPalette.placeholder')}
             </Command.Empty>
 
@@ -163,7 +163,7 @@ export function CommandMenu() {
             {showNavigation && (
               <Command.Group
                 heading={
-                  <span className="font-inscription text-sm text-lapis-600 uppercase tracking-wider">
+                  <span className="font-inscription text-sm text-lapis-600 dark:text-parchment-300 uppercase tracking-wider">
                     {t('commandPalette.sections.navigation')}
                   </span>
                 }
@@ -174,7 +174,7 @@ export function CommandMenu() {
                   onSelect={() => goTo('/')}
                   className="command-item"
                 >
-                  <Home size={18} className="text-lapis-400" />
+                  <Home size={18} className="text-lapis-400 dark:text-parchment-400" />
                   <span className="flex-1">{t('commandPalette.commands.goHome')}</span>
                   <kbd className="shortcut-badge">g h</kbd>
                 </Command.Item>
@@ -184,10 +184,10 @@ export function CommandMenu() {
                   onSelect={() => goTo('/issues')}
                   className="command-item"
                 >
-                  <FileText size={18} className="text-lapis-400" />
+                  <FileText size={18} className="text-lapis-400 dark:text-parchment-400" />
                   <div className="flex-1">
                     <span>{t('commandPalette.commands.goIssues')}</span>
-                    <span className="ltr:ml-2 rtl:mr-2 text-lapis-500 text-sm">{t('nav.issues')}</span>
+                    <span className="ltr:ml-2 rtl:mr-2 text-lapis-500 dark:text-parchment-500 text-sm">{t('nav.issues')}</span>
                   </div>
                   <kbd className="shortcut-badge">g i</kbd>
                 </Command.Item>
@@ -197,10 +197,10 @@ export function CommandMenu() {
                   onSelect={() => goTo('/docs')}
                   className="command-item"
                 >
-                  <BookOpen size={18} className="text-lapis-400" />
+                  <BookOpen size={18} className="text-lapis-400 dark:text-parchment-400" />
                   <div className="flex-1">
                     <span>{t('commandPalette.commands.goDocs')}</span>
-                    <span className="ltr:ml-2 rtl:mr-2 text-lapis-500 text-sm">{t('nav.docs')}</span>
+                    <span className="ltr:ml-2 rtl:mr-2 text-lapis-500 dark:text-parchment-500 text-sm">{t('nav.docs')}</span>
                   </div>
                   <kbd className="shortcut-badge">g d</kbd>
                 </Command.Item>
@@ -210,10 +210,10 @@ export function CommandMenu() {
                   onSelect={() => goTo('/releases')}
                   className="command-item"
                 >
-                  <Package size={18} className="text-lapis-400" />
+                  <Package size={18} className="text-lapis-400 dark:text-parchment-400" />
                   <div className="flex-1">
                     <span>{t('commandPalette.commands.goReleases')}</span>
-                    <span className="ltr:ml-2 rtl:mr-2 text-lapis-500 text-sm">{t('nav.releases')}</span>
+                    <span className="ltr:ml-2 rtl:mr-2 text-lapis-500 dark:text-parchment-500 text-sm">{t('nav.releases')}</span>
                   </div>
                   <kbd className="shortcut-badge">g r</kbd>
                 </Command.Item>
@@ -223,7 +223,7 @@ export function CommandMenu() {
                   onSelect={() => goTo('/settings')}
                   className="command-item"
                 >
-                  <Settings size={18} className="text-lapis-400" />
+                  <Settings size={18} className="text-lapis-400 dark:text-parchment-400" />
                   <span className="flex-1">{t('commandPalette.commands.goSettings')}</span>
                   <kbd className="shortcut-badge">g s</kbd>
                 </Command.Item>
@@ -234,7 +234,7 @@ export function CommandMenu() {
             {showNavigation && (
               <Command.Group
                 heading={
-                  <span className="font-inscription text-sm text-lapis-600 uppercase tracking-wider">
+                  <span className="font-inscription text-sm text-lapis-600 dark:text-parchment-300 uppercase tracking-wider">
                     {t('commandPalette.sections.actions')}
                   </span>
                 }
@@ -245,7 +245,7 @@ export function CommandMenu() {
                   onSelect={() => goTo('/issues?new=true')}
                   className="command-item"
                 >
-                  <Plus size={18} className="text-clay-500" />
+                  <Plus size={18} className="text-clay-500 dark:text-clay-400" />
                   <span className="flex-1">{t('commandPalette.commands.newIssue')}</span>
                   <kbd className="shortcut-badge">c</kbd>
                 </Command.Item>
@@ -255,7 +255,7 @@ export function CommandMenu() {
                   onSelect={() => goTo('/docs?new=true')}
                   className="command-item"
                 >
-                  <Plus size={18} className="text-clay-500" />
+                  <Plus size={18} className="text-clay-500 dark:text-clay-400" />
                   <span className="flex-1">{t('commandPalette.commands.newDoc')}</span>
                 </Command.Item>
 
@@ -264,7 +264,7 @@ export function CommandMenu() {
                   onSelect={() => goTo('/releases?new=true')}
                   className="command-item"
                 >
-                  <Plus size={18} className="text-clay-500" />
+                  <Plus size={18} className="text-clay-500 dark:text-clay-400" />
                   <span className="flex-1">{t('commandPalette.commands.newRelease')}</span>
                 </Command.Item>
               </Command.Group>
@@ -274,7 +274,7 @@ export function CommandMenu() {
             {hasSearchResults && (
               <Command.Group
                 heading={
-                  <span className="font-inscription text-sm text-lapis-600 uppercase tracking-wider">
+                  <span className="font-inscription text-sm text-lapis-600 dark:text-parchment-300 uppercase tracking-wider">
                     {t('commandPalette.sections.recent')}
                   </span>
                 }
@@ -287,16 +287,16 @@ export function CommandMenu() {
                     className="command-item"
                   >
                     {result.type === 'issue' ? (
-                      <FileText size={18} className="text-lapis-400" />
+                      <FileText size={18} className="text-lapis-400 dark:text-parchment-400" />
                     ) : (
-                      <BookOpen size={18} className="text-lapis-400" />
+                      <BookOpen size={18} className="text-lapis-400 dark:text-parchment-400" />
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="truncate">{result.title}</div>
-                      <div className="text-xs text-lapis-500">
+                      <div className="text-xs text-lapis-500 dark:text-parchment-500">
                         {result.type === 'issue' ? t('nav.issuesSubtitle') : t('nav.docsSubtitle')}
                         {result.status && (
-                          <span className="ltr:ml-2 rtl:mr-2 text-clay-600">
+                          <span className="ltr:ml-2 rtl:mr-2 text-clay-600 dark:text-clay-400">
                             {getStatusDisplay(result.status)}
                           </span>
                         )}
@@ -311,26 +311,26 @@ export function CommandMenu() {
           {/* Footer */}
           <div className="
             flex items-center justify-between
-            border-t-2 border-parchment-300
+            border-t-2 border-parchment-300 dark:border-lapis-700
             px-4 py-2
-            text-xs text-lapis-500
-            bg-parchment-50
+            text-xs text-lapis-500 dark:text-parchment-400
+            bg-parchment-50 dark:bg-lapis-900
           ">
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-parchment-200 border border-parchment-400 rounded text-[10px] font-mono">
+                <kbd className="px-1.5 py-0.5 bg-parchment-200 dark:bg-lapis-800 border border-parchment-400 dark:border-lapis-600 rounded text-[10px] font-mono">
                   &#8593;&#8595;
                 </kbd>
                 {t('commandPalette.tips.navigate')}
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-parchment-200 border border-parchment-400 rounded text-[10px] font-mono">
+                <kbd className="px-1.5 py-0.5 bg-parchment-200 dark:bg-lapis-800 border border-parchment-400 dark:border-lapis-600 rounded text-[10px] font-mono">
                   &#8629;
                 </kbd>
                 {t('commandPalette.tips.select')}
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-parchment-200 border border-parchment-400 rounded text-[10px] font-mono">
+                <kbd className="px-1.5 py-0.5 bg-parchment-200 dark:bg-lapis-800 border border-parchment-400 dark:border-lapis-600 rounded text-[10px] font-mono">
                   esc
                 </kbd>
                 {t('common.close')}
@@ -340,7 +340,7 @@ export function CommandMenu() {
         </Command>
       </div>
 
-      {/* Styles for cmdk items */}
+      {/* Styles for cmdk items - supports dark mode via CSS variables */}
       <style>{`
         .command-item {
           display: flex;
@@ -353,9 +353,18 @@ export function CommandMenu() {
           color: #1a365d;
         }
         
+        .dark .command-item {
+          color: #f5f0e6;
+        }
+        
         .command-item[data-selected="true"] {
           background-color: #bcd1ff;
           color: #0c1627;
+        }
+        
+        .dark .command-item[data-selected="true"] {
+          background-color: #1a365d;
+          color: #f5f0e6;
         }
         
         .command-item[data-selected="true"] .text-lapis-400,
@@ -363,12 +372,28 @@ export function CommandMenu() {
           color: #12243f;
         }
         
+        .dark .command-item[data-selected="true"] .text-lapis-400,
+        .dark .command-item[data-selected="true"] .text-lapis-500,
+        .dark .command-item[data-selected="true"] .text-parchment-400,
+        .dark .command-item[data-selected="true"] .text-parchment-500 {
+          color: #f5f0e6;
+        }
+        
         .command-item[data-selected="true"] .text-clay-500 {
           color: #b04d32;
         }
         
+        .dark .command-item[data-selected="true"] .text-clay-500,
+        .dark .command-item[data-selected="true"] .text-clay-400 {
+          color: #e99373;
+        }
+        
         .command-item:hover:not([data-selected="true"]) {
           background-color: #f5f0e6;
+        }
+        
+        .dark .command-item:hover:not([data-selected="true"]) {
+          background-color: #12243f;
         }
         
         .shortcut-badge {
@@ -381,9 +406,20 @@ export function CommandMenu() {
           color: #1a365d;
         }
         
+        .dark .shortcut-badge {
+          background-color: #12243f;
+          border-color: #1a365d;
+          color: #d6d3d1;
+        }
+        
         .command-item[data-selected="true"] .shortcut-badge {
           background-color: #8eb3ff;
           border-color: #5988ff;
+        }
+        
+        .dark .command-item[data-selected="true"] .shortcut-badge {
+          background-color: #152c4d;
+          border-color: #1a365d;
         }
         
         [cmdk-group-heading] {

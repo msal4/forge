@@ -75,13 +75,13 @@ export function FilterBar({
   const isFiltering = totalCount !== filteredCount;
 
   return (
-    <div className="bg-parchment-100 border-b border-clay-200 px-4 py-3">
+    <div className="bg-parchment-100 dark:bg-lapis-900 border-b border-clay-200 dark:border-lapis-700 px-4 py-3">
       <div className="flex flex-wrap items-center gap-3">
         {/* Search Input - "Chiseled" style */}
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search 
             size={16} 
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-lapis-400 pointer-events-none" 
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-lapis-400 dark:text-parchment-500 pointer-events-none" 
           />
           <input
             ref={searchInputRef}
@@ -92,17 +92,17 @@ export function FilterBar({
             placeholder={t('issues.filter.searchPlaceholder')}
             className="
               w-full h-9 pl-9 pr-8 
-              bg-parchment-50 text-lapis-700 text-sm
-              border border-parchment-300 rounded-tablet
-              placeholder:text-stone-500
-              focus:outline-none focus:ring-2 focus:ring-gold-400/30
+              bg-parchment-50 dark:bg-lapis-800 text-lapis-700 dark:text-parchment-200 text-sm
+              border border-parchment-300 dark:border-lapis-600 rounded-tablet
+              placeholder:text-stone-500 dark:placeholder:text-parchment-500
+              focus:outline-none focus:ring-2 focus:ring-gold-400/30 dark:focus:ring-gold-500/40
               transition-all
             "
           />
           {filters.searchQuery && (
             <button
               onClick={() => onSearchChange('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-lapis-400 hover:text-lapis-600 rounded"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-lapis-400 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-200 rounded"
             >
               <X size={14} />
             </button>
@@ -120,12 +120,12 @@ export function FilterBar({
             onClick={() => setShowAssigneeDropdown(!showAssigneeDropdown)}
             className={`
               h-9 px-3 flex items-center gap-2
-              bg-parchment-50 text-sm
+              bg-parchment-50 dark:bg-lapis-800 text-sm
               border rounded-tablet
               transition-all
               ${filters.selectedAssignee !== null
-                ? 'border-lapis-400 text-lapis-700 bg-lapis-50'
-                : 'border-parchment-300 text-lapis-600 hover:border-lapis-300'
+                ? 'border-lapis-400 dark:border-gold-500 text-lapis-700 dark:text-parchment-200 bg-lapis-50 dark:bg-lapis-700'
+                : 'border-parchment-300 dark:border-lapis-600 text-lapis-600 dark:text-parchment-300 hover:border-lapis-300 dark:hover:border-lapis-500'
               }
             `}
           >
@@ -140,8 +140,8 @@ export function FilterBar({
             <div className="
               absolute top-full left-0 mt-1 z-20
               min-w-[180px] max-h-64 overflow-y-auto
-              bg-parchment-50 border border-parchment-300 
-              rounded-tablet shadow-tablet
+              bg-parchment-50 dark:bg-lapis-800 border border-parchment-300 dark:border-lapis-600
+              rounded-tablet shadow-tablet dark:shadow-none
               py-1
               animate-fade-in
             ">
@@ -149,13 +149,13 @@ export function FilterBar({
                 onClick={() => { onAssigneeChange(null); setShowAssigneeDropdown(false); }}
                 className={`
                   w-full px-3 py-2 text-left text-sm 
-                  hover:bg-parchment-200 transition-colors
+                  hover:bg-parchment-200 dark:hover:bg-lapis-700 transition-colors
                   flex items-center gap-2
-                  ${filters.selectedAssignee === null ? 'bg-parchment-200 text-lapis-700' : 'text-lapis-600'}
+                  ${filters.selectedAssignee === null ? 'bg-parchment-200 dark:bg-lapis-700 text-lapis-700 dark:text-parchment-200' : 'text-lapis-600 dark:text-parchment-300'}
                 `}
               >
-                <div className="w-6 h-6 rounded-full bg-parchment-300 flex items-center justify-center">
-                  <User size={12} className="text-lapis-400" />
+                <div className="w-6 h-6 rounded-full bg-parchment-300 dark:bg-lapis-600 flex items-center justify-center">
+                  <User size={12} className="text-lapis-400 dark:text-parchment-400" />
                 </div>
                 {t('issues.filter.allAssignees')}
               </button>
@@ -165,9 +165,9 @@ export function FilterBar({
                   onClick={() => { onAssigneeChange(user.id); setShowAssigneeDropdown(false); }}
                   className={`
                     w-full px-3 py-2 text-left text-sm 
-                    hover:bg-parchment-200 transition-colors
+                    hover:bg-parchment-200 dark:hover:bg-lapis-700 transition-colors
                     flex items-center gap-2
-                    ${filters.selectedAssignee === user.id ? 'bg-parchment-200 text-lapis-700' : 'text-lapis-600'}
+                    ${filters.selectedAssignee === user.id ? 'bg-parchment-200 dark:bg-lapis-700 text-lapis-700 dark:text-parchment-200' : 'text-lapis-600 dark:text-parchment-300'}
                   `}
                 >
                   <Avatar 
@@ -188,14 +188,14 @@ export function FilterBar({
             disabled={availableLabels.length === 0}
             className={`
               h-9 px-3 flex items-center gap-2
-              bg-parchment-50 text-sm
+              bg-parchment-50 dark:bg-lapis-800 text-sm
               border rounded-tablet
               transition-all
               ${availableLabels.length === 0 
-                ? 'opacity-50 cursor-not-allowed border-parchment-300 text-lapis-400' 
+                ? 'opacity-50 cursor-not-allowed border-parchment-300 dark:border-lapis-600 text-lapis-400 dark:text-parchment-500' 
                 : filters.selectedLabels.length > 0
-                  ? 'border-lapis-400 text-lapis-700 bg-lapis-50'
-                  : 'border-parchment-300 text-lapis-600 hover:border-lapis-300'
+                  ? 'border-lapis-400 dark:border-gold-500 text-lapis-700 dark:text-parchment-200 bg-lapis-50 dark:bg-lapis-700'
+                  : 'border-parchment-300 dark:border-lapis-600 text-lapis-600 dark:text-parchment-300 hover:border-lapis-300 dark:hover:border-lapis-500'
               }
             `}
           >
@@ -213,8 +213,8 @@ export function FilterBar({
             <div className="
               absolute top-full left-0 mt-1 z-20
               min-w-[180px] max-h-64 overflow-y-auto
-              bg-parchment-50 border border-parchment-300 
-              rounded-tablet shadow-tablet
+              bg-parchment-50 dark:bg-lapis-800 border border-parchment-300 dark:border-lapis-600
+              rounded-tablet shadow-tablet dark:shadow-none
               py-1
               animate-fade-in
             ">
@@ -226,16 +226,16 @@ export function FilterBar({
                     onClick={() => onToggleLabel(label)}
                     className={`
                       w-full px-3 py-2 text-left text-sm 
-                      hover:bg-parchment-200 transition-colors
+                      hover:bg-parchment-200 dark:hover:bg-lapis-700 transition-colors
                       flex items-center gap-2
-                      ${isSelected ? 'bg-lapis-50 text-lapis-700' : 'text-lapis-600'}
+                      ${isSelected ? 'bg-lapis-50 dark:bg-lapis-700 text-lapis-700 dark:text-parchment-200' : 'text-lapis-600 dark:text-parchment-300'}
                     `}
                   >
                     <div className={`
                       w-4 h-4 rounded border flex items-center justify-center
                       ${isSelected 
-                        ? 'bg-lapis-500 border-lapis-500 text-parchment-50' 
-                        : 'border-parchment-400'
+                        ? 'bg-lapis-500 dark:bg-gold-500 border-lapis-500 dark:border-gold-500 text-parchment-50 dark:text-lapis-950' 
+                        : 'border-parchment-400 dark:border-lapis-500'
                       }
                     `}>
                       {isSelected && (
@@ -255,7 +255,7 @@ export function FilterBar({
         {/* Active Filter Tokens (Clay Tokens) */}
         {hasActiveFilters && (
           <div className="flex items-center gap-2 ml-2">
-            <div className="w-px h-6 bg-parchment-300" />
+            <div className="w-px h-6 bg-parchment-300 dark:bg-lapis-700" />
             
             {/* Search token */}
             {filters.searchQuery && (
@@ -289,8 +289,8 @@ export function FilterBar({
               onClick={onClearFilters}
               className="
                 px-2 py-1 text-xs font-medium
-                text-lapis-500 hover:text-lapis-700
-                hover:bg-parchment-200 rounded
+                text-lapis-500 dark:text-parchment-400 hover:text-lapis-700 dark:hover:text-parchment-200
+                hover:bg-parchment-200 dark:hover:bg-lapis-800 rounded
                 transition-colors
               "
             >
@@ -301,7 +301,7 @@ export function FilterBar({
 
         {/* Results count */}
         {isFiltering && (
-          <div className="ml-auto text-xs text-lapis-500">
+          <div className="ml-auto text-xs text-lapis-500 dark:text-parchment-400">
             <Filter size={12} className="inline mr-1" />
             {t('issues.filter.showing', { filtered: filteredCount, total: totalCount })}
           </div>
@@ -326,8 +326,8 @@ function FilterToken({ label, icon, onRemove }: FilterTokenProps) {
     <span className="
       inline-flex items-center gap-1.5 
       px-2 py-1 
-      bg-clay-100 text-clay-800 
-      border border-clay-200
+      bg-clay-100 dark:bg-clay-900/50 text-clay-800 dark:text-clay-300
+      border border-clay-200 dark:border-clay-700
       rounded-tablet text-xs font-medium
       animate-fade-in
     ">
@@ -335,7 +335,7 @@ function FilterToken({ label, icon, onRemove }: FilterTokenProps) {
       <span className="max-w-[100px] truncate">{label}</span>
       <button
         onClick={onRemove}
-        className="ml-0.5 p-0.5 hover:bg-clay-200 rounded transition-colors"
+        className="ml-0.5 p-0.5 hover:bg-clay-200 dark:hover:bg-clay-800 rounded transition-colors"
       >
         <X size={12} />
       </button>

@@ -114,17 +114,17 @@ export function HomePage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-inscription text-lapis-600">
+        <h1 className="text-3xl font-inscription text-lapis-600 dark:text-parchment-200">
           {t('home.welcome', { name: user?.fullName?.split(' ')[0] || user?.username })}
         </h1>
-        <p className="mt-2 text-lapis-500 italic">
+        <p className="mt-2 text-lapis-500 dark:text-parchment-400 italic">
           "{randomWisdom}"
         </p>
       </div>
 
       {/* Error message */}
       {issuesError && (
-        <div className="p-4 bg-clay-50 border border-clay-200 rounded-tablet text-clay-700 flex items-center gap-3">
+        <div className="p-4 bg-clay-50 dark:bg-clay-900/30 border border-clay-200 dark:border-clay-700 rounded-tablet text-clay-700 dark:text-clay-300 flex items-center gap-3">
           <AlertCircle size={20} />
           <span>Failed to load some data. Please refresh the page.</span>
         </div>
@@ -195,12 +195,12 @@ export function HomePage() {
         {/* Recent Inscriptions - Takes 2 columns */}
         <div className="lg:col-span-2 tablet-card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-inscription text-lapis-600">
+            <h2 className="text-xl font-inscription text-lapis-600 dark:text-parchment-200">
               {t('home.recentInscriptions')}
             </h2>
             <Link 
               to="/issues" 
-              className="text-sm text-lapis-500 hover:text-lapis-600 flex items-center gap-1"
+              className="text-sm text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-200 flex items-center gap-1"
             >
               {t('home.viewAll')} <ArrowRight size={14} className="rtl:rotate-180" />
             </Link>
@@ -229,12 +229,12 @@ export function HomePage() {
           {/* Latest Release */}
           <div className="tablet-card p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-inscription text-lapis-600">
+              <h2 className="text-lg font-inscription text-lapis-600 dark:text-parchment-200">
                 {t('home.latestRelease')}
               </h2>
               <Link 
                 to="/releases" 
-                className="text-sm text-lapis-500 hover:text-lapis-600"
+                className="text-sm text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-200"
               >
                 {t('home.allReleases')}
               </Link>
@@ -250,19 +250,19 @@ export function HomePage() {
                 className="block group"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-tablet bg-gold-100 flex items-center justify-center flex-shrink-0">
-                    <Package size={18} className="text-gold-600" />
+                  <div className="w-10 h-10 rounded-tablet bg-gold-100 dark:bg-gold-900/50 flex items-center justify-center flex-shrink-0">
+                    <Package size={18} className="text-gold-600 dark:text-gold-400" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-sm font-semibold text-lapis-600 group-hover:text-lapis-700">
+                      <span className="font-mono text-sm font-semibold text-lapis-600 dark:text-parchment-200 group-hover:text-lapis-700 dark:group-hover:text-parchment-100">
                         {latestRelease.version}
                       </span>
                     </div>
-                    <p className="text-sm text-lapis-700 font-medium truncate">
+                    <p className="text-sm text-lapis-700 dark:text-parchment-300 font-medium truncate">
                       {latestRelease.title}
                     </p>
-                    <p className="text-xs text-stone-500 mt-1" title={formatFullDate(latestRelease.publishedAt || latestRelease.createdAt)}>
+                    <p className="text-xs text-stone-500 dark:text-parchment-500 mt-1" title={formatFullDate(latestRelease.publishedAt || latestRelease.createdAt)}>
                       {formatRelativeTime(latestRelease.publishedAt || latestRelease.createdAt)}
                     </p>
                   </div>
@@ -279,12 +279,12 @@ export function HomePage() {
           {/* Recent Docs */}
           <div className="tablet-card p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-inscription text-lapis-600">
+              <h2 className="text-lg font-inscription text-lapis-600 dark:text-parchment-200">
                 {t('home.recentDocuments')}
               </h2>
               <Link 
                 to="/docs" 
-                className="text-sm text-lapis-500 hover:text-lapis-600"
+                className="text-sm text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-200"
               >
                 {t('home.libraryLink')}
               </Link>
@@ -305,15 +305,15 @@ export function HomePage() {
                   <Link
                     key={doc.id}
                     to={`/docs/${doc.id}`}
-                    className="block p-2 -mx-2 rounded-tablet hover:bg-parchment-100 transition-colors"
+                    className="block p-2 -mx-2 rounded-tablet hover:bg-parchment-100 dark:hover:bg-lapis-800 transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                      <BookOpen size={14} className="text-stone-400 flex-shrink-0" />
-                      <span className="text-sm text-lapis-600 truncate">
+                      <BookOpen size={14} className="text-stone-400 dark:text-parchment-500 flex-shrink-0" />
+                      <span className="text-sm text-lapis-600 dark:text-parchment-300 truncate">
                         {doc.title}
                       </span>
                     </div>
-                    <p className="text-xs text-stone-500 mt-0.5 ltr:ml-6 rtl:mr-6" title={formatFullDate(doc.updatedAt)}>
+                    <p className="text-xs text-stone-500 dark:text-parchment-500 mt-0.5 ltr:ml-6 rtl:mr-6" title={formatFullDate(doc.updatedAt)}>
                       {formatRelativeTime(doc.updatedAt)}
                     </p>
                   </Link>
@@ -325,9 +325,9 @@ export function HomePage() {
       </div>
       
       {/* Keyboard Shortcuts Hint */}
-      <div className="bg-lapis-500/5 border border-lapis-200 rounded-tablet p-4">
-        <h3 className="font-medium text-lapis-600 mb-2">{t('home.keyboardNav')}</h3>
-        <p className="text-sm text-lapis-500">
+      <div className="bg-lapis-500/5 dark:bg-lapis-800/50 border border-lapis-200 dark:border-lapis-700 rounded-tablet p-4">
+        <h3 className="font-medium text-lapis-600 dark:text-parchment-200 mb-2">{t('home.keyboardNav')}</h3>
+        <p className="text-sm text-lapis-500 dark:text-parchment-400">
           {t('home.keyboardHint')}
         </p>
       </div>
@@ -349,17 +349,17 @@ interface StatCardProps {
 
 function StatCard({ icon, label, value, color, loading }: StatCardProps) {
   const colorClasses = {
-    lapis: 'bg-lapis-50 text-lapis-600 border-lapis-200',
-    clay: 'bg-clay-50 text-clay-600 border-clay-200',
-    gold: 'bg-gold-50 text-gold-700 border-gold-200',
-    parchment: 'bg-parchment-100 text-lapis-600 border-parchment-300',
+    lapis: 'bg-lapis-50 dark:bg-lapis-900/50 text-lapis-600 dark:text-parchment-200 border-lapis-200 dark:border-lapis-700',
+    clay: 'bg-clay-50 dark:bg-clay-900/30 text-clay-600 dark:text-clay-300 border-clay-200 dark:border-clay-800',
+    gold: 'bg-gold-50 dark:bg-gold-900/30 text-gold-700 dark:text-gold-300 border-gold-200 dark:border-gold-800',
+    parchment: 'bg-parchment-100 dark:bg-lapis-800 text-lapis-600 dark:text-parchment-200 border-parchment-300 dark:border-lapis-700',
   };
 
   const iconColors = {
-    lapis: 'text-lapis-500',
-    clay: 'text-clay-500',
-    gold: 'text-gold-600',
-    parchment: 'text-stone-500',
+    lapis: 'text-lapis-500 dark:text-lapis-400',
+    clay: 'text-clay-500 dark:text-clay-400',
+    gold: 'text-gold-600 dark:text-gold-400',
+    parchment: 'text-stone-500 dark:text-parchment-400',
   };
 
   return (
@@ -393,26 +393,26 @@ function IssueRow({ issue, formatRelativeTime, formatFullDate }: IssueRowProps) 
   const statusConfig = {
     [IssueStatus.TO_INSCRIBE]: { 
       icon: <Circle size={14} />, 
-      color: 'text-stone-500',
-      bg: 'bg-parchment-200',
+      color: 'text-stone-500 dark:text-parchment-400',
+      bg: 'bg-parchment-200 dark:bg-lapis-700',
     },
     [IssueStatus.CARVING]: { 
       icon: <Hammer size={14} />, 
-      color: 'text-clay-500',
-      bg: 'bg-clay-100',
+      color: 'text-clay-500 dark:text-clay-400',
+      bg: 'bg-clay-100 dark:bg-clay-900/50',
     },
     [IssueStatus.BAKED]: { 
       icon: <CheckCircle2 size={14} />, 
-      color: 'text-gold-600',
-      bg: 'bg-gold-100',
+      color: 'text-gold-600 dark:text-gold-400',
+      bg: 'bg-gold-100 dark:bg-gold-900/50',
     },
   };
 
   const priorityColors = {
-    critical: 'text-red-600',
-    high: 'text-clay-600',
-    medium: 'text-gold-600',
-    low: 'text-stone-500',
+    critical: 'text-red-600 dark:text-red-400',
+    high: 'text-clay-600 dark:text-clay-400',
+    medium: 'text-gold-600 dark:text-gold-400',
+    low: 'text-stone-500 dark:text-parchment-500',
   };
 
   const config = statusConfig[issue.status];
@@ -420,7 +420,7 @@ function IssueRow({ issue, formatRelativeTime, formatFullDate }: IssueRowProps) 
   return (
     <Link
       to={`/issues/${issue.id}`}
-      className="flex items-center gap-3 p-3 -mx-3 rounded-tablet hover:bg-parchment-100 transition-colors group"
+      className="flex items-center gap-3 p-3 -mx-3 rounded-tablet hover:bg-parchment-100 dark:hover:bg-lapis-800 transition-colors group"
     >
       {/* Status icon */}
       <div className={`w-8 h-8 rounded-full ${config.bg} flex items-center justify-center flex-shrink-0`}>
@@ -430,14 +430,14 @@ function IssueRow({ issue, formatRelativeTime, formatFullDate }: IssueRowProps) 
       {/* Issue info */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-lapis-700 group-hover:text-lapis-800 truncate">
+          <span className="text-sm font-medium text-lapis-700 dark:text-parchment-200 group-hover:text-lapis-800 dark:group-hover:text-parchment-100 truncate">
             {issue.title}
           </span>
           {issue.priority === 'critical' && (
             <span className={`text-xs ${priorityColors.critical}`}>!</span>
           )}
         </div>
-        <div className="flex items-center gap-3 mt-0.5 text-xs text-stone-500">
+        <div className="flex items-center gap-3 mt-0.5 text-xs text-stone-500 dark:text-parchment-500">
           <span className="flex items-center gap-1" title={formatFullDate(issue.updatedAt)}>
             <Clock size={10} />
             {formatRelativeTime(issue.updatedAt)}
@@ -463,7 +463,7 @@ function IssueRow({ issue, formatRelativeTime, formatFullDate }: IssueRowProps) 
         </div>
       )}
 
-      <ArrowRight size={14} className="text-stone-400 group-hover:text-lapis-500 flex-shrink-0 rtl:rotate-180" />
+      <ArrowRight size={14} className="text-stone-400 dark:text-parchment-500 group-hover:text-lapis-500 dark:group-hover:text-parchment-300 flex-shrink-0 rtl:rotate-180" />
     </Link>
   );
 }
@@ -484,15 +484,15 @@ interface QuickActionCardProps {
 function QuickActionCard({ to, icon, title, description, color, shortcut }: QuickActionCardProps) {
   const { t } = useTranslation();
   const colorClasses = {
-    lapis: 'border-lapis-300 hover:border-lapis-400',
-    clay: 'border-clay-300 hover:border-clay-400',
-    gold: 'border-gold-300 hover:border-gold-400',
+    lapis: 'border-lapis-300 dark:border-lapis-600 hover:border-lapis-400 dark:hover:border-lapis-500',
+    clay: 'border-clay-300 dark:border-clay-700 hover:border-clay-400 dark:hover:border-clay-600',
+    gold: 'border-gold-300 dark:border-gold-700 hover:border-gold-400 dark:hover:border-gold-600',
   };
   
   const iconColors = {
-    lapis: 'text-lapis-500',
-    clay: 'text-clay-500',
-    gold: 'text-gold-600',
+    lapis: 'text-lapis-500 dark:text-lapis-400',
+    clay: 'text-clay-500 dark:text-clay-400',
+    gold: 'text-gold-600 dark:text-gold-400',
   };
   
   return (
@@ -507,17 +507,17 @@ function QuickActionCard({ to, icon, title, description, color, shortcut }: Quic
       <div className={`${iconColors[color]} mb-4`}>
         {icon}
       </div>
-      <h3 className="font-inscription text-lg text-lapis-600 mb-2">
+      <h3 className="font-inscription text-lg text-lapis-600 dark:text-parchment-200 mb-2">
         {title}
       </h3>
-      <p className="text-sm text-lapis-500 mb-4">
+      <p className="text-sm text-lapis-500 dark:text-parchment-400 mb-4">
         {description}
       </p>
       <div className="flex items-center justify-between">
-        <span className="text-sm text-stone-500 group-hover:text-lapis-600 transition-colors flex items-center gap-1">
+        <span className="text-sm text-stone-500 dark:text-parchment-500 group-hover:text-lapis-600 dark:group-hover:text-parchment-300 transition-colors flex items-center gap-1">
           {t('home.enter')} <ArrowRight size={14} className="rtl:rotate-180" />
         </span>
-        <kbd className="px-1.5 py-0.5 bg-parchment-200 rounded text-xs text-lapis-600">
+        <kbd className="px-1.5 py-0.5 bg-parchment-200 dark:bg-lapis-700 rounded text-xs text-lapis-600 dark:text-parchment-300">
           {shortcut}
         </kbd>
       </div>
@@ -537,10 +537,10 @@ interface EmptyStateProps {
 
 function EmptyState({ message, hint, small }: EmptyStateProps) {
   return (
-    <div className={`text-center ${small ? 'py-4' : 'py-8'} text-lapis-500`}>
+    <div className={`text-center ${small ? 'py-4' : 'py-8'} text-lapis-500 dark:text-parchment-400`}>
       <p className={small ? 'text-sm' : ''}>{message}</p>
       {hint && (
-        <p className="text-sm mt-2 text-stone-500">
+        <p className="text-sm mt-2 text-stone-500 dark:text-parchment-500">
           {hint}
         </p>
       )}

@@ -181,10 +181,10 @@ export function ReleasesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-inscription text-lapis-600">
+          <h1 className="text-2xl font-inscription text-lapis-600 dark:text-parchment-200">
             {t('releases.title')}
           </h1>
-          <p className="text-lapis-500 text-sm">
+          <p className="text-lapis-500 dark:text-parchment-400 text-sm">
             {t('releases.tagline')}
           </p>
         </div>
@@ -241,11 +241,11 @@ export function ReleasesPage() {
           `}>
             {releases.length === 0 && (
               <div className="tablet-card p-8 text-center">
-                <Package className="mx-auto text-stone-400" size={48} />
-                <h3 className="mt-4 font-inscription text-lg text-lapis-600">
+                <Package className="mx-auto text-stone-400 dark:text-parchment-500" size={48} />
+                <h3 className="mt-4 font-inscription text-lg text-lapis-600 dark:text-parchment-200">
                   {t('releases.emptyGranary')}
                 </h3>
-                <p className="mt-2 text-lapis-500 text-sm">
+                <p className="mt-2 text-lapis-500 dark:text-parchment-400 text-sm">
                   {t('releases.emptyGranaryHint')}
                 </p>
               </div>
@@ -273,7 +273,7 @@ export function ReleasesPage() {
                     <span className="text-sm font-code bg-lapis-500 text-parchment-100 px-2 py-0.5 rounded">
                       {selectedRelease.version}
                     </span>
-                    <h2 className="text-xl font-inscription text-lapis-600">
+                    <h2 className="text-xl font-inscription text-lapis-600 dark:text-parchment-200">
                       {selectedRelease.title}
                     </h2>
                   </div>
@@ -282,7 +282,7 @@ export function ReleasesPage() {
                       <Markdown>{selectedRelease.description}</Markdown>
                     </div>
                   )}
-                  <div className="mt-3 flex items-center gap-4 text-sm text-lapis-500">
+                  <div className="mt-3 flex items-center gap-4 text-sm text-lapis-500 dark:text-parchment-400">
                     {selectedRelease.author && (
                       <span className="flex items-center gap-1">
                         <User size={14} />
@@ -306,7 +306,7 @@ export function ReleasesPage() {
                 </div>
                 <button
                   onClick={() => selectRelease(null)}
-                  className="p-1 rounded hover:bg-parchment-200 text-lapis-500"
+                  className="p-1 rounded hover:bg-parchment-200 dark:hover:bg-lapis-700 text-lapis-500 dark:text-parchment-400"
                 >
                   <X size={20} />
                 </button>
@@ -315,7 +315,7 @@ export function ReleasesPage() {
               {/* Files Section */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-medium text-lapis-600">{t('releases.files')}</h3>
+                  <h3 className="font-medium text-lapis-600 dark:text-parchment-200">{t('releases.files')}</h3>
                   <label className="cursor-pointer">
                     <input
                       ref={fileInputRef}
@@ -342,9 +342,9 @@ export function ReleasesPage() {
                 </div>
 
                 {selectedRelease.files.length === 0 ? (
-                  <div className="text-center py-8 border-2 border-dashed border-parchment-300 rounded-tablet">
-                    <HardDrive className="mx-auto text-stone-400" size={32} />
-                    <p className="mt-2 text-sm text-lapis-500">
+                  <div className="text-center py-8 border-2 border-dashed border-parchment-300 dark:border-lapis-700 rounded-tablet">
+                    <HardDrive className="mx-auto text-stone-400 dark:text-parchment-500" size={32} />
+                    <p className="mt-2 text-sm text-lapis-500 dark:text-parchment-400">
                       {t('releases.noFiles')}
                     </p>
                   </div>
@@ -366,11 +366,11 @@ export function ReleasesPage() {
               <CommentSection resourceType="release" resourceId={selectedRelease.id} />
 
               {/* Danger Zone */}
-              <div className="pt-4 border-t border-parchment-300">
+              <div className="pt-4 border-t border-parchment-300 dark:border-lapis-700">
                 <button
                   onClick={() => handleDeleteRelease(selectedRelease)}
                   disabled={deleteReleaseMutation.isPending}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-tablet transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-tablet transition-colors disabled:opacity-50"
                 >
                   {deleteReleaseMutation.isPending ? (
                     <LoadingIndicator size="sm" inline />
@@ -432,24 +432,24 @@ function ReleaseCard({ release, isSelected, onClick, formatDate, formatSize }: R
         tablet-card p-4 cursor-pointer scroll-mt-2
         transition-all duration-150
         ${isSelected 
-          ? 'ring-2 ring-lapis-500 bg-lapis-50 border-lapis-400 shadow-tablet' 
-          : 'hover:border-lapis-300 hover:shadow-tablet'
+          ? 'ring-2 ring-lapis-500 dark:ring-gold-500 bg-lapis-50 dark:bg-lapis-800 border-lapis-400 dark:border-lapis-600 shadow-tablet' 
+          : 'hover:border-lapis-300 dark:hover:border-lapis-600 hover:shadow-tablet'
         }
       `}
       onClick={onClick}
     >
       <div className="flex items-start gap-3">
-        <div className={`p-2 rounded-tablet ${isSelected ? 'bg-lapis-500 text-parchment-100' : 'bg-gold-100 text-gold-600'}`}>
+        <div className={`p-2 rounded-tablet ${isSelected ? 'bg-lapis-500 text-parchment-100' : 'bg-gold-100 dark:bg-gold-900/30 text-gold-600 dark:text-gold-400'}`}>
           <Package size={20} />
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <span className={`text-xs font-code px-1.5 py-0.5 rounded ${isSelected ? 'bg-lapis-500 text-parchment-100' : 'bg-lapis-100 text-lapis-600'}`}>
+            <span className={`text-xs font-code px-1.5 py-0.5 rounded ${isSelected ? 'bg-lapis-500 text-parchment-100' : 'bg-lapis-100 dark:bg-lapis-800 text-lapis-600 dark:text-parchment-300'}`}>
               {release.version}
             </span>
-            <h3 className={`font-medium ${isSelected ? 'text-lapis-700' : 'text-lapis-600'}`}>{release.title}</h3>
+            <h3 className={`font-medium ${isSelected ? 'text-lapis-700 dark:text-parchment-200' : 'text-lapis-600 dark:text-parchment-300'}`}>{release.title}</h3>
           </div>
-          <div className="mt-1 flex items-center gap-3 text-xs text-lapis-500">
+          <div className="mt-1 flex items-center gap-3 text-xs text-lapis-500 dark:text-parchment-400">
             <span>{formatDate(release.createdAt)}</span>
             <span>{t('releases.fileCount', { count: release.files.length })}</span>
             {totalSize > 0 && <span>{formatSize(totalSize)}</span>}
@@ -484,12 +484,12 @@ function FileRow({ file, releaseId, formatSize }: FileRowProps) {
   };
 
   return (
-    <div className="flex items-center justify-between p-3 bg-parchment-100 rounded-tablet border border-parchment-200">
+    <div className="flex items-center justify-between p-3 bg-parchment-100 dark:bg-lapis-800 rounded-tablet border border-parchment-200 dark:border-lapis-700">
       <div className="flex items-center gap-3">
         <span className="text-lg">{getFileIcon()}</span>
         <div>
-          <p className="font-medium text-sm text-lapis-600">{file.filename}</p>
-          <p className="text-xs text-lapis-500">{formatSize(file.size)}</p>
+          <p className="font-medium text-sm text-lapis-600 dark:text-parchment-200">{file.filename}</p>
+          <p className="text-xs text-lapis-500 dark:text-parchment-400">{formatSize(file.size)}</p>
         </div>
       </div>
       <a
@@ -576,11 +576,11 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
         onClick={onClose}
       />
       
-      <div className="relative w-full max-w-md bg-parchment-50 rounded-tablet shadow-tablet border border-parchment-300 m-4">
+      <div className="relative w-full max-w-md bg-parchment-50 dark:bg-lapis-900 rounded-tablet shadow-tablet border border-parchment-300 dark:border-lapis-700 m-4">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-parchment-300">
-          <h2 className="text-lg font-inscription text-lapis-600">{t('releases.modal.title')}</h2>
-          <button onClick={onClose} className="p-1 rounded hover:bg-parchment-200 text-lapis-500">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-parchment-300 dark:border-lapis-700">
+          <h2 className="text-lg font-inscription text-lapis-600 dark:text-parchment-200">{t('releases.modal.title')}</h2>
+          <button onClick={onClose} className="p-1 rounded hover:bg-parchment-200 dark:hover:bg-lapis-800 text-lapis-500 dark:text-parchment-400">
             <X size={20} />
           </button>
         </div>
@@ -588,13 +588,13 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-tablet text-red-600 text-sm">
+            <div className="p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-tablet text-red-600 dark:text-red-400 text-sm">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-lapis-600 mb-1">
+            <label className="block text-sm font-medium text-lapis-600 dark:text-parchment-300 mb-1">
               {t('releases.modal.version')} <span className="text-red-500">*</span>
             </label>
             <input
@@ -603,15 +603,15 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
               value={version}
               onChange={(e) => setVersion(e.target.value)}
               placeholder={t('releases.modal.versionPlaceholder')}
-              className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
-                         bg-parchment-100 text-lapis-700 font-code
+              className="w-full px-3 py-2 rounded-tablet border border-parchment-300 dark:border-lapis-700
+                         bg-parchment-100 dark:bg-lapis-800 text-lapis-700 dark:text-parchment-200 font-code
                          focus:ring-2 focus:ring-gold-400/30 focus:outline-none
-                         placeholder:text-stone-500"
+                         placeholder:text-stone-500 dark:placeholder:text-parchment-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-lapis-600 mb-1">
+            <label className="block text-sm font-medium text-lapis-600 dark:text-parchment-300 mb-1">
               {t('releases.modal.releaseTitle')} <span className="text-red-500">*</span>
             </label>
             <input
@@ -619,15 +619,15 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t('releases.modal.titlePlaceholder')}
-              className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
-                         bg-parchment-100 text-lapis-700
+              className="w-full px-3 py-2 rounded-tablet border border-parchment-300 dark:border-lapis-700
+                         bg-parchment-100 dark:bg-lapis-800 text-lapis-700 dark:text-parchment-200
                          focus:ring-2 focus:ring-gold-400/30 focus:outline-none
-                         placeholder:text-stone-500"
+                         placeholder:text-stone-500 dark:placeholder:text-parchment-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-lapis-600 mb-1">
+            <label className="block text-sm font-medium text-lapis-600 dark:text-parchment-300 mb-1">
               {t('releases.modal.description')}
             </label>
             <div>
@@ -642,17 +642,17 @@ function CreateReleaseModal({ isOpen, onClose, onSave, isLoading }: CreateReleas
                 onImagePaste={uploadImage}
                 placeholder={t('releases.modal.descriptionPlaceholder')}
                 rows={3}
-                className="w-full px-3 py-2 rounded-b-tablet border border-parchment-300 border-t-0
-                           bg-parchment-100 text-lapis-700 resize-none
+                className="w-full px-3 py-2 rounded-b-tablet border border-parchment-300 dark:border-lapis-700 border-t-0
+                           bg-parchment-100 dark:bg-lapis-800 text-lapis-700 dark:text-parchment-200 resize-none
                            focus:ring-2 focus:ring-gold-400/30 focus:outline-none
-                           placeholder:text-stone-500"
+                           placeholder:text-stone-500 dark:placeholder:text-parchment-500"
               />
             </div>
           </div>
         </form>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-parchment-300 bg-parchment-100">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-parchment-300 dark:border-lapis-700 bg-parchment-100 dark:bg-lapis-800">
           <ButtonWithHotkey variant="ghost" onClick={onClose}>
             {t('common.cancel')}
           </ButtonWithHotkey>

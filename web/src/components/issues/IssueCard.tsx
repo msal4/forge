@@ -123,14 +123,15 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
       className={`
         group relative
         bg-gradient-to-b from-parchment-50 to-parchment-100
+        dark:from-lapis-800 dark:to-lapis-900
         rounded-lg
-        border border-parchment-300
-        shadow-sm
+        border border-parchment-300 dark:border-lapis-600
+        shadow-sm dark:shadow-none
         cursor-grab active:cursor-grabbing
         transition-all duration-200
-        hover:shadow-tablet hover:border-lapis-300
+        hover:shadow-tablet hover:border-lapis-300 dark:hover:border-lapis-500
         ${isDragging 
-          ? 'opacity-60 scale-105 shadow-lg ring-2 ring-lapis-400 rotate-1' 
+          ? 'opacity-60 scale-105 shadow-lg ring-2 ring-lapis-400 dark:ring-gold-500 rotate-1' 
           : 'hover:-translate-y-0.5'
         }
       `}
@@ -162,13 +163,13 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
       {/* Content */}
       <div className="p-3 pl-5">
         {/* Title */}
-        <h4 className="text-sm font-medium text-lapis-700 line-clamp-2 pr-6 leading-snug">
+        <h4 className="text-sm font-medium text-lapis-700 dark:text-parchment-200 line-clamp-2 pr-6 leading-snug">
           {issue.title}
         </h4>
 
         {/* Description preview (if exists) */}
         {issue.description && (
-          <p className="text-xs text-lapis-500 mt-1 line-clamp-1 opacity-70">
+          <p className="text-xs text-lapis-500 dark:text-parchment-400 mt-1 line-clamp-1 opacity-70">
             {stripMarkdown(issue.description)}
           </p>
         )}
@@ -192,8 +193,8 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
               key={label}
               className="
                 text-[10px] px-1.5 py-0.5 rounded-md
-                bg-parchment-200 text-lapis-600 
-                border border-parchment-300
+                bg-parchment-200 dark:bg-lapis-700 text-lapis-600 dark:text-parchment-300
+                border border-parchment-300 dark:border-lapis-600
                 font-medium
               "
             >
@@ -201,14 +202,14 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
             </span>
           ))}
           {issue.labels && issue.labels.length > 2 && (
-            <span className="text-[10px] text-stone-500 font-medium">
+            <span className="text-[10px] text-stone-500 dark:text-parchment-500 font-medium">
               +{issue.labels.length - 2}
             </span>
           )}
         </div>
 
         {/* Footer row */}
-        <div className="flex items-center justify-between mt-3 pt-2 border-t border-parchment-200">
+        <div className="flex items-center justify-between mt-3 pt-2 border-t border-parchment-200 dark:border-lapis-700">
           {/* Assignee */}
           <div className="flex items-center gap-1.5">
             {issue.assignee ? (
@@ -218,14 +219,14 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
                   avatarUrl={issue.assignee.avatarUrl}
                   username={issue.assignee.username}
                   size="xs"
-                  className="ring-1 ring-parchment-300"
+                  className="ring-1 ring-parchment-300 dark:ring-lapis-600"
                 />
-                <span className="text-[11px] text-lapis-600 font-medium">
+                <span className="text-[11px] text-lapis-600 dark:text-parchment-300 font-medium">
                   {issue.assignee.fullName?.split(' ')[0] || issue.assignee.username}
                 </span>
               </div>
             ) : (
-              <div className="flex items-center gap-1 text-stone-500">
+              <div className="flex items-center gap-1 text-stone-500 dark:text-parchment-500">
                 <User size={12} strokeWidth={2.5} />
                 <span className="text-[11px]">{t('issueModal.unassigned')}</span>
               </div>
@@ -256,20 +257,20 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
           }}
           className="
             p-1.5 rounded-md
-            bg-parchment-100 border border-transparent
+            bg-parchment-100 dark:bg-lapis-700 border border-transparent
             opacity-0 group-hover:opacity-100 
-            hover:bg-parchment-200 hover:border-parchment-300
+            hover:bg-parchment-200 dark:hover:bg-lapis-600 hover:border-parchment-300 dark:hover:border-lapis-500
             transition-all duration-150
           "
         >
-          <MoreHorizontal size={14} className="text-lapis-500" />
+          <MoreHorizontal size={14} className="text-lapis-500 dark:text-parchment-400" />
         </button>
         
         {showMenu && (
           <div className="
             absolute right-0 top-full mt-1 
-            bg-parchment-50 
-            border border-parchment-300 
+            bg-parchment-50 dark:bg-lapis-800
+            border border-parchment-300 dark:border-lapis-600
             rounded-lg shadow-lg 
             py-1 z-20 min-w-[140px]
             animate-scale-in
@@ -281,15 +282,15 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
                 setShowMenu(false);
               }}
               className="
-                w-full px-3 py-2 text-left text-sm text-lapis-600 
-                hover:bg-parchment-200 
+                w-full px-3 py-2 text-left text-sm text-lapis-600 dark:text-parchment-300
+                hover:bg-parchment-200 dark:hover:bg-lapis-700
                 flex items-center gap-2
               "
             >
               <Edit3 size={14} />
               {t('issueCard.editInscription')}
             </button>
-            <div className="h-px bg-parchment-200 my-1" />
+            <div className="h-px bg-parchment-200 dark:bg-lapis-700 my-1" />
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -297,8 +298,8 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
                 setShowMenu(false);
               }}
               className="
-                w-full px-3 py-2 text-left text-sm text-red-600 
-                hover:bg-red-50 
+                w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400
+                hover:bg-red-50 dark:hover:bg-red-900/30
                 flex items-center gap-2
               "
             >

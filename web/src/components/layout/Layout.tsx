@@ -35,12 +35,12 @@ export function Layout() {
   };
   
   return (
-    <div className="h-screen bg-parchment-100 flex overflow-hidden">
+    <div className="h-screen bg-parchment-100 dark:bg-lapis-950 flex overflow-hidden">
       {/* Sidebar */}
       <aside 
         className={`
           fixed inset-y-0 ltr:left-0 rtl:right-0 z-40
-          w-72 bg-parchment-50 ltr:border-r rtl:border-l border-parchment-300
+          w-72 bg-parchment-50 dark:bg-lapis-900 ltr:border-r rtl:border-l border-parchment-300 dark:border-lapis-700
           transform transition-transform duration-200 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : 'ltr:-translate-x-full rtl:translate-x-full'}
           lg:relative lg:translate-x-0 lg:flex-shrink-0
@@ -48,12 +48,12 @@ export function Layout() {
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-4 border-b border-parchment-300">
-            <h1 className="font-inscription text-xl text-lapis-600 flex items-center gap-2">
+          <div className="p-4 border-b border-parchment-300 dark:border-lapis-700">
+            <h1 className="font-inscription text-xl text-lapis-600 dark:text-parchment-200 flex items-center gap-2">
               <span className="text-2xl">𒀭</span>
               {t('app.name')}
             </h1>
-            <p className="text-xs text-lapis-500 mt-1">{t('app.tagline')}</p>
+            <p className="text-xs text-lapis-500 dark:text-parchment-400 mt-1">{t('app.tagline')}</p>
           </div>
           
           {/* Command Palette Trigger + Notifications */}
@@ -62,8 +62,8 @@ export function Layout() {
               <button
                 onClick={openCommandPalette}
                 className="flex-1 flex items-center gap-2 px-3 py-2 rounded-tablet
-                           bg-parchment-200 text-lapis-500 text-sm
-                           hover:bg-parchment-300 transition-colors"
+                           bg-parchment-200 dark:bg-lapis-800 text-lapis-500 dark:text-parchment-400 text-sm
+                           hover:bg-parchment-300 dark:hover:bg-lapis-700 transition-colors"
               >
                 <Command size={16} />
                 <span className="flex-1 ltr:text-left rtl:text-right">{t('nav.commandPalette')}</span>
@@ -80,18 +80,18 @@ export function Layout() {
             <NavItem to="/docs" icon={<BookOpen size={18} />} label={t('nav.docs')} subtitle={t('nav.docsSubtitle')} shortcut="g+d" />
             <NavItem to="/releases" icon={<Package size={18} />} label={t('nav.releases')} subtitle={t('nav.releasesSubtitle')} shortcut="g+r" />
             
-            <div className="pt-4 mt-4 border-t border-parchment-300">
+            <div className="pt-4 mt-4 border-t border-parchment-300 dark:border-lapis-700">
               <NavItem to="/settings" icon={<Settings size={18} />} label={t('nav.settings')} shortcut="g+s" />
             </div>
           </nav>
           
           {/* Active Users Widget */}
-          <div className="border-t border-parchment-300">
+          <div className="border-t border-parchment-300 dark:border-lapis-700">
             <ActiveUsers />
           </div>
           
           {/* User Info & Logout */}
-          <div className="p-3 border-t border-parchment-300 space-y-2">
+          <div className="p-3 border-t border-parchment-300 dark:border-lapis-700 space-y-2">
             {/* Connection Status */}
             <div className="flex items-center justify-center">
               <ConnectionStatus />
@@ -101,7 +101,7 @@ export function Layout() {
             {user && (
               <Link 
                 to={`/profile/${user.username}`}
-                className="flex items-center gap-3 px-3 py-2 rounded-tablet hover:bg-parchment-200 transition-colors"
+                className="flex items-center gap-3 px-3 py-2 rounded-tablet hover:bg-parchment-200 dark:hover:bg-lapis-800 transition-colors"
               >
                 <Avatar 
                   name={user.fullName || user.username}
@@ -110,10 +110,10 @@ export function Layout() {
                   showHoverEffect={false}
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-lapis-600 truncate">
+                  <div className="text-sm font-medium text-lapis-600 dark:text-parchment-200 truncate">
                     {user.fullName || user.username}
                   </div>
-                  <div className="text-xs text-stone-500 truncate">
+                  <div className="text-xs text-stone-500 dark:text-parchment-500 truncate">
                     {user.email}
                   </div>
                 </div>
@@ -124,7 +124,7 @@ export function Layout() {
             <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-tablet
-                         text-lapis-600 hover:bg-clay-100 hover:text-clay-700 transition-colors"
+                         text-lapis-600 dark:text-parchment-300 hover:bg-clay-100 dark:hover:bg-clay-900/50 hover:text-clay-700 dark:hover:text-clay-400 transition-colors"
             >
               <LogOut size={18} />
               <span className="text-sm font-medium">{t('nav.logout')}</span>
@@ -137,7 +137,7 @@ export function Layout() {
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
         className="lg:hidden fixed top-4 ltr:left-4 rtl:right-4 z-50 p-2 rounded-tablet
-                   bg-parchment-50 border border-parchment-300 shadow-tablet"
+                   bg-parchment-50 dark:bg-lapis-800 border border-parchment-300 dark:border-lapis-600 shadow-tablet text-lapis-600 dark:text-parchment-300"
         aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
       >
         {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
@@ -146,7 +146,7 @@ export function Layout() {
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div 
-          className="lg:hidden fixed inset-0 bg-lapis-900/50 z-30"
+          className="lg:hidden fixed inset-0 bg-lapis-900/50 dark:bg-black/60 z-30"
           onClick={() => setSidebarOpen(false)}
           aria-hidden="true"
         />

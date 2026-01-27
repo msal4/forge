@@ -84,8 +84,8 @@ export function ActivityHistory({ entityType, entityId }: ActivityHistoryProps) 
   // Don't render anything if loading initial data
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 text-sm text-stone-500 py-4">
-        <LoadingIndicator size="xs" className="text-stone-500" inline />
+      <div className="flex items-center gap-2 text-sm text-stone-500 dark:text-parchment-500 py-4">
+        <LoadingIndicator size="xs" className="text-stone-500 dark:text-parchment-500" inline />
         {t('history.loading')}
       </div>
     );
@@ -100,7 +100,7 @@ export function ActivityHistory({ entityType, entityId }: ActivityHistoryProps) 
     <div className="space-y-3">
 
       {isError ? (
-        <div className="text-sm text-clay-600">{t('history.failedToLoad')}</div>
+        <div className="text-sm text-clay-600 dark:text-clay-400">{t('history.failedToLoad')}</div>
       ) : (
         <>
           {/* Initial Activities - Always visible */}
@@ -108,7 +108,7 @@ export function ActivityHistory({ entityType, entityId }: ActivityHistoryProps) 
             <div className="relative ml-2">
               {/* Show vertical line if there are multiple initial activities or expanded */}
               {(initialActivities.length > 1 || (isExpanded && remainingActivities.length > 0)) && (
-                <div className="absolute left-[7px] top-6 bottom-0 w-0.5 bg-parchment-300" />
+                <div className="absolute left-[7px] top-6 bottom-0 w-0.5 bg-parchment-300 dark:bg-lapis-700" />
               )}
               
               <div className="space-y-4">
@@ -128,7 +128,7 @@ export function ActivityHistory({ entityType, entityId }: ActivityHistoryProps) 
             <div className="mt-2 ml-2">
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="flex items-center gap-1 text-xs text-lapis-500 hover:text-lapis-700 transition-colors"
+                className="flex items-center gap-1 text-xs text-lapis-500 dark:text-parchment-400 hover:text-lapis-700 dark:hover:text-parchment-200 transition-colors"
               >
                 {isExpanded ? (
                   <>
@@ -153,7 +153,7 @@ export function ActivityHistory({ entityType, entityId }: ActivityHistoryProps) 
                 <div className="mt-3 relative">
                   {/* Vertical line */}
                   {remainingActivities.length > 0 && (
-                    <div className="absolute left-[7px] top-0 bottom-2 w-0.5 bg-parchment-300" />
+                    <div className="absolute left-[7px] top-0 bottom-2 w-0.5 bg-parchment-300 dark:bg-lapis-700" />
                   )}
 
                   {/* Activity entries */}
@@ -173,7 +173,7 @@ export function ActivityHistory({ entityType, entityId }: ActivityHistoryProps) 
                       <button
                         onClick={handleLoadMore}
                         disabled={isFetchingNextPage}
-                        className="text-xs text-lapis-500 hover:text-lapis-700 hover:underline transition-colors disabled:opacity-50"
+                        className="text-xs text-lapis-500 dark:text-parchment-400 hover:text-lapis-700 dark:hover:text-parchment-200 hover:underline transition-colors disabled:opacity-50"
                       >
                         {isFetchingNextPage ? (
                           <span className="flex items-center gap-1">
@@ -289,7 +289,7 @@ function ActivityEntry({ activity, onViewDiff }: ActivityEntryProps) {
         className={`relative z-10 w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 ${
           isCreated 
             ? 'bg-lapis-500 border-lapis-500' 
-            : 'bg-parchment-50 border-lapis-400'
+            : 'bg-parchment-50 dark:bg-lapis-800 border-lapis-400 dark:border-lapis-500'
         }`}
       />
 
@@ -297,10 +297,10 @@ function ActivityEntry({ activity, onViewDiff }: ActivityEntryProps) {
       <div className="flex-1 min-w-0 pb-2">
         {/* User and action */}
         <div className="text-sm">
-          <span className="font-medium text-lapis-700">
+          <span className="font-medium text-lapis-700 dark:text-parchment-200">
             {activity.user?.fullName || activity.user?.username || 'System'}
           </span>
-          <span className="text-lapis-500 ms-1">
+          <span className="text-lapis-500 dark:text-parchment-400 ms-1">
             {t(`history.actions.${activity.action}`, activity.action)}
           </span>
         </div>
@@ -321,7 +321,7 @@ function ActivityEntry({ activity, onViewDiff }: ActivityEntryProps) {
 
         {/* Timestamp */}
         <div 
-          className="mt-1 flex items-center gap-1 text-xs text-stone-500"
+          className="mt-1 flex items-center gap-1 text-xs text-stone-500 dark:text-parchment-500"
           title={formatFullDate(activity.createdAt)}
         >
           <Clock size={12} />
@@ -345,15 +345,15 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
   if (isTextDiff(change)) {
     const fieldLabel = t(`history.fields.${field}`, field);
     return (
-      <div className="flex items-center gap-2 text-xs text-lapis-500 bg-parchment-100 rounded px-2 py-1">
+      <div className="flex items-center gap-2 text-xs text-lapis-500 dark:text-parchment-400 bg-parchment-100 dark:bg-lapis-800 rounded px-2 py-1">
         <FileText size={12} className="flex-shrink-0" />
         <span>{t('history.changes.updated', { field: fieldLabel })}</span>
-        <span className="text-stone-500">
+        <span className="text-stone-500 dark:text-parchment-500">
           ({change.addedChars ? `+${change.addedChars}` : ''}{change.addedChars && change.removedChars ? ' / ' : ''}{change.removedChars ? `-${change.removedChars}` : ''} {t('history.changes.chars')})
         </span>
         <button
           onClick={() => onViewDiff(field, change)}
-          className="ms-auto text-lapis-600 hover:text-lapis-800 hover:underline"
+          className="ms-auto text-lapis-600 dark:text-gold-400 hover:text-lapis-800 dark:hover:text-gold-300 hover:underline"
         >
           {t('history.changes.viewDiff')}
         </button>
@@ -366,7 +366,7 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
     return (
       <div className="flex items-center gap-2 text-xs">
         <StatusBadge status={String(change.old)} />
-        <ArrowRight size={12} className="text-stone-400" />
+        <ArrowRight size={12} className="text-stone-400 dark:text-parchment-500" />
         <StatusBadge status={String(change.new)} />
       </div>
     );
@@ -377,7 +377,7 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
     return (
       <div className="flex items-center gap-2 text-xs">
         <PriorityBadge priority={String(change.old)} />
-        <ArrowRight size={12} className="text-stone-400" />
+        <ArrowRight size={12} className="text-stone-400 dark:text-parchment-500" />
         <PriorityBadge priority={String(change.new)} />
       </div>
     );
@@ -391,12 +391,12 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
     const removed = oldLabels.filter(l => !newLabels.includes(l));
 
     return (
-      <div className="text-xs text-lapis-500">
+      <div className="text-xs text-lapis-500 dark:text-parchment-400">
         {added.length > 0 && (
           <div className="flex items-center gap-1 flex-wrap">
-            <span className="text-green-600">+</span>
+            <span className="text-green-600 dark:text-green-400">+</span>
             {added.map(label => (
-              <span key={label} className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded">
+              <span key={label} className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">
                 {label}
               </span>
             ))}
@@ -404,9 +404,9 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
         )}
         {removed.length > 0 && (
           <div className="flex items-center gap-1 flex-wrap mt-1">
-            <span className="text-red-600">-</span>
+            <span className="text-red-600 dark:text-red-400">-</span>
             {removed.map(label => (
-              <span key={label} className="px-1.5 py-0.5 bg-red-100 text-red-700 rounded line-through">
+              <span key={label} className="px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded line-through">
                 {label}
               </span>
             ))}
@@ -421,10 +421,10 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
     const oldName = (change as Record<string, unknown>).oldName as string || t('history.changes.unassigned');
     const newName = (change as Record<string, unknown>).newName as string || t('history.changes.unassigned');
     return (
-      <div className="text-xs text-lapis-500">
-        {t('history.changes.changedAssignee')} <span className="text-stone-500 line-through">{oldName || t('history.changes.unassigned')}</span>
+      <div className="text-xs text-lapis-500 dark:text-parchment-400">
+        {t('history.changes.changedAssignee')} <span className="text-stone-500 dark:text-parchment-500 line-through">{oldName || t('history.changes.unassigned')}</span>
         <ArrowRight size={10} className="inline mx-1" />
-        <span className="text-lapis-600">{newName || t('history.changes.unassigned')}</span>
+        <span className="text-lapis-600 dark:text-parchment-300">{newName || t('history.changes.unassigned')}</span>
       </div>
     );
   }
@@ -434,10 +434,10 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
     const oldVal = change.old ? `User #${change.old}` : t('history.changes.unassigned');
     const newVal = change.new ? `User #${change.new}` : t('history.changes.unassigned');
     return (
-      <div className="text-xs text-lapis-500">
-        {t('history.changes.changedAssignee')} <span className="text-stone-500 line-through">{oldVal}</span>
+      <div className="text-xs text-lapis-500 dark:text-parchment-400">
+        {t('history.changes.changedAssignee')} <span className="text-stone-500 dark:text-parchment-500 line-through">{oldVal}</span>
         <ArrowRight size={10} className="inline mx-1" />
-        <span className="text-lapis-600">{newVal}</span>
+        <span className="text-lapis-600 dark:text-parchment-300">{newVal}</span>
       </div>
     );
   }
@@ -445,13 +445,13 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
   // Handle title change
   if (field === 'title') {
     return (
-      <div className="text-xs text-lapis-500">
+      <div className="text-xs text-lapis-500 dark:text-parchment-400">
         <div>
-          <span className="text-stone-500 line-through">{String(change.old)}</span>
+          <span className="text-stone-500 dark:text-parchment-500 line-through">{String(change.old)}</span>
         </div>
         <div className="flex items-center gap-1">
           <ArrowRight size={10} />
-          <span className="text-lapis-600">{String(change.new)}</span>
+          <span className="text-lapis-600 dark:text-parchment-300">{String(change.new)}</span>
         </div>
       </div>
     );
@@ -469,11 +469,11 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
       });
     };
     return (
-      <div className="text-xs text-lapis-500">
+      <div className="text-xs text-lapis-500 dark:text-parchment-400">
         {t('history.fields.dueDate')}:{' '}
-        <span className="text-stone-500 line-through mx-1">{formatDate(change.old)}</span>
+        <span className="text-stone-500 dark:text-parchment-500 line-through mx-1">{formatDate(change.old)}</span>
         <ArrowRight size={10} className="inline" />
-        <span className="text-lapis-600 ms-1">{formatDate(change.new)}</span>
+        <span className="text-lapis-600 dark:text-parchment-300 ms-1">{formatDate(change.new)}</span>
       </div>
     );
   }
@@ -484,11 +484,11 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
   const newVal = change.new !== undefined && change.new !== null ? String(change.new) : '-';
 
   return (
-    <div className="text-xs text-lapis-500">
+    <div className="text-xs text-lapis-500 dark:text-parchment-400">
       {fieldLabel}: 
-      <span className="text-stone-500 line-through mx-1">{oldVal}</span>
+      <span className="text-stone-500 dark:text-parchment-500 line-through mx-1">{oldVal}</span>
       <ArrowRight size={10} className="inline" />
-      <span className="text-lapis-600 ms-1">{newVal}</span>
+      <span className="text-lapis-600 dark:text-parchment-300 ms-1">{newVal}</span>
     </div>
   );
 }
@@ -497,13 +497,13 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
 function StatusBadge({ status }: { status: string }) {
   const { t } = useTranslation();
   const colors: Record<string, string> = {
-    to_inscribe: 'bg-parchment-200 text-lapis-600',
-    carving: 'bg-gold-100 text-gold-700',
-    baked: 'bg-green-100 text-green-700',
+    to_inscribe: 'bg-parchment-200 dark:bg-lapis-700 text-lapis-600 dark:text-parchment-300',
+    carving: 'bg-gold-100 dark:bg-gold-900/30 text-gold-700 dark:text-gold-400',
+    baked: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
   };
 
   return (
-    <span className={`px-2 py-0.5 rounded text-xs font-medium ${colors[status] || 'bg-parchment-200 text-lapis-600'}`}>
+    <span className={`px-2 py-0.5 rounded text-xs font-medium ${colors[status] || 'bg-parchment-200 dark:bg-lapis-700 text-lapis-600 dark:text-parchment-300'}`}>
       {t(`history.statuses.${status}`, status)}
     </span>
   );
@@ -513,14 +513,14 @@ function StatusBadge({ status }: { status: string }) {
 function PriorityBadge({ priority }: { priority: string }) {
   const { t } = useTranslation();
   const colors: Record<string, string> = {
-    low: 'bg-lapis-100 text-lapis-600',
-    medium: 'bg-gold-100 text-gold-700',
-    high: 'bg-clay-100 text-clay-700',
-    critical: 'bg-red-100 text-red-700',
+    low: 'bg-lapis-100 dark:bg-lapis-800 text-lapis-600 dark:text-parchment-300',
+    medium: 'bg-gold-100 dark:bg-gold-900/30 text-gold-700 dark:text-gold-400',
+    high: 'bg-clay-100 dark:bg-clay-900/30 text-clay-700 dark:text-clay-400',
+    critical: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
   };
 
   return (
-    <span className={`px-2 py-0.5 rounded text-xs font-medium ${colors[priority] || 'bg-parchment-200 text-lapis-600'}`}>
+    <span className={`px-2 py-0.5 rounded text-xs font-medium ${colors[priority] || 'bg-parchment-200 dark:bg-lapis-700 text-lapis-600 dark:text-parchment-300'}`}>
       {t(`history.priorities.${priority}`, priority)}
     </span>
   );

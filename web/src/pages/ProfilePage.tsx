@@ -166,7 +166,7 @@ export function ProfilePage() {
       {/* Back button */}
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-lapis-500 hover:text-lapis-600 transition-colors"
+        className="flex items-center gap-2 text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-200 transition-colors"
       >
         <ArrowLeft size={16} />
         <span>{t('common.goBack')}</span>
@@ -194,10 +194,10 @@ export function ProfilePage() {
 
           {/* Info */}
           <div className="flex-1 text-center sm:text-left">
-            <h1 className="text-2xl font-inscription text-lapis-700">{profile.fullName}</h1>
-            <p className="text-lapis-500 mt-1">@{profile.username}</p>
+            <h1 className="text-2xl font-inscription text-lapis-700 dark:text-parchment-200">{profile.fullName}</h1>
+            <p className="text-lapis-500 dark:text-parchment-400 mt-1">@{profile.username}</p>
 
-            <div className="flex flex-wrap justify-center sm:justify-start gap-4 mt-4 text-sm text-lapis-500">
+            <div className="flex flex-wrap justify-center sm:justify-start gap-4 mt-4 text-sm text-lapis-500 dark:text-parchment-400">
               <div className="flex items-center gap-1">
                 <Mail size={14} />
                 <span>{profile.email}</span>
@@ -218,34 +218,34 @@ export function ProfilePage() {
             {/* Stats */}
             <div className="flex flex-wrap justify-center sm:justify-start gap-6 mt-4">
               <div className="text-center">
-                <div className="text-xl font-semibold text-lapis-700">
+                <div className="text-xl font-semibold text-lapis-700 dark:text-parchment-200">
                   {profile.stats.issuesAssigned}
                 </div>
-                <div className="text-xs text-lapis-500">{t('profile.assigned')}</div>
+                <div className="text-xs text-lapis-500 dark:text-parchment-400">{t('profile.assigned')}</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-semibold text-lapis-700">
+                <div className="text-xl font-semibold text-lapis-700 dark:text-parchment-200">
                   {profile.stats.issuesReported}
                 </div>
-                <div className="text-xs text-lapis-500">{t('profile.reported')}</div>
+                <div className="text-xs text-lapis-500 dark:text-parchment-400">{t('profile.reported')}</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-semibold text-lapis-700">
+                <div className="text-xl font-semibold text-lapis-700 dark:text-parchment-200">
                   {profile.stats.docsAuthored}
                 </div>
-                <div className="text-xs text-lapis-500">{t('profile.docsCount')}</div>
+                <div className="text-xs text-lapis-500 dark:text-parchment-400">{t('profile.docsCount')}</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-semibold text-lapis-700">
+                <div className="text-xl font-semibold text-lapis-700 dark:text-parchment-200">
                   {profile.stats.releases}
                 </div>
-                <div className="text-xs text-lapis-500">{t('profile.releasesCount')}</div>
+                <div className="text-xs text-lapis-500 dark:text-parchment-400">{t('profile.releasesCount')}</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-semibold text-lapis-700">
+                <div className="text-xl font-semibold text-lapis-700 dark:text-parchment-200">
                   {profile.stats.comments}
                 </div>
-                <div className="text-xs text-lapis-500">{t('profile.commentsCount')}</div>
+                <div className="text-xs text-lapis-500 dark:text-parchment-400">{t('profile.commentsCount')}</div>
               </div>
             </div>
 
@@ -253,7 +253,7 @@ export function ProfilePage() {
             {isOwnProfile && (
               <Link
                 to="/settings"
-                className="inline-flex items-center gap-1 mt-4 text-sm text-lapis-500 hover:text-lapis-600 transition-colors"
+                className="inline-flex items-center gap-1 mt-4 text-sm text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-200 transition-colors"
               >
                 <span>{t('profile.editProfile')}</span>
                 <ExternalLink size={12} />
@@ -264,7 +264,7 @@ export function ProfilePage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-parchment-300">
+      <div className="border-b border-parchment-300 dark:border-lapis-700">
         <nav className="flex gap-1 -mb-px overflow-x-auto">
           {tabs.map((tab) => (
             <button
@@ -273,14 +273,14 @@ export function ProfilePage() {
               className={`
                 px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap transition-colors
                 ${activeTab === tab.key
-                  ? 'border-lapis-500 text-lapis-700'
-                  : 'border-transparent text-lapis-500 hover:text-lapis-600 hover:border-parchment-400'
+                  ? 'border-lapis-500 dark:border-gold-500 text-lapis-700 dark:text-parchment-200'
+                  : 'border-transparent text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-300 hover:border-parchment-400 dark:hover:border-lapis-600'
                 }
               `}
             >
               {tab.label}
               {tab.count > 0 && (
-                <span className="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-parchment-200 text-lapis-600">
+                <span className="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-parchment-200 dark:bg-lapis-700 text-lapis-600 dark:text-parchment-300">
                   {tab.count}
                 </span>
               )}
@@ -335,7 +335,7 @@ function IssuesTab({ issues, isLoading, userId }: { issues: Issue[]; isLoading: 
 
   if (issues.length === 0) {
     return (
-      <div className="text-center py-12 text-lapis-500">
+      <div className="text-center py-12 text-lapis-500 dark:text-parchment-400">
         {t('profile.noIssues')}
       </div>
     );
@@ -354,18 +354,18 @@ function IssuesTab({ issues, isLoading, userId }: { issues: Issue[]; isLoading: 
   const IssueCard = ({ issue }: { issue: Issue }) => (
     <button
       onClick={() => navigate(`/issues/${issue.id}`)}
-      className="w-full tablet-card p-4 text-left hover:border-lapis-300 transition-colors"
+      className="w-full tablet-card p-4 text-left hover:border-lapis-300 dark:hover:border-lapis-600 transition-colors"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h4 className="text-sm font-medium text-lapis-700 truncate">{issue.title}</h4>
-          <p className="text-xs text-lapis-500 mt-1 line-clamp-2">{issue.description}</p>
+          <h4 className="text-sm font-medium text-lapis-700 dark:text-parchment-200 truncate">{issue.title}</h4>
+          <p className="text-xs text-lapis-500 dark:text-parchment-400 mt-1 line-clamp-2">{issue.description}</p>
         </div>
         <span className={`shrink-0 px-2 py-0.5 text-xs rounded-full ${statusColors[issue.status] || ''}`}>
           {t(`issues.status.${issue.status}`)}
         </span>
       </div>
-      <div className="flex items-center gap-4 mt-2 text-xs text-lapis-400">
+      <div className="flex items-center gap-4 mt-2 text-xs text-lapis-400 dark:text-parchment-500">
         <span>{new Date(issue.updatedAt).toLocaleDateString(i18n.language === 'ar' ? 'ar-SA' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
         {issue.labels?.length > 0 && (
           <span>{issue.labels.slice(0, 2).join(', ')}</span>
@@ -378,7 +378,7 @@ function IssuesTab({ issues, isLoading, userId }: { issues: Issue[]; isLoading: 
     <div className="space-y-6">
       {assigned.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium text-lapis-600 mb-3">
+          <h3 className="text-sm font-medium text-lapis-600 dark:text-parchment-300 mb-3">
             {t('profile.assignedIssues')} ({assigned.length})
           </h3>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -391,7 +391,7 @@ function IssuesTab({ issues, isLoading, userId }: { issues: Issue[]; isLoading: 
 
       {reported.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium text-lapis-600 mb-3">
+          <h3 className="text-sm font-medium text-lapis-600 dark:text-parchment-300 mb-3">
             {t('profile.reportedIssues')} ({reported.length})
           </h3>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -419,7 +419,7 @@ function DocsTab({ docs, isLoading }: { docs: Doc[]; isLoading: boolean }) {
 
   if (docs.length === 0) {
     return (
-      <div className="text-center py-12 text-lapis-500">
+      <div className="text-center py-12 text-lapis-500 dark:text-parchment-400">
         {t('profile.noDocs')}
       </div>
     );
@@ -431,16 +431,16 @@ function DocsTab({ docs, isLoading }: { docs: Doc[]; isLoading: boolean }) {
         <button
           key={doc.id}
           onClick={() => navigate(`/docs/${doc.id}`)}
-          className="tablet-card p-4 text-left hover:border-lapis-300 transition-colors"
+          className="tablet-card p-4 text-left hover:border-lapis-300 dark:hover:border-lapis-600 transition-colors"
         >
           <div className="flex items-start gap-3">
-            <FileText size={20} className="shrink-0 text-lapis-400 mt-0.5" />
+            <FileText size={20} className="shrink-0 text-lapis-400 dark:text-parchment-500 mt-0.5" />
             <div className="min-w-0">
-              <h4 className="text-sm font-medium text-lapis-700 truncate">{doc.title}</h4>
-              <p className="text-xs text-lapis-500 mt-1 line-clamp-2">
+              <h4 className="text-sm font-medium text-lapis-700 dark:text-parchment-200 truncate">{doc.title}</h4>
+              <p className="text-xs text-lapis-500 dark:text-parchment-400 mt-1 line-clamp-2">
                 {doc.content?.slice(0, 100)}...
               </p>
-              <p className="text-xs text-lapis-400 mt-2">
+              <p className="text-xs text-lapis-400 dark:text-parchment-500 mt-2">
                 {new Date(doc.updatedAt).toLocaleDateString(i18n.language === 'ar' ? 'ar-SA' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
               </p>
             </div>
@@ -465,7 +465,7 @@ function ReleasesTab({ releases, isLoading }: { releases: Release[]; isLoading: 
 
   if (releases.length === 0) {
     return (
-      <div className="text-center py-12 text-lapis-500">
+      <div className="text-center py-12 text-lapis-500 dark:text-parchment-400">
         {t('profile.noReleases')}
       </div>
     );
@@ -477,19 +477,19 @@ function ReleasesTab({ releases, isLoading }: { releases: Release[]; isLoading: 
         <button
           key={release.id}
           onClick={() => navigate(`/releases/${release.id}`)}
-          className="tablet-card p-4 text-left hover:border-lapis-300 transition-colors"
+          className="tablet-card p-4 text-left hover:border-lapis-300 dark:hover:border-lapis-600 transition-colors"
         >
           <div className="flex items-start gap-3">
-            <Package size={20} className="shrink-0 text-gold-500 mt-0.5" />
+            <Package size={20} className="shrink-0 text-gold-500 dark:text-gold-400 mt-0.5" />
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-lapis-700">{release.version}</span>
-                <span className="text-xs text-lapis-500">{release.title}</span>
+                <span className="text-sm font-medium text-lapis-700 dark:text-parchment-200">{release.version}</span>
+                <span className="text-xs text-lapis-500 dark:text-parchment-400">{release.title}</span>
               </div>
-              <p className="text-xs text-lapis-500 mt-1 line-clamp-2">
+              <p className="text-xs text-lapis-500 dark:text-parchment-400 mt-1 line-clamp-2">
                 {release.description?.slice(0, 80)}...
               </p>
-              <div className="flex items-center gap-2 mt-2 text-xs text-lapis-400">
+              <div className="flex items-center gap-2 mt-2 text-xs text-lapis-400 dark:text-parchment-500">
                 <span>{new Date(release.createdAt).toLocaleDateString(i18n.language === 'ar' ? 'ar-SA' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 {release.files?.length > 0 && (
                   <span>{release.files.length} {t('releases.files')}</span>
@@ -517,7 +517,7 @@ function CommentsTab({ comments, isLoading }: { comments: UserComment[]; isLoadi
 
   if (comments.length === 0) {
     return (
-      <div className="text-center py-12 text-lapis-500">
+      <div className="text-center py-12 text-lapis-500 dark:text-parchment-400">
         {t('profile.noComments')}
       </div>
     );
@@ -537,9 +537,9 @@ function CommentsTab({ comments, isLoading }: { comments: UserComment[]; isLoadi
   };
 
   const entityIcons: Record<string, React.ReactNode> = {
-    issue: <FileText size={14} className="text-lapis-400" />,
-    doc: <FileText size={14} className="text-lapis-400" />,
-    release: <Package size={14} className="text-gold-500" />,
+    issue: <FileText size={14} className="text-lapis-400 dark:text-parchment-500" />,
+    doc: <FileText size={14} className="text-lapis-400 dark:text-parchment-500" />,
+    release: <Package size={14} className="text-gold-500 dark:text-gold-400" />,
   };
 
   return (
@@ -548,13 +548,13 @@ function CommentsTab({ comments, isLoading }: { comments: UserComment[]; isLoadi
         <button
           key={`${comment.entityType}-${comment.id}`}
           onClick={() => navigate(getEntityPath(comment))}
-          className="w-full tablet-card p-4 text-left hover:border-lapis-300 transition-colors"
+          className="w-full tablet-card p-4 text-left hover:border-lapis-300 dark:hover:border-lapis-600 transition-colors"
         >
           <div className="flex items-start gap-3">
-            <MessageSquare size={16} className="shrink-0 text-lapis-400 mt-1" />
+            <MessageSquare size={16} className="shrink-0 text-lapis-400 dark:text-parchment-500 mt-1" />
             <div className="min-w-0 flex-1">
-              <p className="text-sm text-lapis-700 line-clamp-2">{comment.content}</p>
-              <div className="flex items-center gap-2 mt-2 text-xs text-lapis-400">
+              <p className="text-sm text-lapis-700 dark:text-parchment-200 line-clamp-2">{comment.content}</p>
+              <div className="flex items-center gap-2 mt-2 text-xs text-lapis-400 dark:text-parchment-500">
                 {entityIcons[comment.entityType]}
                 <span className="truncate">{comment.entityTitle}</span>
                 <span className="shrink-0">
@@ -595,7 +595,7 @@ function ActivityTab({
 
   if (activities.length === 0) {
     return (
-      <div className="text-center py-12 text-lapis-500">
+      <div className="text-center py-12 text-lapis-500 dark:text-parchment-400">
         {t('profile.noActivity')}
       </div>
     );
@@ -640,20 +640,20 @@ function ActivityTab({
         <button
           key={activity.id}
           onClick={() => navigate(getEntityPath(activity))}
-          className="w-full tablet-card p-4 text-left hover:border-lapis-300 transition-colors"
+          className="w-full tablet-card p-4 text-left hover:border-lapis-300 dark:hover:border-lapis-600 transition-colors"
         >
           <div className="flex items-start gap-3">
-            <History size={16} className="shrink-0 text-lapis-400 mt-1" />
+            <History size={16} className="shrink-0 text-lapis-400 dark:text-parchment-500 mt-1" />
             <div className="min-w-0 flex-1">
-              <p className="text-sm text-lapis-700">
+              <p className="text-sm text-lapis-700 dark:text-parchment-200">
                 {getActionLabel(activity.action)}
               </p>
               {activity.entityTitle && (
-                <p className="text-sm text-lapis-500 truncate mt-0.5">
+                <p className="text-sm text-lapis-500 dark:text-parchment-400 truncate mt-0.5">
                   {activity.entityTitle}
                 </p>
               )}
-              <p className="text-xs text-lapis-400 mt-1">
+              <p className="text-xs text-lapis-400 dark:text-parchment-500 mt-1">
                 {formatDate(activity.createdAt)}
               </p>
             </div>
@@ -666,7 +666,7 @@ function ActivityTab({
           <button
             onClick={onLoadMore}
             disabled={isFetchingMore}
-            className="px-4 py-2 text-sm text-lapis-600 hover:text-lapis-700 
+            className="px-4 py-2 text-sm text-lapis-600 dark:text-parchment-400 hover:text-lapis-700 dark:hover:text-parchment-200
                        disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isFetchingMore ? (

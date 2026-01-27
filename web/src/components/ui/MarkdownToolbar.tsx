@@ -35,7 +35,7 @@ export function MarkdownToolbar({
   };
 
   return (
-    <div className={`flex items-center gap-1 px-2 py-1 bg-parchment-100 border border-parchment-300 border-b-0 rounded-t-lg ${className}`}>
+    <div className={`flex items-center gap-1 px-2 py-1 bg-parchment-100 dark:bg-lapis-800 border border-parchment-300 dark:border-lapis-700 border-b-0 rounded-t-lg ${className}`}>
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -54,8 +54,8 @@ export function MarkdownToolbar({
         title="Insert image (paste or drag-drop also works)"
         className="
           flex items-center gap-1.5 px-2 py-1
-          text-sm text-lapis-600
-          rounded hover:bg-parchment-200
+          text-sm text-lapis-600 dark:text-parchment-300
+          rounded hover:bg-parchment-200 dark:hover:bg-lapis-700
           disabled:opacity-50 disabled:cursor-not-allowed
           transition-colors
         "
@@ -74,7 +74,7 @@ export function MarkdownToolbar({
       </button>
 
       {/* Hint text */}
-      <span className="ml-auto text-xs text-stone-400 hidden md:inline">
+      <span className="ml-auto text-xs text-stone-400 dark:text-parchment-500 hidden md:inline">
         Paste or drag images
       </span>
     </div>

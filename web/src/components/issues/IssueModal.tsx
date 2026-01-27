@@ -394,7 +394,7 @@ export function IssueModal({
 		<div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 overflow-hidden">
 			{/* Backdrop */}
 			<div
-				className="fixed inset-0 bg-lapis-900/60 backdrop-blur-sm animate-fade-in"
+				className="fixed inset-0 bg-lapis-900/60 dark:bg-black/70 backdrop-blur-sm animate-fade-in"
 				onClick={onClose}
 			/>
 
@@ -403,8 +403,8 @@ export function IssueModal({
 				className="
 					relative w-full h-full
 					sm:h-[80vh] sm:max-w-4xl sm:rounded-xl
-					bg-parchment-50
-					shadow-2xl border-0 sm:border border-parchment-300
+					bg-parchment-50 dark:bg-lapis-900
+					shadow-2xl border-0 sm:border border-parchment-300 dark:border-lapis-700
 					flex flex-col
 					overflow-hidden
 					animate-scale-in
@@ -421,7 +421,7 @@ export function IssueModal({
 					}`} />
 
 				{/* Header */}
-				<div className="flex-shrink-0 flex items-start justify-between px-6 py-4 border-b border-parchment-200 bg-parchment-100/50">
+				<div className="flex-shrink-0 flex items-start justify-between px-6 py-4 border-b border-parchment-200 dark:border-lapis-700 bg-parchment-100/50 dark:bg-lapis-900/50">
 					<div className="flex-1 pr-4">
 						{/* Status & Priority badges */}
 						<div className="flex items-center gap-2 mb-3">
@@ -449,13 +449,13 @@ export function IssueModal({
 									{isEditing && !isCreating && <ChevronDown size={14} />}
 								</button>
 								{showStatusDropdown && (
-									<div className="absolute top-full left-0 mt-1 bg-parchment-50 border border-parchment-300 rounded-lg shadow-lg py-1 z-10 min-w-[140px]">
+									<div className="absolute top-full left-0 mt-1 bg-parchment-50 dark:bg-lapis-800 border border-parchment-300 dark:border-lapis-600 rounded-lg shadow-lg py-1 z-10 min-w-[140px]">
 										{Object.entries(statusStyles).map(([key, cfg]) => (
 											<button
 												key={key}
 												onClick={() => { setStatus(key as IssueStatusType); setShowStatusDropdown(false); }}
-												className={`w-full px-3 py-2 text-left text-sm hover:bg-parchment-200 flex items-center gap-2
-                          ${status === key ? 'bg-parchment-200' : ''}`}
+												className={`w-full px-3 py-2 text-left text-sm hover:bg-parchment-200 dark:hover:bg-lapis-700 flex items-center gap-2
+                          ${status === key ? 'bg-parchment-200 dark:bg-lapis-700' : ''}`}
 											>
 												<span>{cfg.icon}</span> {getStatusLabel(key as IssueStatusType)}
 											</button>
@@ -488,13 +488,13 @@ export function IssueModal({
 									{isEditing && <ChevronDown size={12} />}
 								</button>
 								{showPriorityDropdown && (
-									<div className="absolute top-full left-0 mt-1 bg-parchment-50 border border-parchment-300 rounded-lg shadow-lg py-1 z-10 min-w-[120px]">
+									<div className="absolute top-full left-0 mt-1 bg-parchment-50 dark:bg-lapis-800 border border-parchment-300 dark:border-lapis-600 rounded-lg shadow-lg py-1 z-10 min-w-[120px]">
 										{Object.entries(priorityStyles).map(([key, cfg]) => (
 											<button
 												key={key}
 												onClick={() => { setPriority(key as PriorityType); setShowPriorityDropdown(false); }}
-												className={`w-full px-3 py-2 text-left text-sm hover:bg-parchment-200 flex items-center gap-2
-                          ${priority === key ? 'bg-parchment-200' : ''}`}
+												className={`w-full px-3 py-2 text-left text-sm hover:bg-parchment-200 dark:hover:bg-lapis-700 flex items-center gap-2
+                          ${priority === key ? 'bg-parchment-200 dark:bg-lapis-700' : ''}`}
 											>
 												<span className={cfg.color}>{cfg.icon}</span> {getPriorityLabel(key as PriorityType)}
 											</button>
@@ -514,17 +514,17 @@ export function IssueModal({
 									onChange={(e) => setTitle(e.target.value)}
 									placeholder={t('issueModal.titlePlaceholder')}
 									className="
-                    w-full text-xl font-inscription font-normal text-lapis-700
+                    w-full text-xl font-inscription font-normal text-lapis-700 dark:text-parchment-200
                     px-2 py-1 rounded-lg leading-normal
-                    bg-parchment-100/50 border border-parchment-300
+                    bg-parchment-100/50 dark:bg-lapis-800/50 border border-parchment-300 dark:border-lapis-700
                     outline-none focus:ring-2 focus:ring-gold-400/30
-                    placeholder:text-stone-500
+                    placeholder:text-stone-500 dark:placeholder:text-parchment-500
                     caret-gold-500
                     transition-colors
                   "
 								/>
 							) : (
-								<h2 className="text-xl font-inscription font-normal text-lapis-700 leading-normal px-2 py-1">
+								<h2 className="text-xl font-inscription font-normal text-lapis-700 dark:text-parchment-200 leading-normal px-2 py-1">
 									{title}
 								</h2>
 							)}
@@ -536,7 +536,7 @@ export function IssueModal({
 						{mode === 'view' && (
 							<button
 								onClick={() => onModeChange('edit')}
-								className="p-2 rounded-lg hover:bg-parchment-200 text-lapis-500 transition-colors"
+								className="p-2 rounded-lg hover:bg-parchment-200 dark:hover:bg-lapis-800 text-lapis-500 dark:text-parchment-400 transition-colors"
 								title="Edit (e)"
 								tabIndex={-1}
 							>
@@ -547,7 +547,7 @@ export function IssueModal({
 						{onDelete && issue && (
 							<button
 								onClick={() => onDelete(issue)}
-								className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
+								className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 dark:text-red-400 transition-colors"
 								title="Delete"
 								tabIndex={-1}
 							>
@@ -558,8 +558,8 @@ export function IssueModal({
 						<button
 							onClick={isEditing ? handleCancel : onClose}
 							className={`p-2 rounded-lg transition-colors ${isEditing && !isCreating
-								? 'hover:bg-lapis-100 text-lapis-600'
-								: 'hover:bg-parchment-200 text-lapis-500'
+								? 'hover:bg-lapis-100 dark:hover:bg-lapis-800 text-lapis-600 dark:text-parchment-300'
+								: 'hover:bg-parchment-200 dark:hover:bg-lapis-800 text-lapis-500 dark:text-parchment-400'
 								}`}
 							title={isEditing ? (isCreating ? t('common.close') : t('common.back')) + " (Esc)" : t('common.close') + " (Esc)"}
 							tabIndex={-1}
@@ -575,7 +575,7 @@ export function IssueModal({
 
 				{/* Error */}
 				{error && (
-					<div className="flex-shrink-0 mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+					<div className="flex-shrink-0 mx-6 mt-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
 						{error}
 					</div>
 				)}
@@ -589,7 +589,7 @@ export function IssueModal({
 					>
 						{/* Description */}
 						<div>
-							<h3 className="flex items-center gap-2 text-sm font-semibold text-lapis-600 mb-3">
+							<h3 className="flex items-center gap-2 text-sm font-semibold text-lapis-600 dark:text-parchment-300 mb-3">
 								<FileText size={16} />
 								{t('issueModal.description')}
 							</h3>
@@ -608,20 +608,20 @@ export function IssueModal({
 										rows={4}
 										className="
                   w-full min-h-[100px] sm:min-h-[120px] p-3 sm:p-4 rounded-b-lg 
-                  bg-parchment-100/50 text-lapis-700 resize-none
-                  border border-parchment-300 border-t-0
-                  outline-none focus:ring-2 focus:ring-gold-400/30 focus:bg-parchment-100
-                  placeholder:text-stone-500
+                  bg-parchment-100/50 dark:bg-lapis-800/50 text-lapis-700 dark:text-parchment-200 resize-none
+                  border border-parchment-300 dark:border-lapis-700 border-t-0
+                  outline-none focus:ring-2 focus:ring-gold-400/30 focus:bg-parchment-100 dark:focus:bg-lapis-800
+                  placeholder:text-stone-500 dark:placeholder:text-parchment-500
                   transition-colors
                 "
 									/>
 								</div>
 							) : description ? (
-								<div className="min-h-[80px] sm:min-h-[100px] bg-parchment-100/30 rounded-lg p-3 sm:p-4 prose-mesopotamian">
+								<div className="min-h-[80px] sm:min-h-[100px] bg-parchment-100/30 dark:bg-lapis-800/30 rounded-lg p-3 sm:p-4 prose-mesopotamian">
 									<Markdown users={users}>{description}</Markdown>
 								</div>
 							) : (
-								<div className="min-h-[80px] sm:min-h-[100px] flex items-center justify-center text-stone-500 italic text-sm bg-parchment-100/30 rounded-lg">
+								<div className="min-h-[80px] sm:min-h-[100px] flex items-center justify-center text-stone-500 dark:text-parchment-500 italic text-sm bg-parchment-100/30 dark:bg-lapis-800/30 rounded-lg">
 									{t('issueModal.noDescription')}
 								</div>
 							)}
@@ -639,10 +639,10 @@ export function IssueModal({
 						</div>
 
 						{/* Details grid - Moved up before labels */}
-						<div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 p-3 sm:p-4 rounded-lg bg-parchment-100/60 border border-parchment-200">
+						<div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 p-3 sm:p-4 rounded-lg bg-parchment-100/60 dark:bg-lapis-800/40 border border-parchment-200 dark:border-lapis-700">
 							{/* Assignee */}
 							<div>
-								<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 mb-2">
+								<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 dark:text-parchment-400 mb-2">
 									<User size={12} />
 									{t('issueModal.assignee')}
 								</h4>
@@ -658,8 +658,8 @@ export function IssueModal({
 												}}
 												className="
                         w-full h-10 flex items-center gap-2 px-3 rounded-lg text-left
-                        border border-parchment-300 bg-parchment-100/50
-                        hover:border-lapis-400 hover:bg-parchment-100 transition-colors
+                        border border-parchment-300 dark:border-lapis-700 bg-parchment-100/50 dark:bg-lapis-800/50
+                        hover:border-lapis-400 dark:hover:border-lapis-500 hover:bg-parchment-100 dark:hover:bg-lapis-800 transition-colors
                       "
 											>
 												{selectedAssignee ? (
@@ -668,27 +668,27 @@ export function IssueModal({
 															name={selectedAssignee.fullName || selectedAssignee.username}
 															size="sm"
 														/>
-														<span className="text-sm text-lapis-700 truncate">{selectedAssignee.fullName || selectedAssignee.username}</span>
+														<span className="text-sm text-lapis-700 dark:text-parchment-200 truncate">{selectedAssignee.fullName || selectedAssignee.username}</span>
 													</>
 												) : (
-													<span className="text-sm text-stone-500">{t('issueModal.unassigned')}</span>
+													<span className="text-sm text-stone-500 dark:text-parchment-500">{t('issueModal.unassigned')}</span>
 												)}
-												<ChevronDown size={14} className="ltr:ml-auto rtl:mr-auto text-stone-400 flex-shrink-0" />
+												<ChevronDown size={14} className="ltr:ml-auto rtl:mr-auto text-stone-400 dark:text-parchment-500 flex-shrink-0" />
 											</button>
 											{showAssigneeDropdown && (
-												<div className="absolute top-full left-0 right-0 mt-1 bg-parchment-50 border border-parchment-300 rounded-lg shadow-lg py-1 z-10 max-h-48 overflow-y-auto">
+												<div className="absolute top-full left-0 right-0 mt-1 bg-parchment-50 dark:bg-lapis-800 border border-parchment-300 dark:border-lapis-600 rounded-lg shadow-lg py-1 z-10 max-h-48 overflow-y-auto">
 													<button
 														onClick={() => { setAssigneeId(null); setShowAssigneeDropdown(false); }}
-														className={`w-full px-3 py-2 text-sm hover:bg-parchment-200 flex items-center gap-2 ${!assigneeId ? 'bg-parchment-200' : ''}`}
+														className={`w-full px-3 py-2 text-sm hover:bg-parchment-200 dark:hover:bg-lapis-700 flex items-center gap-2 ${!assigneeId ? 'bg-parchment-200 dark:bg-lapis-700' : ''}`}
 													>
-														<span className="text-stone-500">{t('issueModal.unassigned')}</span>
+														<span className="text-stone-500 dark:text-parchment-500">{t('issueModal.unassigned')}</span>
 													</button>
 													{users.map((user) => (
 														<button
 															key={user.id}
 															onClick={() => { setAssigneeId(user.id); setShowAssigneeDropdown(false); }}
-															className={`w-full px-3 py-2 text-left text-sm hover:bg-parchment-200 flex items-center gap-2
-                              ${assigneeId === user.id ? 'bg-parchment-200' : ''}`}
+															className={`w-full px-3 py-2 text-left text-sm text-lapis-700 dark:text-parchment-300 hover:bg-parchment-200 dark:hover:bg-lapis-700 flex items-center gap-2
+                              ${assigneeId === user.id ? 'bg-parchment-200 dark:bg-lapis-700' : ''}`}
 														>
 															<Avatar
 																name={user.fullName || user.username}
@@ -707,19 +707,19 @@ export function IssueModal({
 												avatarUrl={selectedAssignee.avatarUrl}
 												username={selectedAssignee.username}
 												size="md"
-												className="ring-2 ring-parchment-200"
+												className="ring-2 ring-parchment-200 dark:ring-lapis-700"
 											/>
-											<span className="text-sm text-lapis-700 font-medium">{selectedAssignee.fullName || selectedAssignee.username}</span>
+											<span className="text-sm text-lapis-700 dark:text-parchment-200 font-medium">{selectedAssignee.fullName || selectedAssignee.username}</span>
 										</div>
 									) : (
-										<span className="text-sm text-stone-500 italic">{t('issueModal.unassigned')}</span>
+										<span className="text-sm text-stone-500 dark:text-parchment-500 italic">{t('issueModal.unassigned')}</span>
 									)}
 								</div>
 							</div>
 
 							{/* Reporter (view only) */}
 							<div>
-								<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 mb-2">
+								<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 dark:text-parchment-400 mb-2">
 									<User size={12} />
 									{t('issueModal.reporter')}
 								</h4>
@@ -731,19 +731,19 @@ export function IssueModal({
 												avatarUrl={issue.reporter.avatarUrl}
 												username={issue.reporter.username}
 												size="md"
-												className="ring-2 ring-parchment-200"
+												className="ring-2 ring-parchment-200 dark:ring-lapis-700"
 											/>
-											<span className="text-sm text-lapis-700 font-medium">{issue.reporter.fullName || issue.reporter.username}</span>
+											<span className="text-sm text-lapis-700 dark:text-parchment-200 font-medium">{issue.reporter.fullName || issue.reporter.username}</span>
 										</div>
 									) : (
-										<span className="text-sm text-stone-500 italic">{isCreating ? t('issueModal.you') : t('issueModal.unknown')}</span>
+										<span className="text-sm text-stone-500 dark:text-parchment-500 italic">{isCreating ? t('issueModal.you') : t('issueModal.unknown')}</span>
 									)}
 								</div>
 							</div>
 
 							{/* Due Date */}
 							<div>
-								<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 mb-2">
+								<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 dark:text-parchment-400 mb-2">
 									<Calendar size={12} />
 									{t('issueModal.dueDate')}
 								</h4>
@@ -755,30 +755,30 @@ export function IssueModal({
 											onChange={(e) => setDueDate(e.target.value)}
 											className="
                       w-full h-10 px-3 rounded-lg text-sm
-                      border border-parchment-300 bg-parchment-100/50 text-lapis-700
-                      focus:ring-2 focus:ring-gold-400/30 focus:bg-parchment-100 outline-none transition-all
+                      border border-parchment-300 dark:border-lapis-700 bg-parchment-100/50 dark:bg-lapis-800/50 text-lapis-700 dark:text-parchment-200
+                      focus:ring-2 focus:ring-gold-400/30 focus:bg-parchment-100 dark:focus:bg-lapis-800 outline-none transition-all
                     "
 										/>
 									) : dueDate ? (
-										<span className={`text-sm font-medium ${isDueOverdue ? 'text-red-600' : 'text-lapis-700'}`}>
+										<span className={`text-sm font-medium ${isDueOverdue ? 'text-red-600 dark:text-red-400' : 'text-lapis-700 dark:text-parchment-200'}`}>
 											{formatDate(dueDate)}
-											{isDueOverdue && <span className="ltr:ml-2 rtl:mr-2 text-xs text-red-500">({t('issueModal.overdue')})</span>}
+											{isDueOverdue && <span className="ltr:ml-2 rtl:mr-2 text-xs text-red-500 dark:text-red-400">({t('issueModal.overdue')})</span>}
 										</span>
 									) : (
-										<span className="text-sm text-stone-500 italic">{t('issueModal.noDueDate')}</span>
+										<span className="text-sm text-stone-500 dark:text-parchment-500 italic">{t('issueModal.noDueDate')}</span>
 									)}
 								</div>
 							</div>
 
 							{/* Created (view only) */}
 							<div>
-								<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 mb-2">
+								<h4 className="flex items-center gap-1.5 text-xs font-semibold text-lapis-500 dark:text-parchment-400 mb-2">
 									<Clock size={12} />
 									{t('issueModal.created')}
 								</h4>
 								<div className="h-10 flex items-center">
 									<span
-										className="text-sm text-lapis-700 cursor-default"
+										className="text-sm text-lapis-700 dark:text-parchment-200 cursor-default"
 										title={issue?.createdAt ? formatDate(issue.createdAt) || '' : ''}
 									>
 										{issue?.createdAt ? formatRelativeTime(issue.createdAt) : t('issueModal.now')}
@@ -789,7 +789,7 @@ export function IssueModal({
 
 						{/* Labels */}
 						<div>
-							<h3 className="flex items-center gap-2 text-sm font-semibold text-lapis-600 mb-3">
+							<h3 className="flex items-center gap-2 text-sm font-semibold text-lapis-600 dark:text-parchment-300 mb-3">
 								<Tag size={16} />
 								{t('issueModal.labels')}
 							</h3>
@@ -799,13 +799,13 @@ export function IssueModal({
 										key={label}
 										className="
                     inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                    bg-lapis-100 text-lapis-700 border border-lapis-200
+                    bg-lapis-100 dark:bg-lapis-700 text-lapis-700 dark:text-parchment-200 border border-lapis-200 dark:border-lapis-600
                     text-sm font-medium
                   "
 									>
 										{label}
 										{isEditing && (
-											<button onClick={() => removeLabel(label)} className="hover:text-red-500">
+											<button onClick={() => removeLabel(label)} className="hover:text-red-500 dark:hover:text-red-400">
 												<X size={14} />
 											</button>
 										)}
@@ -828,10 +828,10 @@ export function IssueModal({
 										placeholder={`+ ${t('issueModal.labels')}`}
 										className="
                     px-3 py-1.5 rounded-lg text-sm w-28
-                    bg-transparent text-lapis-600
+                    bg-transparent text-lapis-600 dark:text-parchment-300
                     outline-none
-                    placeholder:text-stone-500
-                    focus:bg-parchment-100 focus:w-40
+                    placeholder:text-stone-500 dark:placeholder:text-parchment-500
+                    focus:bg-parchment-100 dark:focus:bg-lapis-800 focus:w-40
                     transition-all
                   "
 									/>
@@ -841,24 +841,24 @@ export function IssueModal({
 
 						{/* Tabbed Panel for Comments & Activity - only in view mode */}
 						{mode === 'view' && issue && (
-							<div className="border border-parchment-200 rounded-lg bg-parchment-50 overflow-hidden">
+							<div className="border border-parchment-200 dark:border-lapis-700 rounded-lg bg-parchment-50 dark:bg-lapis-900 overflow-hidden">
 								{/* Tab Header */}
-								<div className="flex border-b border-parchment-200 bg-parchment-100/50">
+								<div className="flex border-b border-parchment-200 dark:border-lapis-700 bg-parchment-100/50 dark:bg-lapis-800/50">
 									<button
 										onClick={() => setActiveTab('comments')}
 										className={`
 										flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium
 										transition-colors relative
 										${activeTab === 'comments'
-												? 'text-lapis-700 bg-parchment-50'
-												: 'text-lapis-500 hover:text-lapis-600 hover:bg-parchment-100'
+												? 'text-lapis-700 dark:text-parchment-200 bg-parchment-50 dark:bg-lapis-900'
+												: 'text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-300 hover:bg-parchment-100 dark:hover:bg-lapis-800'
 											}
 									`}
 									>
 										<MessageSquare size={16} />
 										{t('issueModal.tabs.comments')}
 										{activeTab === 'comments' && (
-											<div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500" />
+											<div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500 dark:bg-gold-500" />
 										)}
 									</button>
 									<button
@@ -867,15 +867,15 @@ export function IssueModal({
 										flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium
 										transition-colors relative
 										${activeTab === 'activity'
-												? 'text-lapis-700 bg-parchment-50'
-												: 'text-lapis-500 hover:text-lapis-600 hover:bg-parchment-100'
+												? 'text-lapis-700 dark:text-parchment-200 bg-parchment-50 dark:bg-lapis-900'
+												: 'text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-300 hover:bg-parchment-100 dark:hover:bg-lapis-800'
 											}
 									`}
 									>
 										<History size={16} />
 										{t('issueModal.tabs.activity')}
 										{activeTab === 'activity' && (
-											<div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500" />
+											<div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500 dark:bg-gold-500" />
 										)}
 									</button>
 								</div>
@@ -896,15 +896,15 @@ export function IssueModal({
 					{/* Scroll fade indicator */}
 					{canScrollDown && (
 						<div
-							className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none bg-gradient-to-t from-parchment-50 to-transparent"
+							className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none bg-gradient-to-t from-parchment-50 dark:from-lapis-900 to-transparent"
 							aria-hidden="true"
 						/>
 					)}
 				</div>
 
 				{/* Footer */}
-				<div className="flex-shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t border-parchment-200 bg-parchment-100/80">
-					<div className="text-xs text-stone-500 text-center sm:text-left">
+				<div className="flex-shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t border-parchment-200 dark:border-lapis-700 bg-parchment-100/80 dark:bg-lapis-900/80">
+					<div className="text-xs text-stone-500 dark:text-parchment-500 text-center sm:text-left">
 						{issue?.updatedAt && !isCreating && (
 							<span title={formatDate(issue.updatedAt) || ''}>
 								{t('issueModal.lastUpdated')}: {formatRelativeTime(issue.updatedAt)}
@@ -919,7 +919,7 @@ export function IssueModal({
 									onClick={handleCancel}
 									className="
                     px-4 py-2 rounded-lg text-sm font-medium
-                    text-lapis-600 hover:bg-parchment-200
+                    text-lapis-600 dark:text-parchment-300 hover:bg-parchment-200 dark:hover:bg-lapis-800
                     transition-colors
                     flex items-center gap-2
                   "
@@ -949,7 +949,7 @@ export function IssueModal({
 								</button>
 							</>
 						) : (
-							<p className="text-xs text-stone-500 flex items-center gap-1">
+							<p className="text-xs text-stone-500 dark:text-parchment-500 flex items-center gap-1">
 								<span className="hidden sm:inline">{t('issueModal.pressToEdit')} <HotkeyBadge keys="e" /></span>
 								<span className="hidden sm:inline">{' '}&bull;{' '}</span>
 								<HotkeyBadge keys="Escape" className="hidden sm:inline-flex" />

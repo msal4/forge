@@ -51,18 +51,18 @@ export function ActiveUsers() {
   if (loading) {
     return (
       <div className="px-3 py-2">
-        <div className="flex items-center gap-2 text-xs text-lapis-500 mb-2">
-          <Users size={14} />
-          <span>{t('presence.onlineNow')}</span>
-        </div>
-        <div className="flex -space-x-2 rtl:space-x-reverse">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="w-8 h-8 rounded-full bg-parchment-300 animate-pulse"
-            />
-          ))}
-        </div>
+      <div className="flex items-center gap-2 text-xs text-lapis-500 dark:text-parchment-400 mb-2">
+        <Users size={14} />
+        <span>{t('presence.onlineNow')}</span>
+      </div>
+      <div className="flex -space-x-2 rtl:space-x-reverse">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="w-8 h-8 rounded-full bg-parchment-300 dark:bg-lapis-700 animate-pulse"
+          />
+        ))}
+      </div>
       </div>
     );
   }
@@ -78,10 +78,10 @@ export function ActiveUsers() {
   return (
     <div className="px-3 py-2">
       {/* Header */}
-      <div className="flex items-center gap-2 text-xs text-lapis-500 mb-2">
+      <div className="flex items-center gap-2 text-xs text-lapis-500 dark:text-parchment-400 mb-2">
         <Users size={14} />
         <span>{t('presence.onlineNow')}</span>
-        <span className="ml-auto rtl:ml-0 rtl:mr-auto text-lapis-400">
+        <span className="ml-auto rtl:ml-0 rtl:mr-auto text-lapis-400 dark:text-parchment-500">
           {activeUsers.length}
         </span>
       </div>
@@ -95,12 +95,12 @@ export function ActiveUsers() {
               avatarUrl={user.avatarUrl}
               username={user.username}
               size="md"
-              className="ring-2 ring-parchment-50"
+              className="ring-2 ring-parchment-50 dark:ring-lapis-900"
             />
             {/* Green online dot */}
             <span 
               className="absolute bottom-0 ltr:right-0 rtl:left-0 block w-2.5 h-2.5 
-                         bg-green-500 rounded-full ring-2 ring-parchment-50"
+                         bg-green-500 rounded-full ring-2 ring-parchment-50 dark:ring-lapis-900"
               aria-hidden="true"
             />
           </div>
@@ -109,8 +109,8 @@ export function ActiveUsers() {
         {/* Overflow indicator */}
         {remainingCount > 0 && (
           <div 
-            className="w-8 h-8 rounded-full bg-parchment-300 ring-2 ring-parchment-50
-                       flex items-center justify-center text-xs font-medium text-lapis-600"
+            className="w-8 h-8 rounded-full bg-parchment-300 dark:bg-lapis-700 ring-2 ring-parchment-50 dark:ring-lapis-900
+                       flex items-center justify-center text-xs font-medium text-lapis-600 dark:text-parchment-300"
             title={activeUsers.slice(MAX_VISIBLE_AVATARS).map(u => u.fullName || u.username).join(', ')}
           >
             +{remainingCount}
@@ -120,7 +120,7 @@ export function ActiveUsers() {
 
       {/* Show "Just you" if only one user */}
       {activeUsers.length === 1 && (
-        <p className="text-xs text-lapis-400 mt-1.5">
+        <p className="text-xs text-lapis-400 dark:text-parchment-500 mt-1.5">
           {t('presence.justYou')}
         </p>
       )}

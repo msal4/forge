@@ -447,7 +447,7 @@ export function DocsPage() {
                 selectDoc(null);
                 setMode('list');
               }}
-              className="p-2 rounded-tablet hover:bg-parchment-200 text-lapis-500 transition-colors"
+              className="p-2 rounded-tablet hover:bg-parchment-200 dark:hover:bg-lapis-800 text-lapis-500 dark:text-parchment-400 transition-colors"
             >
               <ArrowLeft size={20} className="rtl:rotate-180" />
             </button>
@@ -455,7 +455,7 @@ export function DocsPage() {
           {mode === 'edit' && (
             <button
               onClick={cancelEdit}
-              className="p-2 rounded-tablet hover:bg-parchment-200 text-lapis-500 transition-colors"
+              className="p-2 rounded-tablet hover:bg-parchment-200 dark:hover:bg-lapis-800 text-lapis-500 dark:text-parchment-400 transition-colors"
             >
               <ArrowLeft size={20} className="rtl:rotate-180" />
             </button>
@@ -463,13 +463,13 @@ export function DocsPage() {
           {mode === 'create' && (
             <button
               onClick={cancelEdit}
-              className="p-2 rounded-tablet hover:bg-parchment-200 text-lapis-500 transition-colors"
+              className="p-2 rounded-tablet hover:bg-parchment-200 dark:hover:bg-lapis-800 text-lapis-500 dark:text-parchment-400 transition-colors"
             >
               <ArrowLeft size={20} className="rtl:rotate-180" />
             </button>
           )}
           <div>
-            <h1 className="text-2xl font-inscription text-lapis-600">
+            <h1 className="text-2xl font-inscription text-lapis-600 dark:text-parchment-200">
               {mode === 'create' 
                 ? t('docs.newScroll')
                 : mode === 'edit' 
@@ -478,7 +478,7 @@ export function DocsPage() {
                     ? selectedDoc.title 
                     : t('docs.title')}
             </h1>
-            <p className="text-lapis-500 text-sm">
+            <p className="text-lapis-500 dark:text-parchment-400 text-sm">
               {mode === 'create'
                 ? t('docs.createNew')
                 : mode === 'edit'
@@ -516,7 +516,7 @@ export function DocsPage() {
               <ButtonWithHotkey
                 variant="ghost"
                 onClick={() => handleDeleteDoc(selectedDoc)}
-                className="text-red-600 hover:bg-red-50"
+                className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30"
               >
                 <Trash2 size={18} />
               </ButtonWithHotkey>
@@ -593,10 +593,10 @@ export function DocsPage() {
       {isEditing && (
         <div className="tablet-card overflow-hidden transition-all duration-200">
           {/* Title & Parent */}
-          <div className="p-6 space-y-4 border-b border-parchment-200">
+          <div className="p-6 space-y-4 border-b border-parchment-200 dark:border-lapis-700">
             {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-lapis-600 mb-1">
+              <label className="block text-sm font-medium text-lapis-600 dark:text-parchment-300 mb-1">
                 {t('docs.titleLabel')} <span className="text-red-500">*</span>
               </label>
               <input
@@ -605,24 +605,24 @@ export function DocsPage() {
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
                 placeholder={t('docs.titlePlaceholder')}
-                className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
-                           bg-parchment-100 text-lapis-700 text-lg font-medium
+                className="w-full px-3 py-2 rounded-tablet border border-parchment-300 dark:border-lapis-700
+                           bg-parchment-100 dark:bg-lapis-800 text-lapis-700 dark:text-parchment-200 text-lg font-medium
                            focus:ring-2 focus:ring-gold-400/30 focus:outline-none
-                           placeholder:text-stone-500 transition-colors"
+                           placeholder:text-stone-500 dark:placeholder:text-parchment-500 transition-colors"
               />
             </div>
 
             {/* Parent selection */}
             {availableParents.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-lapis-600 mb-1">
+                <label className="block text-sm font-medium text-lapis-600 dark:text-parchment-300 mb-1">
                   {t('docs.parentDocument')}
                 </label>
                 <select
                   value={editParentId}
                   onChange={(e) => setEditParentId(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full px-3 py-2 rounded-tablet border border-parchment-300 
-                             bg-parchment-100 text-lapis-700
+                  className="w-full px-3 py-2 rounded-tablet border border-parchment-300 dark:border-lapis-700
+                             bg-parchment-100 dark:bg-lapis-800 text-lapis-700 dark:text-parchment-200
                              focus:ring-2 focus:ring-gold-400/30 focus:outline-none
                              transition-colors"
                 >
@@ -757,9 +757,9 @@ function InlineMarkdownEditor({
   return (
     <div className="flex flex-col">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-parchment-100 border-b border-parchment-200">
+      <div className="flex items-center justify-between px-4 py-2 bg-parchment-100 dark:bg-lapis-800 border-b border-parchment-200 dark:border-lapis-700">
         {/* View mode tabs */}
-        <div className="flex items-center gap-1 bg-parchment-200 rounded-tablet p-0.5">
+        <div className="flex items-center gap-1 bg-parchment-200 dark:bg-lapis-700 rounded-tablet p-0.5">
           <button
             type="button"
             onClick={() => setViewMode('edit')}
@@ -767,8 +767,8 @@ function InlineMarkdownEditor({
               flex items-center gap-1.5 px-3 py-1.5 rounded-tablet text-sm font-medium
               transition-colors
               ${viewMode === 'edit' 
-                ? 'bg-parchment-50 text-lapis-600 shadow-sm' 
-                : 'text-lapis-500 hover:text-lapis-600'}
+                ? 'bg-parchment-50 dark:bg-lapis-600 text-lapis-600 dark:text-parchment-200 shadow-sm' 
+                : 'text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-200'}
             `}
           >
             <Edit3 size={14} />
@@ -781,8 +781,8 @@ function InlineMarkdownEditor({
               flex items-center gap-1.5 px-3 py-1.5 rounded-tablet text-sm font-medium
               transition-colors
               ${viewMode === 'split' 
-                ? 'bg-parchment-50 text-lapis-600 shadow-sm' 
-                : 'text-lapis-500 hover:text-lapis-600'}
+                ? 'bg-parchment-50 dark:bg-lapis-600 text-lapis-600 dark:text-parchment-200 shadow-sm' 
+                : 'text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-200'}
             `}
           >
             {t('docs.editor.split')}
@@ -794,8 +794,8 @@ function InlineMarkdownEditor({
               flex items-center gap-1.5 px-3 py-1.5 rounded-tablet text-sm font-medium
               transition-colors
               ${viewMode === 'preview' 
-                ? 'bg-parchment-50 text-lapis-600 shadow-sm' 
-                : 'text-lapis-500 hover:text-lapis-600'}
+                ? 'bg-parchment-50 dark:bg-lapis-600 text-lapis-600 dark:text-parchment-200 shadow-sm' 
+                : 'text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-200'}
             `}
           >
             <Eye size={14} />
@@ -804,7 +804,7 @@ function InlineMarkdownEditor({
         </div>
 
         {/* Hints */}
-        <div className="text-xs text-stone-500">
+        <div className="text-xs text-stone-500 dark:text-parchment-500">
           {t('docs.editor.hint')}
         </div>
       </div>
@@ -813,7 +813,7 @@ function InlineMarkdownEditor({
       <div className="flex min-h-[500px]">
         {/* Editor */}
         {viewMode !== 'preview' && (
-          <div className={`${viewMode === 'split' ? 'w-1/2 border-r border-parchment-200' : 'w-full'} flex flex-col`}>
+          <div className={`${viewMode === 'split' ? 'w-1/2 border-r border-parchment-200 dark:border-lapis-700' : 'w-full'} flex flex-col`}>
             <MarkdownToolbar
               onImageSelect={uploadImage}
               uploading={uploadingImage}
@@ -827,10 +827,10 @@ function InlineMarkdownEditor({
               placeholder={placeholder}
               className="
                 flex-1 w-full p-4 resize-none
-                font-code text-sm text-lapis-700
-                bg-parchment-50 
+                font-code text-sm text-lapis-700 dark:text-parchment-200
+                bg-parchment-50 dark:bg-lapis-900
                 focus:outline-none
-                placeholder:text-stone-500
+                placeholder:text-stone-500 dark:placeholder:text-parchment-500
                 min-h-[500px]
               "
             />
@@ -839,12 +839,12 @@ function InlineMarkdownEditor({
 
         {/* Preview */}
         {viewMode !== 'edit' && (
-          <div className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'} overflow-auto bg-parchment-50`}>
+          <div className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'} overflow-auto bg-parchment-50 dark:bg-lapis-900`}>
             <div className="p-4 prose prose-mesopotamian max-w-none">
               {value ? (
                 <Markdown users={users}>{value}</Markdown>
               ) : (
-                <p className="text-stone-500 italic">{t('docs.editor.previewPlaceholder')}</p>
+                <p className="text-stone-500 dark:text-parchment-500 italic">{t('docs.editor.previewPlaceholder')}</p>
               )}
             </div>
           </div>
@@ -884,32 +884,32 @@ function DocCard({ doc, onClick, onEdit, onDelete }: DocCardProps) {
     <div
       className="
         tablet-card p-4 cursor-pointer group
-        hover:border-lapis-300 hover:shadow-tablet
+        hover:border-lapis-300 dark:hover:border-lapis-600 hover:shadow-tablet
         transition-all duration-150
       "
       onClick={onClick}
     >
       <div className="flex items-start gap-3">
-        <div className="p-2 rounded-tablet bg-lapis-100 text-lapis-500">
+        <div className="p-2 rounded-tablet bg-lapis-100 dark:bg-lapis-800 text-lapis-500 dark:text-parchment-400">
           <FileText size={20} />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-lapis-600 truncate group-hover:text-lapis-700">
+          <h3 className="font-medium text-lapis-600 dark:text-parchment-200 truncate group-hover:text-lapis-700 dark:group-hover:text-parchment-100">
             {doc.title}
           </h3>
-          <p className="text-sm text-lapis-500 mt-1 line-clamp-2">
+          <p className="text-sm text-lapis-500 dark:text-parchment-400 mt-1 line-clamp-2">
             {preview}
           </p>
         </div>
         <ChevronRight 
           size={18} 
-          className="text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 rtl:rotate-180" 
+          className="text-stone-400 dark:text-parchment-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 rtl:rotate-180" 
         />
       </div>
 
       {/* Card footer */}
-      <div className="mt-3 pt-3 border-t border-parchment-200 flex items-center justify-between">
-        <div className="text-xs text-stone-500">
+      <div className="mt-3 pt-3 border-t border-parchment-200 dark:border-lapis-700 flex items-center justify-between">
+        <div className="text-xs text-stone-500 dark:text-parchment-500">
           {new Date(doc.updatedAt).toLocaleDateString(i18n.language === 'ar' ? 'ar-SA' : 'en-US', {
             day: 'numeric',
             month: 'short',
@@ -921,7 +921,7 @@ function DocCard({ doc, onClick, onEdit, onDelete }: DocCardProps) {
               e.stopPropagation();
               onEdit();
             }}
-            className="p-1 rounded hover:bg-parchment-200 text-lapis-500"
+            className="p-1 rounded hover:bg-parchment-200 dark:hover:bg-lapis-700 text-lapis-500 dark:text-parchment-400"
           >
             <Edit3 size={14} />
           </button>
@@ -930,7 +930,7 @@ function DocCard({ doc, onClick, onEdit, onDelete }: DocCardProps) {
               e.stopPropagation();
               onDelete();
             }}
-            className="p-1 rounded hover:bg-red-50 text-red-500"
+            className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 dark:text-red-400"
           >
             <Trash2 size={14} />
           </button>
@@ -991,8 +991,8 @@ function DocViewContent({
       </div>
       
       {/* Document metadata + scroll to comments button */}
-      <div className="mt-6 pt-4 border-t border-parchment-300 flex items-center justify-between">
-        <div className="flex items-center gap-4 text-sm text-lapis-500">
+      <div className="mt-6 pt-4 border-t border-parchment-300 dark:border-lapis-700 flex items-center justify-between">
+        <div className="flex items-center gap-4 text-sm text-lapis-500 dark:text-parchment-400">
           {doc.author && (
             <div className="flex items-center gap-1">
               <User size={14} />
@@ -1008,7 +1008,7 @@ function DocViewContent({
         {/* Scroll to comments button */}
         <button
           onClick={scrollToComments}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-lapis-500 hover:text-lapis-700 hover:bg-parchment-200 rounded-lg transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-lapis-500 dark:text-parchment-400 hover:text-lapis-700 dark:hover:text-parchment-200 hover:bg-parchment-200 dark:hover:bg-lapis-800 rounded-lg transition-colors"
         >
           <MessageSquare size={14} />
           {t('docs.jumpToComments')}
@@ -1019,25 +1019,25 @@ function DocViewContent({
       {/* Tabbed Panel for Comments & Activity */}
       <div 
         ref={tabbedPanelRef}
-        className="mt-6 border border-parchment-200 rounded-lg bg-parchment-50 overflow-hidden scroll-mt-4"
+        className="mt-6 border border-parchment-200 dark:border-lapis-700 rounded-lg bg-parchment-50 dark:bg-lapis-900 overflow-hidden scroll-mt-4"
       >
         {/* Tab Header */}
-        <div className="flex border-b border-parchment-200 bg-parchment-100/50">
+        <div className="flex border-b border-parchment-200 dark:border-lapis-700 bg-parchment-100/50 dark:bg-lapis-800/50">
           <button
             onClick={() => setActiveTab('comments')}
             className={`
               flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium
               transition-colors relative
               ${activeTab === 'comments' 
-                ? 'text-lapis-700 bg-parchment-50' 
-                : 'text-lapis-500 hover:text-lapis-600 hover:bg-parchment-100'
+                ? 'text-lapis-700 dark:text-parchment-200 bg-parchment-50 dark:bg-lapis-900' 
+                : 'text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-300 hover:bg-parchment-100 dark:hover:bg-lapis-800'
               }
             `}
           >
             <MessageSquare size={16} />
             {t('docs.tabs.comments')}
             {activeTab === 'comments' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500" />
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500 dark:bg-gold-500" />
             )}
           </button>
           <button
@@ -1046,15 +1046,15 @@ function DocViewContent({
               flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium
               transition-colors relative
               ${activeTab === 'activity' 
-                ? 'text-lapis-700 bg-parchment-50' 
-                : 'text-lapis-500 hover:text-lapis-600 hover:bg-parchment-100'
+                ? 'text-lapis-700 dark:text-parchment-200 bg-parchment-50 dark:bg-lapis-900' 
+                : 'text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-300 hover:bg-parchment-100 dark:hover:bg-lapis-800'
               }
             `}
           >
             <History size={16} />
             {t('docs.tabs.activity')}
             {activeTab === 'activity' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500" />
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lapis-500 dark:bg-gold-500" />
             )}
           </button>
         </div>

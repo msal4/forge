@@ -26,6 +26,7 @@
   
   body {
     @apply bg-parchment-100 text-lapis-700 font-body antialiased;
+    @apply dark:bg-lapis-950 dark:text-parchment-200;
     /* Ensure body takes full height for proper scrollbar behavior */
     min-height: 100vh;
   }
@@ -40,6 +41,7 @@
   /* Inscription-style headers */
   h1, h2, h3, h4, h5, h6 {
     @apply font-inscription font-semibold text-lapis-600;
+    @apply dark:text-parchment-300;
   }
   
   h1 {
@@ -57,6 +59,7 @@
   /* Focus styles */
   :focus-visible {
     @apply outline-none ring-2 ring-gold-400 ring-offset-2 ring-offset-parchment-100;
+    @apply dark:ring-gold-500 dark:ring-offset-lapis-950;
   }
   
   /* Input focus styles - gold highlight (ring only, no border change) */
@@ -64,11 +67,13 @@
   textarea:focus,
   select:focus {
     @apply ring-2 ring-gold-400/30 outline-none;
+    @apply dark:ring-gold-500/40;
   }
   
   /* Selection color */
   ::selection {
     @apply bg-lapis-500 text-parchment-100;
+    @apply dark:bg-gold-500 dark:text-lapis-950;
   }
 }
 
@@ -77,19 +82,23 @@
   /* Card - resembles clay tablet */
   .tablet-card {
     @apply bg-parchment-50 border border-parchment-300 rounded-tablet shadow-tablet;
+    @apply dark:bg-lapis-900 dark:border-lapis-700 dark:shadow-none;
     @apply transition-shadow duration-200;
   }
   
   .tablet-card:hover {
     @apply shadow-tablet-hover;
+    @apply dark:shadow-none dark:bg-lapis-800/50;
   }
   
   /* Input fields */
   .forge-input {
     @apply w-full px-3 py-2 rounded-tablet;
     @apply bg-parchment-50 border border-parchment-400;
+    @apply dark:bg-lapis-900 dark:border-lapis-600 dark:text-parchment-200 dark:placeholder-parchment-500;
     @apply text-lapis-700 placeholder-stone-500;
     @apply focus:ring-2 focus:ring-gold-400/30 focus:outline-none;
+    @apply dark:focus:ring-gold-500/40;
     @apply transition-colors duration-150;
   }
   
@@ -97,13 +106,17 @@
   .nav-item {
     @apply flex items-center gap-3 px-3 py-2 rounded-tablet;
     @apply text-lapis-600 font-medium;
+    @apply dark:text-parchment-300;
     @apply hover:bg-parchment-200 hover:text-lapis-700;
+    @apply dark:hover:bg-lapis-800 dark:hover:text-parchment-100;
     @apply transition-colors duration-150;
   }
   
   .nav-item.active {
     @apply bg-lapis-500 text-parchment-100;
+    @apply dark:bg-gold-600 dark:text-lapis-950;
     @apply hover:bg-lapis-600;
+    @apply dark:hover:bg-gold-500;
   }
   
   /* Status badges for Kanban */
@@ -113,31 +126,38 @@
   
   .status-to-inscribe {
     @apply bg-parchment-300 text-lapis-600;
+    @apply dark:bg-lapis-700 dark:text-parchment-300;
   }
   
   .status-carving {
     @apply bg-clay-200 text-clay-700;
+    @apply dark:bg-clay-900 dark:text-clay-300;
   }
   
   .status-baked {
     @apply bg-gold-200 text-gold-800;
+    @apply dark:bg-gold-900 dark:text-gold-300;
   }
   
   /* Priority indicators */
   .priority-critical {
     @apply text-red-600;
+    @apply dark:text-red-400;
   }
   
   .priority-high {
     @apply text-clay-600;
+    @apply dark:text-clay-400;
   }
   
   .priority-medium {
     @apply text-gold-600;
+    @apply dark:text-gold-400;
   }
   
   .priority-low {
     @apply text-stone-500;
+    @apply dark:text-stone-400;
   }
 }
 
@@ -157,6 +177,10 @@
     scrollbar-color: theme('colors.parchment.400') transparent;
   }
   
+  :is(.dark .scrollbar-thin) {
+    scrollbar-color: theme('colors.lapis.600') transparent;
+  }
+  
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -171,8 +195,16 @@
     border-radius: 3px;
   }
   
+  :is(.dark .scrollbar-thin)::-webkit-scrollbar-thumb {
+    background-color: theme('colors.lapis.600');
+  }
+  
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background-color: theme('colors.parchment.500');
+  }
+  
+  :is(.dark .scrollbar-thin)::-webkit-scrollbar-thumb:hover {
+    background-color: theme('colors.lapis.500');
   }
   
   /* Prevent content jump when scrollbar appears */
@@ -195,6 +227,7 @@
    ============================================ */
 .prose-mesopotamian {
   @apply text-lapis-700 leading-relaxed;
+  @apply dark:text-parchment-300;
 }
 
 .prose-mesopotamian h1,
@@ -204,10 +237,12 @@
 .prose-mesopotamian h5,
 .prose-mesopotamian h6 {
   @apply font-inscription text-lapis-600 mt-6 mb-4 first:mt-0;
+  @apply dark:text-parchment-200;
 }
 
 .prose-mesopotamian h1 {
   @apply text-2xl border-b border-parchment-300 pb-2;
+  @apply dark:border-lapis-700;
 }
 
 .prose-mesopotamian h2 {
@@ -224,10 +259,12 @@
 
 .prose-mesopotamian a {
   @apply text-lapis-500 underline hover:text-lapis-600;
+  @apply dark:text-gold-400 dark:hover:text-gold-300;
 }
 
 .prose-mesopotamian strong {
   @apply font-semibold text-lapis-800;
+  @apply dark:text-parchment-100;
 }
 
 .prose-mesopotamian em {
@@ -236,10 +273,12 @@
 
 .prose-mesopotamian code {
   @apply font-code text-sm bg-parchment-200 text-clay-600 px-1.5 py-0.5 rounded;
+  @apply dark:bg-lapis-800 dark:text-clay-300;
 }
 
 .prose-mesopotamian pre {
   @apply bg-lapis-800 text-parchment-100 p-4 rounded-tablet overflow-x-auto my-4;
+  @apply dark:bg-lapis-900 dark:border dark:border-lapis-700;
 }
 
 .prose-mesopotamian pre code {
@@ -248,6 +287,7 @@
 
 .prose-mesopotamian blockquote {
   @apply border-l-4 border-clay-400 pl-4 my-4 text-lapis-600 italic;
+  @apply dark:border-clay-600 dark:text-parchment-400;
 }
 
 .prose-mesopotamian ul,
@@ -269,6 +309,7 @@
 
 .prose-mesopotamian hr {
   @apply border-parchment-300 my-8;
+  @apply dark:border-lapis-700;
 }
 
 .prose-mesopotamian table {
@@ -278,14 +319,17 @@
 .prose-mesopotamian th,
 .prose-mesopotamian td {
   @apply border border-parchment-300 px-3 py-2 text-left;
+  @apply dark:border-lapis-700;
 }
 
 .prose-mesopotamian th {
   @apply bg-parchment-200 font-semibold text-lapis-600;
+  @apply dark:bg-lapis-800 dark:text-parchment-200;
 }
 
 .prose-mesopotamian tr:nth-child(even) {
   @apply bg-parchment-100;
+  @apply dark:bg-lapis-900/50;
 }
 
 .prose-mesopotamian img {
@@ -304,15 +348,47 @@
 .prose-mesopotamian input[type="checkbox"] {
   @apply mt-1 w-4 h-4 rounded border-parchment-400 text-lapis-500 
          focus:ring-gold-400 focus:ring-offset-0 cursor-default;
+  @apply dark:border-lapis-600 dark:bg-lapis-800 dark:text-gold-500;
 }
 
 /* @mention styling */
 .mention {
   @apply text-lapis-500 font-semibold no-underline;
+  @apply dark:text-gold-400;
 }
 
 a.mention {
   @apply hover:text-lapis-700 hover:underline cursor-pointer transition-colors;
+  @apply dark:hover:text-gold-300;
+}
+
+/* ============================================
+   Command Palette Styles
+   ============================================ */
+.command-item {
+  @apply flex items-center gap-3 px-3 py-2 rounded-tablet cursor-pointer;
+  @apply text-lapis-700 dark:text-parchment-200;
+  @apply hover:bg-parchment-200 dark:hover:bg-lapis-800;
+  @apply data-[selected=true]:bg-parchment-200 dark:data-[selected=true]:bg-lapis-800;
+  @apply transition-colors;
+}
+
+.shortcut-badge {
+  @apply px-2 py-0.5 rounded text-xs font-mono;
+  @apply bg-parchment-200 dark:bg-lapis-700 text-lapis-500 dark:text-parchment-400;
+}
+
+/* ============================================
+   Date Input Calendar Icon Styling (Dark Mode)
+   ============================================ */
+/* Style the calendar icon in date inputs for dark mode */
+:is(.dark) input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+  cursor: pointer;
+}
+
+:is(.dark) input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  filter: invert(1);
 }
 
 /* ============================================

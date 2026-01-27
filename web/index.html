@@ -7,6 +7,16 @@
     <meta name="theme-color" content="#1a365d" />
     <meta name="description" content="Sarray Forge - Internal ALM Tool" />
     <title>Sarray Forge</title>
+    <!-- Prevent flash of wrong theme on page load -->
+    <script>
+      (function() {
+        const theme = localStorage.getItem('theme');
+        // Default to light mode if no theme is set
+        if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

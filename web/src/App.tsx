@@ -6,6 +6,7 @@ import { AuthProvider, ProtectedRoute, useAuth } from './context/AuthContext';
 import { KeyboardProvider } from './context/KeyboardContext';
 import { WebSocketProvider } from './context/WebSocketContext';
 import { ToastProvider } from './context/ToastContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { CommandMenu } from './components/ui/CommandMenu';
 import { Layout } from './components/layout/Layout';
 import { ConflictWarning } from './components/ui/ConflictWarning';
@@ -115,19 +116,21 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AuthProvider>
-          <WebSocketProvider>
-            <KeyboardProvider>
-              <ToastProvider>
-                <GlobalLoadingIndicator />
-                <CommandMenu />
-                <ConflictWarning />
-                <NotificationHandler />
-                <AppRoutes />
-              </ToastProvider>
-            </KeyboardProvider>
-          </WebSocketProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <WebSocketProvider>
+              <KeyboardProvider>
+                <ToastProvider>
+                  <GlobalLoadingIndicator />
+                  <CommandMenu />
+                  <ConflictWarning />
+                  <NotificationHandler />
+                  <AppRoutes />
+                </ToastProvider>
+              </KeyboardProvider>
+            </WebSocketProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );

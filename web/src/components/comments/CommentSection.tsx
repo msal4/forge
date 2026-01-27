@@ -214,13 +214,13 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
 		<>
 			<div className="space-y-4">
 				{/* Comments list */}
-				<div className="divide-y divide-parchment-200">
+				<div className="divide-y divide-parchment-200 dark:divide-lapis-700">
 					{isLoading ? (
 						<div className="py-8">
 							<LoadingIndicator size="md" className="text-lapis-400" />
 						</div>
 					) : totalComments === 0 ? (
-						<div className="text-center py-6 text-stone-500 text-sm italic">
+						<div className="text-center py-6 text-stone-500 dark:text-parchment-500 text-sm italic">
 							{t('comments.empty', 'No comments yet. Be the first to add one!')}
 						</div>
 					) : (
@@ -231,8 +231,8 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
 									onClick={() => setShowAllComments(true)}
 									className="
                     w-full flex items-center justify-center gap-2 py-2 px-3
-                    text-sm text-lapis-500 hover:text-lapis-700
-                    hover:bg-parchment-100 rounded-lg
+                    text-sm text-lapis-500 dark:text-parchment-400 hover:text-lapis-700 dark:hover:text-parchment-200
+                    hover:bg-parchment-100 dark:hover:bg-lapis-800 rounded-lg
                     transition-colors
                   "
 								>
@@ -263,11 +263,11 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
 				<form onSubmit={handleSubmit} className="space-y-2">
 					<div className="relative">
 						{isPreview ? (
-							<div className="min-h-[80px] p-3 rounded-lg bg-parchment-100/50 border border-parchment-300">
+							<div className="min-h-[80px] p-3 rounded-lg bg-parchment-100/50 dark:bg-lapis-800/50 border border-parchment-300 dark:border-lapis-700">
 								{newComment.trim() ? (
 									<Markdown users={users}>{newComment}</Markdown>
 								) : (
-									<span className="text-stone-500 italic text-sm">
+									<span className="text-stone-500 dark:text-parchment-500 italic text-sm">
 										{t('comments.previewEmpty', 'Nothing to preview')}
 									</span>
 								)}
@@ -288,10 +288,10 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
 									rows={3}
 									className="
                   w-full p-3 rounded-b-lg resize-none
-                  bg-parchment-100/50 text-lapis-700
-                  border border-parchment-300 border-t-0
-                  outline-none focus:ring-2 focus:ring-gold-400/30 focus:bg-parchment-100
-                  placeholder:text-stone-500
+                  bg-parchment-100/50 dark:bg-lapis-800/50 text-lapis-700 dark:text-parchment-200
+                  border border-parchment-300 dark:border-lapis-700 border-t-0
+                  outline-none focus:ring-2 focus:ring-gold-400/30 focus:bg-parchment-100 dark:focus:bg-lapis-800
+                  placeholder:text-stone-500 dark:placeholder:text-parchment-500
                   transition-colors
                 "
 								/>
@@ -309,8 +309,8 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
                   flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium
                   transition-colors
                   ${isPreview
-										? 'text-lapis-600 bg-lapis-100'
-										: 'text-lapis-500 hover:bg-parchment-200'
+										? 'text-lapis-600 dark:text-parchment-200 bg-lapis-100 dark:bg-lapis-700'
+										: 'text-lapis-500 dark:text-parchment-400 hover:bg-parchment-200 dark:hover:bg-lapis-800'
 									}
                 `}
 							>
@@ -326,7 +326,7 @@ export function CommentSection({ resourceType, resourceId }: CommentSectionProps
 									</>
 								)}
 							</button>
-							<span className="text-xs text-stone-500">
+							<span className="text-xs text-stone-500 dark:text-parchment-500">
 								{t('comments.markdownHint', 'Markdown supported')}
 							</span>
 						</div>
@@ -390,7 +390,7 @@ function CommentItem({ comment, resourceType, resourceId, isOwn, onDelete, isDel
 	const { reactions, toggle, isToggling } = useReactions({ target: reactionTarget });
 
 	return (
-		<div className="group relative py-2 hover:bg-parchment-100/30 transition-colors">
+		<div className="group relative py-2 hover:bg-parchment-100/30 dark:hover:bg-lapis-800/30 transition-colors">
 			<div className="flex gap-2">
 				{/* Avatar */}
 				<div className="flex-shrink-0 pt-0.5">
@@ -406,10 +406,10 @@ function CommentItem({ comment, resourceType, resourceId, isOwn, onDelete, isDel
 				<div className="flex-1 min-w-0">
 					{/* Header inline with content start */}
 					<div className="flex items-baseline gap-2 flex-wrap">
-						<span className="font-medium text-sm text-lapis-700">
+						<span className="font-medium text-sm text-lapis-700 dark:text-parchment-200">
 							{authorName}
 						</span>
-						<span className="text-xs text-stone-400">
+						<span className="text-xs text-stone-400 dark:text-parchment-500">
 							{formatRelativeTime(comment.createdAt)}
 						</span>
 						{/* Delete button - inline with header */}
@@ -419,8 +419,8 @@ function CommentItem({ comment, resourceType, resourceId, isOwn, onDelete, isDel
 								disabled={isDeleting}
 								className="
 									ml-auto flex items-center gap-1 px-1.5 py-0.5 rounded
-									text-xs text-stone-400 
-									hover:text-red-600 hover:bg-red-50
+									text-xs text-stone-400 dark:text-parchment-500
+									hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30
 									opacity-0 group-hover:opacity-100
 									disabled:opacity-50 disabled:cursor-not-allowed
 									transition-all
@@ -435,7 +435,7 @@ function CommentItem({ comment, resourceType, resourceId, isOwn, onDelete, isDel
 						)}
 					</div>
 
-					<div className="text-sm text-lapis-600 prose-sm prose-mesopotamian max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+					<div className="text-sm text-lapis-600 dark:text-parchment-300 prose-sm prose-mesopotamian max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
 						<Markdown users={users}>{comment.content}</Markdown>
 					</div>
 

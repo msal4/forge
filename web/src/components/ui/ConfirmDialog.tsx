@@ -69,15 +69,15 @@ export function ConfirmDialog({
 
   const variantStyles = {
     danger: {
-      icon: 'bg-red-100 text-red-600',
+      icon: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
       confirmBtn: 'bg-red-600 hover:bg-red-700 text-white',
     },
     warning: {
-      icon: 'bg-gold-100 text-gold-600',
+      icon: 'bg-gold-100 dark:bg-gold-900/30 text-gold-600 dark:text-gold-400',
       confirmBtn: 'bg-gold-600 hover:bg-gold-700 text-white',
     },
     default: {
-      icon: 'bg-lapis-100 text-lapis-600',
+      icon: 'bg-lapis-100 dark:bg-lapis-800 text-lapis-600 dark:text-parchment-300',
       confirmBtn: 'bg-lapis-500 hover:bg-lapis-600 text-white',
     },
   };
@@ -104,8 +104,8 @@ export function ConfirmDialog({
       <div 
         className="
           relative w-full max-w-md
-          bg-parchment-50 rounded-xl shadow-2xl
-          border border-parchment-300
+          bg-parchment-50 dark:bg-lapis-900 rounded-xl shadow-2xl
+          border border-parchment-300 dark:border-lapis-700
           animate-scale-in
         "
         onClick={(e) => e.stopPropagation()}
@@ -116,28 +116,28 @@ export function ConfirmDialog({
             <AlertTriangle size={24} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-inscription text-lapis-700">
+            <h3 className="text-lg font-inscription text-lapis-700 dark:text-parchment-200">
               {title}
             </h3>
-            <p className="mt-2 text-sm text-lapis-600">
+            <p className="mt-2 text-sm text-lapis-600 dark:text-parchment-400">
               {message}
             </p>
           </div>
           <button
             onClick={onCancel}
-            className="p-1 rounded-lg hover:bg-parchment-200 text-stone-400 transition-colors"
+            className="p-1 rounded-lg hover:bg-parchment-200 dark:hover:bg-lapis-800 text-stone-400 dark:text-parchment-500 transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-parchment-200 bg-parchment-100/50 rounded-b-xl">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-parchment-200 dark:border-lapis-700 bg-parchment-100/50 dark:bg-lapis-800/50 rounded-b-xl">
           <button
             onClick={onCancel}
             className="
               px-4 py-2 rounded-lg text-sm font-medium
-              text-lapis-600 hover:bg-parchment-200
+              text-lapis-600 dark:text-parchment-300 hover:bg-parchment-200 dark:hover:bg-lapis-700
               transition-colors inline-flex items-center gap-2
             "
           >

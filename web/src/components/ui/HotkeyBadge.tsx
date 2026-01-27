@@ -25,7 +25,7 @@ export function HotkeyBadge({ keys, className = '', size = 'sm', variant = 'defa
   };
   
   const variantClasses = {
-    default: 'bg-parchment-300 text-lapis-600 border-parchment-400',
+    default: 'bg-parchment-300 dark:bg-lapis-700 text-lapis-600 dark:text-parchment-300 border-parchment-400 dark:border-lapis-600',
     dark: 'bg-white/20 text-parchment-100 border-white/30',
   };
   
@@ -71,17 +71,25 @@ export function ButtonWithHotkey({
       hover:bg-lapis-600 
       active:bg-lapis-700
       border border-lapis-600
+      dark:bg-gold-600 dark:text-lapis-950
+      dark:hover:bg-gold-500
+      dark:border-gold-500
     `,
     secondary: `
       bg-parchment-200 text-lapis-600
       hover:bg-parchment-300
       active:bg-parchment-400
       border border-parchment-400
+      dark:bg-lapis-800 dark:text-parchment-300
+      dark:hover:bg-lapis-700
+      dark:border-lapis-600
     `,
     ghost: `
       bg-transparent text-lapis-600
       hover:bg-parchment-200
       active:bg-parchment-300
+      dark:text-parchment-300
+      dark:hover:bg-lapis-800
     `,
   };
   
@@ -98,7 +106,7 @@ export function ButtonWithHotkey({
         font-body font-medium
         rounded-tablet
         transition-colors duration-150
-        focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2 focus:ring-offset-parchment-100
+        focus:outline-none focus:ring-2 focus:ring-gold-400 focus:ring-offset-2 focus:ring-offset-parchment-100 dark:focus:ring-offset-lapis-950
         disabled:opacity-50 disabled:cursor-not-allowed
         ${variantClasses[variant]}
         ${sizeClasses[size]}

@@ -387,8 +387,8 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
         className="
           fixed z-[9999]
           w-64 max-h-48 overflow-y-auto
-          bg-parchment-50 rounded-lg
-          shadow-lg border border-parchment-300
+          bg-parchment-50 dark:bg-lapis-800 rounded-lg
+          shadow-lg border border-parchment-300 dark:border-lapis-600
         "
         style={{
           top: dropdownPosition.top,
@@ -406,8 +406,8 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
                   text-left text-sm
                   transition-colors
                   ${index === selectedIndex 
-                    ? 'bg-lapis-100 text-lapis-700' 
-                    : 'text-lapis-600 hover:bg-parchment-100'
+                    ? 'bg-lapis-100 dark:bg-lapis-700 text-lapis-700 dark:text-parchment-200' 
+                    : 'text-lapis-600 dark:text-parchment-300 hover:bg-parchment-100 dark:hover:bg-lapis-700'
                   }
                 `}
               >
@@ -425,7 +425,7 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
                   <div className="font-medium truncate">
                     {user.fullName || user.username}
                   </div>
-                  <div className="text-xs text-stone-500 truncate">
+                  <div className="text-xs text-stone-500 dark:text-parchment-500 truncate">
                     @{user.username}
                   </div>
                 </div>

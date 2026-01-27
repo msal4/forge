@@ -5,26 +5,51 @@ import rehypeRaw from 'rehype-raw';
 import mermaid from 'mermaid';
 import { useNavigate } from 'react-router-dom';
 
+// Mermaid theme variables for light and dark modes
+const lightThemeVars = {
+  primaryColor: '#d4b896',      // parchment
+  primaryTextColor: '#1a365d',  // lapis
+  primaryBorderColor: '#c9a86c', // clay
+  lineColor: '#1a365d',
+  secondaryColor: '#f5f0e6',
+  tertiaryColor: '#fff',
+  background: '#faf8f5',
+  mainBkg: '#d4b896',
+  nodeBorder: '#1a365d',
+  clusterBkg: '#f5f0e6',
+  titleColor: '#1a365d',
+  edgeLabelBackground: '#faf8f5',
+};
+
+const darkThemeVars = {
+  primaryColor: '#1a365d',      // lapis
+  primaryTextColor: '#f5f0e6',  // parchment
+  primaryBorderColor: '#d4a017', // gold
+  lineColor: '#f5f0e6',
+  secondaryColor: '#12243f',
+  tertiaryColor: '#0c1627',
+  background: '#080e19',
+  mainBkg: '#1a365d',
+  nodeBorder: '#d4a017',
+  clusterBkg: '#12243f',
+  titleColor: '#f5f0e6',
+  edgeLabelBackground: '#0c1627',
+};
+
+// Check if dark mode is active
+function isDarkMode(): boolean {
+  return document.documentElement.classList.contains('dark');
+}
+
 // Initialize mermaid with theme settings
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'base',
-  themeVariables: {
-    primaryColor: '#d4b896',      // parchment
-    primaryTextColor: '#1a365d',  // lapis
-    primaryBorderColor: '#c9a86c', // clay
-    lineColor: '#1a365d',
-    secondaryColor: '#f5f0e6',
-    tertiaryColor: '#fff',
-    background: '#faf8f5',
-    mainBkg: '#d4b896',
-    nodeBorder: '#1a365d',
-    clusterBkg: '#f5f0e6',
-    titleColor: '#1a365d',
-    edgeLabelBackground: '#faf8f5',
-  },
-  fontFamily: 'ui-serif, Georgia, serif',
-});
+function initMermaid() {
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'base',
+    themeVariables: isDarkMode() ? darkThemeVars : lightThemeVars,
+    fontFamily: 'ui-serif, Georgia, serif',
+  });
+}
 
 // Mermaid diagram component
 function MermaidDiagram({ chart }: { chart: string }) {
@@ -37,6 +62,9 @@ function MermaidDiagram({ chart }: { chart: string }) {
       if (!containerRef.current) return;
 
       try {
+        // Re-initialize mermaid with current theme before rendering
+        initMermaid();
+        
         // Generate unique ID for this diagram
         const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
         const { svg } = await mermaid.render(id, chart);
@@ -53,7 +81,7 @@ function MermaidDiagram({ chart }: { chart: string }) {
 
   if (error) {
     return (
-      <div className="p-4 bg-clay-100 border border-clay-300 rounded-lg text-clay-700 text-sm">
+      <div className="p-4 bg-clay-100 dark:bg-clay-900/50 border border-clay-300 dark:border-clay-700 rounded-lg text-clay-700 dark:text-clay-300 text-sm">
         <p className="font-medium">Diagram Error</p>
         <pre className="mt-2 text-xs overflow-auto">{error}</pre>
       </div>
