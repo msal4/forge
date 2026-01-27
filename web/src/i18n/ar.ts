@@ -323,6 +323,8 @@ export default {
 		telegramInstructions: 'انقر على الزر أدناه لفتح تيليجرام وربط حسابك. ستستلم جميع الإشعارات عبر تيليجرام.',
 		linkTelegram: 'ربط تيليجرام',
 		unlinkTelegram: 'إلغاء ربط تيليجرام',
+		unlinkTelegramConfirmTitle: 'إلغاء ربط تيليجرام',
+		unlinkTelegramConfirmMessage: 'هل أنت متأكد من إلغاء ربط حساب تيليجرام؟ لن تستلم الإشعارات عبر تيليجرام بعد ذلك.',
 		telegramLinkFailed: 'فشل إنشاء رابط تيليجرام. يرجى المحاولة مرة أخرى.',
 		telegramUnlinkFailed: 'فشل إلغاء ربط تيليجرام. يرجى المحاولة مرة أخرى.',
 	},

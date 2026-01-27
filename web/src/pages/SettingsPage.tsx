@@ -6,6 +6,7 @@ import { usersApi, type TelegramStatus } from '../api/users';
 import { useWebSocket } from '../context/WebSocketContext';
 import { useAuth } from '../context/AuthContext';
 import { Avatar } from '../components/ui/Avatar';
+import { useConfirmDialog } from '../components/ui/ConfirmDialog';
 
 // ============================================
 // Settings Page
@@ -124,7 +125,19 @@ export function SettingsPage() {
 		}
 	};
 
+	// Confirmation dialog for Telegram unlink
+	const { confirm, DialogComponent: ConfirmDialogComponent } = useConfirmDialog();
+
 	const handleUnlinkTelegram = async () => {
+		const confirmed = await confirm({
+			title: t('settings.unlinkTelegramConfirmTitle'),
+			message: t('settings.unlinkTelegramConfirmMessage'),
+			confirmLabel: t('settings.unlinkTelegram'),
+			variant: 'warning',
+		});
+
+		if (!confirmed) return;
+
 		setTelegramError('');
 		setIsUnlinkingTelegram(true);
 		try {
@@ -694,6 +707,9 @@ export function SettingsPage() {
 					</div>
 				</div>
 			</div>
+
+			{/* Confirmation Dialog */}
+			{ConfirmDialogComponent}
 		</div>
 	);
 }

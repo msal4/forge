@@ -323,6 +323,8 @@ export default {
 		telegramInstructions: 'Click the button below to open Telegram and link your account. You will receive all notifications via Telegram.',
 		linkTelegram: 'Link Telegram',
 		unlinkTelegram: 'Unlink Telegram',
+		unlinkTelegramConfirmTitle: 'Unlink Telegram',
+		unlinkTelegramConfirmMessage: 'Are you sure you want to unlink your Telegram account? You will stop receiving notifications via Telegram.',
 		telegramLinkFailed: 'Failed to generate Telegram link. Please try again.',
 		telegramUnlinkFailed: 'Failed to unlink Telegram. Please try again.',
 	},
