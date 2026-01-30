@@ -510,6 +510,21 @@ export default {
 		reacted: '{{actor}} تفاعل مع {{entityType}} الخاص بك',
 	},
 
+	// Chat
+	chat: {
+		title: 'الدردشة',
+		toggle: 'تبديل الدردشة',
+		teamChat: 'دردشة الفريق',
+		selectRoom: 'اختر محادثة',
+		noMessages: 'لا توجد رسائل بعد. ابدأ المحادثة!',
+		inputPlaceholder: 'اكتب رسالة...',
+		send: 'إرسال',
+		you: 'أنت',
+		startDM: 'ابدأ محادثة',
+		ephemeralNotice: 'الرسائل غير محفوظة',
+		rateLimitError: 'رسائل كثيرة جداً. يرجى الإبطاء.',
+	},
+
 	// Activity History
 	history: {
 		title: 'السجل',

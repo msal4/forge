@@ -10,14 +10,48 @@ import { queryKeys } from '../hooks/useApi';
 // WebSocket event types from backend
 export interface WSEvent {
   type: string;
-  resource: 'issue' | 'doc' | 'release' | 'comment' | 'notification' | 'users';
+  resource: 'issue' | 'doc' | 'release' | 'comment' | 'notification' | 'users' | 'chat';
   id: number;
   data?: unknown;
   userId: number;
 }
 
+// Chat message from WebSocket
+export interface WSChatMessage {
+  id: string;
+  room: string;
+  from: {
+    id: number;
+    username: string;
+    fullName: string;
+  };
+  content: string;
+  timestamp: number;
+}
+
+// Chat error from WebSocket
+export interface WSChatError {
+  code: string;
+  message: string;
+}
+
 // Connection states
 export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'reconnecting';
+
+// Online user info from /api/users/active
+export interface OnlineUser {
+  id: number;
+  username: string;
+  fullName: string;
+  avatarUrl?: string;
+}
+
+// Chat event handlers (set by ChatProvider)
+export interface ChatEventHandlers {
+  onChatMessage: (message: WSChatMessage) => void;
+  onChatError: (error: WSChatError) => void;
+  onPresenceUpdate: (users: OnlineUser[]) => void;
+}
 
 interface WebSocketContextValue {
   status: ConnectionStatus;
@@ -35,6 +69,12 @@ interface WebSocketContextValue {
   syncVersion: number;
   // Last event received - for components that need to react to specific events
   lastEvent: WSEvent | null;
+  // Send message through WebSocket (for chat)
+  sendMessage: (message: unknown) => void;
+  // Register chat handlers
+  setChatHandlers: (handlers: ChatEventHandlers | null) => void;
+  // Online users
+  onlineUsers: OnlineUser[];
 }
 
 const WebSocketContext = createContext<WebSocketContextValue | null>(null);
@@ -68,11 +108,13 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
   const [conflictEvent, setConflictEvent] = useState<WSEvent | null>(null);
   const [syncVersion, setSyncVersion] = useState(0);
   const [lastEvent, setLastEvent] = useState<WSEvent | null>(null);
+  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectDelayRef = useRef(INITIAL_DELAY);
   const isUnmountingRef = useRef(false);
+  const chatHandlersRef = useRef<ChatEventHandlers | null>(null);
   
   // Use refs for values that change but shouldn't trigger reconnection
   const editingResourceRef = useRef(editingResource);
@@ -83,6 +125,20 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
   useEffect(() => { editingResourceRef.current = editingResource; }, [editingResource]);
   useEffect(() => { editingIdRef.current = editingId; }, [editingId]);
   useEffect(() => { userIdRef.current = user?.id; }, [user?.id]);
+  
+  // Set chat handlers
+  const setChatHandlers = useCallback((handlers: ChatEventHandlers | null) => {
+    chatHandlersRef.current = handlers;
+  }, []);
+  
+  // Send message through WebSocket
+  const sendMessage = useCallback((message: unknown) => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(message));
+    } else {
+      console.warn('[WS] Cannot send message - not connected');
+    }
+  }, []);
 
   // Set editing item (called by pages when user starts editing)
   const setEditingItem = useCallback((resource: string | null, id: number | null) => {
@@ -136,6 +192,41 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
       
       for (const msg of messages) {
         const data: WSEvent = JSON.parse(msg);
+        
+        // Handle chat messages separately
+        if (data.type === 'chat_message') {
+          console.log('[WS] Chat message received');
+          if (chatHandlersRef.current?.onChatMessage && data.data) {
+            chatHandlersRef.current.onChatMessage(data.data as WSChatMessage);
+          }
+          continue;
+        }
+        
+        // Handle chat errors
+        if (data.type === 'chat_error') {
+          console.log('[WS] Chat error received');
+          if (chatHandlersRef.current?.onChatError && data.data) {
+            chatHandlersRef.current.onChatError(data.data as WSChatError);
+          }
+          continue;
+        }
+        
+        // Handle presence updates
+        if (data.type === 'presence.update') {
+          console.log('[WS] Presence update - fetching online users');
+          // Fetch active users from API (returns full user objects)
+          fetch('/api/users/active')
+            .then(res => res.json())
+            .then((data: { users: OnlineUser[]; count: number }) => {
+              const users = data.users || [];
+              setOnlineUsers(users);
+              if (chatHandlersRef.current?.onPresenceUpdate) {
+                chatHandlersRef.current.onPresenceUpdate(users);
+              }
+            })
+            .catch(err => console.error('[WS] Failed to fetch online users:', err));
+          continue;
+        }
         
         console.log('[WS] Received:', data.type, data.resource, data.id, 'from user:', data.userId);
         console.log('[WS] Current editing state:', {
@@ -241,6 +332,18 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
       console.log('[WS] Connected');
       setStatus('connected');
       reconnectDelayRef.current = INITIAL_DELAY; // Reset delay on successful connection
+      
+      // Fetch initial online users (with full user info)
+      fetch('/api/users/active')
+        .then(res => res.json())
+        .then((data: { users: OnlineUser[]; count: number }) => {
+          const users = data.users || [];
+          setOnlineUsers(users);
+          if (chatHandlersRef.current?.onPresenceUpdate) {
+            chatHandlersRef.current.onPresenceUpdate(users);
+          }
+        })
+        .catch(err => console.error('[WS] Failed to fetch initial online users:', err));
     };
 
     ws.onmessage = handleMessage;
@@ -306,6 +409,9 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
     syncEditingItem,
     syncVersion,
     lastEvent,
+    sendMessage,
+    setChatHandlers,
+    onlineUsers,
   };
 
   return (

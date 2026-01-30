@@ -38,6 +38,34 @@ func (h *Handlers) SetTelegram(tg *telegram.Service) {
 	h.telegram = tg
 }
 
+// sendChatNotificationToOfflineUser sends a Telegram notification for a chat DM to an offline user
+func (h *Handlers) sendChatNotificationToOfflineUser(recipientUserID int64, senderName, message string) {
+	if h.telegram == nil || !h.telegram.IsConfigured() {
+		return
+	}
+
+	// Get recipient's Telegram chat ID
+	var telegramChatID *string
+	err := h.db.QueryRow(`SELECT telegram_chat_id FROM users WHERE id = ?`, recipientUserID).Scan(&telegramChatID)
+	if err != nil || telegramChatID == nil || *telegramChatID == "" {
+		// User doesn't have Telegram linked
+		return
+	}
+
+	// Format and send the message
+	// Truncate message if too long
+	preview := message
+	if len(preview) > 200 {
+		preview = preview[:200] + "..."
+	}
+
+	text := "💬 *New message from " + senderName + "*\n\n" + preview
+
+	if err := h.telegram.SendMessage(*telegramChatID, text); err != nil {
+		log.Printf("[Chat] Failed to send Telegram notification to user %d: %v", recipientUserID, err)
+	}
+}
+
 // WebSocket upgrader
 var upgrader = gorillaws.Upgrader{
 	ReadBufferSize:  1024,
@@ -57,8 +85,17 @@ func (h *Handlers) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("[WS] Upgrade request from user %d, Proto: %s, Headers: Connection=%s, Upgrade=%s",
-		userID, r.Proto, r.Header.Get("Connection"), r.Header.Get("Upgrade"))
+	// Fetch user info for chat
+	var username, fullName string
+	err := h.db.QueryRow(`SELECT username, full_name FROM users WHERE id = ?`, userID).Scan(&username, &fullName)
+	if err != nil {
+		log.Printf("[WS] Failed to fetch user info for %d: %v", userID, err)
+		http.Error(w, "User not found", http.StatusUnauthorized)
+		return
+	}
+
+	log.Printf("[WS] Upgrade request from user %d (%s), Proto: %s, Headers: Connection=%s, Upgrade=%s",
+		userID, username, r.Proto, r.Header.Get("Connection"), r.Header.Get("Upgrade"))
 
 	// Upgrade HTTP connection to WebSocket
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -66,10 +103,17 @@ func (h *Handlers) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		log.Printf("[WS] Upgrade failed: %v", err)
 		return
 	}
-	log.Printf("[WS] Connection upgraded successfully for user %d", userID)
+	log.Printf("[WS] Connection upgraded successfully for user %d (%s)", userID, username)
 
-	// Create new client
-	client := websocket.NewClient(h.hub, conn, userID)
+	// Create new client with user info for chat
+	client := websocket.NewClient(h.hub, conn, userID, username, fullName)
+
+	// Set up offline user notification callback (for Telegram)
+	if h.telegram != nil && h.telegram.IsConfigured() {
+		client.SetNotifyOfflineUser(func(recipientUserID int64, senderName, message string) {
+			h.sendChatNotificationToOfflineUser(recipientUserID, senderName, message)
+		})
+	}
 
 	// Register client with hub
 	h.hub.Register(client)
@@ -238,6 +282,15 @@ func (h *Handlers) GetActiveUsers(w http.ResponseWriter, r *http.Request) {
 		"users": users,
 		"count": len(users),
 	})
+}
+
+// GetOnlineUserIDs handles GET /api/users/online - returns just the IDs of connected users
+func (h *Handlers) GetOnlineUserIDs(w http.ResponseWriter, r *http.Request) {
+	userIDs := h.hub.ConnectedUserIDs()
+	if userIDs == nil {
+		userIDs = []int64{}
+	}
+	writeJSON(w, http.StatusOK, userIDs)
 }
 
 // ============================================

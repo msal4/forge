@@ -111,6 +111,20 @@ func (h *Hub) ConnectedUserIDs() []int64 {
 	return userIDs
 }
 
+// IsUserOnline checks if a specific user has an active WebSocket connection
+func (h *Hub) IsUserOnline(userID int64) bool {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	for client := range h.clients {
+		if client.userID == userID {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Register registers a client with the hub
 func (h *Hub) Register(client *Client) {
 	h.register <- client
@@ -136,6 +150,36 @@ func (h *Hub) SendToUser(userID int64, event Event) {
 			default:
 				// Client's buffer is full, skip
 				log.Printf("[WS Hub] User %d client buffer full, skipping", userID)
+			}
+		}
+	}
+}
+
+// SendToUsers sends an event to multiple users (used for DM where both parties need the message)
+func (h *Hub) SendToUsers(userIDs []int64, event Event) {
+	data, err := json.Marshal(event)
+	if err != nil {
+		log.Printf("[WS Hub] Error marshaling event: %v", err)
+		return
+	}
+
+	log.Printf("[WS Hub] Sending to users %v: %s", userIDs, event.Type)
+
+	// Build lookup set for efficient checking
+	targetUsers := make(map[int64]bool)
+	for _, id := range userIDs {
+		targetUsers[id] = true
+	}
+
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	for client := range h.clients {
+		if targetUsers[client.userID] {
+			select {
+			case client.send <- data:
+			default:
+				log.Printf("[WS Hub] User %d client buffer full, skipping", client.userID)
 			}
 		}
 	}

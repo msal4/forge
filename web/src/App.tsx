@@ -4,13 +4,15 @@ import { QueryClient, QueryClientProvider, useIsFetching } from '@tanstack/react
 import { useTranslation } from 'react-i18next';
 import { AuthProvider, ProtectedRoute, useAuth } from './context/AuthContext';
 import { KeyboardProvider } from './context/KeyboardContext';
-import { WebSocketProvider } from './context/WebSocketContext';
+import { WebSocketProvider, useWebSocket } from './context/WebSocketContext';
 import { ToastProvider } from './context/ToastContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ChatProvider, useChat } from './context/ChatContext';
 import { CommandMenu } from './components/ui/CommandMenu';
 import { Layout } from './components/layout/Layout';
 import { ConflictWarning } from './components/ui/ConflictWarning';
 import { LoadingIndicator } from './components/ui/LoadingIndicator';
+import { ChatPanel } from './components/chat';
 import { notificationsApi } from './api/notifications';
 
 // i18n
@@ -53,6 +55,44 @@ function GlobalLoadingIndicator() {
       <span className="text-sm text-lapis-600 font-inscription">{t('common.loading')}</span>
     </div>
   );
+}
+
+// Wrapper that provides WebSocket send function to ChatProvider
+function ChatProviderWithWebSocket({ children }: { children: React.ReactNode }) {
+  const { sendMessage } = useWebSocket();
+  return (
+    <ChatProvider sendWebSocketMessage={sendMessage}>
+      <ChatBridge />
+      {children}
+    </ChatProvider>
+  );
+}
+
+// Bridge between Chat and WebSocket contexts
+function ChatBridge() {
+  const { setChatHandlers, onlineUsers } = useWebSocket();
+  const { handleIncomingMessage, handleChatError, setOnlineUsers } = useChat();
+
+  useEffect(() => {
+    // Register chat handlers with WebSocket
+    setChatHandlers({
+      onChatMessage: handleIncomingMessage,
+      onChatError: handleChatError,
+      onPresenceUpdate: setOnlineUsers,
+    });
+
+    // Cleanup on unmount
+    return () => {
+      setChatHandlers(null);
+    };
+  }, [setChatHandlers, handleIncomingMessage, handleChatError, setOnlineUsers]);
+
+  // Sync online users when they change
+  useEffect(() => {
+    setOnlineUsers(onlineUsers);
+  }, [onlineUsers, setOnlineUsers]);
+
+  return null;
 }
 
 // Handle ?notif= query param to mark notifications as read
@@ -121,11 +161,14 @@ function App() {
             <WebSocketProvider>
               <KeyboardProvider>
                 <ToastProvider>
-                  <GlobalLoadingIndicator />
-                  <CommandMenu />
-                  <ConflictWarning />
-                  <NotificationHandler />
-                  <AppRoutes />
+                  <ChatProviderWithWebSocket>
+                    <GlobalLoadingIndicator />
+                    <CommandMenu />
+                    <ConflictWarning />
+                    <NotificationHandler />
+                    <ChatPanel />
+                    <AppRoutes />
+                  </ChatProviderWithWebSocket>
                 </ToastProvider>
               </KeyboardProvider>
             </WebSocketProvider>

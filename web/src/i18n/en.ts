@@ -510,6 +510,21 @@ export default {
 		reacted: '{{actor}} reacted to your {{entityType}}',
 	},
 
+	// Chat
+	chat: {
+		title: 'Chat',
+		toggle: 'Toggle chat',
+		teamChat: 'Team Chat',
+		selectRoom: 'Select a conversation',
+		noMessages: 'No messages yet. Start the conversation!',
+		inputPlaceholder: 'Type a message...',
+		send: 'Send',
+		you: 'You',
+		startDM: 'Start a conversation',
+		ephemeralNotice: 'Messages are not saved',
+		rateLimitError: 'Too many messages. Please slow down.',
+	},
+
 	// Activity History
 	history: {
 		title: 'History',

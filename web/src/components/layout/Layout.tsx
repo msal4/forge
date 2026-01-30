@@ -19,6 +19,7 @@ import { ConnectionStatus } from '../ui/ConnectionStatus';
 import { NotificationBell } from '../ui/NotificationBell';
 import { Avatar } from '../ui/Avatar';
 import { ActiveUsers } from '../ui/ActiveUsers';
+import { ChatToggle } from '../chat';
 
 // ============================================
 // Main Layout - Sidebar + Content
@@ -56,7 +57,7 @@ export function Layout() {
             <p className="text-xs text-lapis-500 dark:text-parchment-400 mt-1">{t('app.tagline')}</p>
           </div>
           
-          {/* Command Palette Trigger + Notifications */}
+          {/* Command Palette Trigger + Notifications + Chat */}
           <div className="p-3 space-y-2">
             <div className="flex items-center gap-2">
               <button
@@ -70,6 +71,7 @@ export function Layout() {
                 <HotkeyBadge keys="Ctrl+k" size="sm" />
               </button>
               <NotificationBell />
+              <ChatToggle />
             </div>
           </div>
           

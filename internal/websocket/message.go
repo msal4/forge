@@ -39,6 +39,10 @@ const (
 
 	// Telegram
 	EventTelegramLinked = "telegram_linked"
+
+	// Chat
+	EventChatMessage = "chat_message"
+	EventChatError   = "chat_error"
 )
 
 // Resource types
@@ -49,4 +53,29 @@ const (
 	ResourceComment      = "comment"
 	ResourceReaction     = "reaction"
 	ResourceNotification = "notification"
+	ResourceChat         = "chat"
 )
+
+// ChatMessage represents an ephemeral chat message
+type ChatMessage struct {
+	ID        string   `json:"id"`        // UUID generated client-side
+	Room      string   `json:"room"`      // "team" or "dm:{lowerID}:{higherID}"
+	From      ChatUser `json:"from"`      // Sender info
+	Content   string   `json:"content"`   // Message text
+	Timestamp int64    `json:"timestamp"` // Unix timestamp in milliseconds
+}
+
+// ChatUser represents a user in chat context
+type ChatUser struct {
+	ID       int64  `json:"id"`
+	Username string `json:"username"`
+	FullName string `json:"fullName"`
+}
+
+// IncomingChatMessage is the message format sent from clients
+type IncomingChatMessage struct {
+	Type    string `json:"type"`    // "chat_message"
+	ID      string `json:"id"`      // UUID from client
+	Room    string `json:"room"`    // Target room
+	Content string `json:"content"` // Message content
+}
