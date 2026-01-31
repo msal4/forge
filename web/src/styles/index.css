@@ -362,6 +362,11 @@ a.mention {
   @apply dark:hover:text-gold-300;
 }
 
+.mention-everyone {
+  @apply text-lapis-600 bg-lapis-100/50 rounded px-1;
+  @apply dark:text-gold-300 dark:bg-gold-900/30;
+}
+
 /* ============================================
    Command Palette Styles
    ============================================ */

@@ -86,6 +86,8 @@ type Querier interface {
 	DeleteTelegramLinkToken(ctx context.Context, userID int64) error
 	DeleteUser(ctx context.Context, id int64) error
 	DeleteUserSessions(ctx context.Context, userID int64) error
+	// Get all active user IDs for @everyone mention notifications
+	GetAllActiveUserIDs(ctx context.Context) ([]int64, error)
 	// ============================================
 	// Issue Comment Queries
 	// ============================================

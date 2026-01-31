@@ -122,6 +122,7 @@ const (
 	NotificationTypeEntityUpdated     NotificationType = "entity_updated" // Someone updated your issue/doc/release
 	NotificationTypeEntityDeleted     NotificationType = "entity_deleted" // Someone deleted your issue/doc/release
 	NotificationTypeReaction          NotificationType = "reaction"       // Someone reacted to your content
+	NotificationTypeMentionEveryone  NotificationType = "mention_everyone" // @everyone broadcast mention
 )
 
 // Notification represents an in-app notification

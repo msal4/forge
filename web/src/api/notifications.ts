@@ -6,13 +6,15 @@ import { api, type RequestOptions } from './client';
 import type { User } from './users';
 
 // Notification types
-export type NotificationType = 
+export type NotificationType =
   | 'mention'
+  | 'mention_everyone'
   | 'assigned'
   | 'comment_on_owned'
   | 'comment_on_assigned'
   | 'entity_updated'
-  | 'entity_deleted';
+  | 'entity_deleted'
+  | 'reaction';
 
 export type EntityType = 'issue' | 'doc' | 'release';
 

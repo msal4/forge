@@ -10,6 +10,7 @@ import (
 var notificationMessages = map[string]map[string]string{
 	"en": {
 		"mention":             "{{actor}} mentioned you",
+		"mention_everyone":    "{{actor}} mentioned everyone",
 		"assigned":            "{{actor}} assigned you",
 		"comment_on_owned":    "{{actor}} commented on your {{entityType}}",
 		"comment_on_assigned": "{{actor}} commented",
@@ -19,6 +20,7 @@ var notificationMessages = map[string]map[string]string{
 	},
 	"ar": {
 		"mention":             "{{actor}} أشار إليك",
+		"mention_everyone":    "{{actor}} أشار إلى الجميع",
 		"assigned":            "{{actor}} أسند إليك",
 		"comment_on_owned":    "{{actor}} علّق على {{entityType}} الخاص بك",
 		"comment_on_assigned": "{{actor}} علّق",

@@ -103,13 +103,22 @@ interface MentionUser {
   username: string;
 }
 
+// Check if a mention is the @everyone broadcast keyword
+function isEveryoneMention(username: string): boolean {
+  return username === 'everyone' || username === 'الجميع';
+}
+
 // Preprocess markdown to convert @mentions to clickable links
 function preprocessMentions(text: string, users?: MentionUser[]): string {
   // Match @username but not inside code blocks or inline code
-  // This regex avoids matching inside backticks
+  // Supports Unicode word chars for Arabic @الجميع
   return text.replace(
-    /(?<!`)@([a-zA-Z0-9_]+)(?!`)/g,
+    /(?<!`)@([\w\p{L}]+)(?!`)/gu,
     (_match, mentionedUsername) => {
+      // Handle @everyone / @الجميع with distinct styling
+      if (isEveryoneMention(mentionedUsername)) {
+        return `<span class="mention mention-everyone"><strong>@${mentionedUsername}</strong></span>`;
+      }
       // Try to find the user to verify they exist
       const user = users?.find(u => u.username.toLowerCase() === mentionedUsername.toLowerCase());
       if (user) {

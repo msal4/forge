@@ -452,7 +452,7 @@ export default {
 	comments: {
 		title: 'التعليقات',
 		empty: 'لا توجد تعليقات بعد. كن أول من يضيف تعليقاً!',
-		placeholder: 'أضف تعليقاً... (يدعم Markdown، @الإشارة للمستخدمين)',
+		placeholder: 'أضف تعليقاً... (يدعم Markdown، @الإشارة للمستخدمين، @الجميع)',
 		previewEmpty: 'لا شيء للمعاينة',
 		edit: 'تحرير',
 		preview: 'معاينة',
@@ -476,6 +476,7 @@ export default {
 		},
 		types: {
 			mention: '{{actor}} أشار إليك',
+			mention_everyone: '{{actor}} أشار إلى الجميع',
 			assigned: '{{actor}} أسند إليك',
 			comment_on_owned: '{{actor}} علّق على {{entityType}} الخاص بك',
 			comment_on_assigned: '{{actor}} علّق',
@@ -502,6 +503,11 @@ export default {
 			updated: 'حدّث إصدار',
 			deleted: 'حذف إصدار',
 		},
+	},
+
+	// Mentions
+	mentions: {
+		everyone: 'الجميع',
 	},
 
 	// Reactions

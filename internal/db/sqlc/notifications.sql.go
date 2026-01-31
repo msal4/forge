@@ -87,6 +87,34 @@ func (q *Queries) DeleteNotification(ctx context.Context, arg DeleteNotification
 	return err
 }
 
+const getAllActiveUserIDs = `-- name: GetAllActiveUserIDs :many
+SELECT id FROM users WHERE is_active = 1
+`
+
+// Get all active user IDs for @everyone mention notifications
+func (q *Queries) GetAllActiveUserIDs(ctx context.Context) ([]int64, error) {
+	rows, err := q.db.QueryContext(ctx, getAllActiveUserIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []int64{}
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getDocOwner = `-- name: GetDocOwner :one
 SELECT 
     d.author_id,
@@ -203,7 +231,7 @@ func (q *Queries) GetNotificationByID(ctx context.Context, arg GetNotificationBy
 }
 
 const getReleaseOwner = `-- name: GetReleaseOwner :one
-SELECT 
+SELECT
     r.author_id,
     r.title,
     r.version

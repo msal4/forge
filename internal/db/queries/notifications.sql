@@ -84,10 +84,14 @@ LIMIT 1;
 
 -- name: GetReleaseOwner :one
 -- Get author for a release (for notification recipients)
-SELECT 
+SELECT
     r.author_id,
     r.title,
     r.version
 FROM releases r
 WHERE r.id = ?
 LIMIT 1;
+
+-- name: GetAllActiveUserIDs :many
+-- Get all active user IDs for @everyone mention notifications
+SELECT id FROM users WHERE is_active = 1;

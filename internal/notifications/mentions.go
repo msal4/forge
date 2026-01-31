@@ -12,8 +12,8 @@ import (
 )
 
 // mentionRegex matches @username patterns
-// Supports alphanumeric usernames with underscores
-var mentionRegex = regexp.MustCompile(`@(\w+)`)
+// Supports alphanumeric usernames with underscores and Unicode chars (for Arabic @الجميع)
+var mentionRegex = regexp.MustCompile(`@([\w\p{L}]+)`)
 
 // ExtractMentions parses @username mentions from content
 // Returns a slice of unique usernames (lowercase)
@@ -33,6 +33,21 @@ func ExtractMentions(content string) []string {
 	}
 
 	return usernames
+}
+
+// IsEveryoneMention returns true if the username is an @everyone keyword
+func IsEveryoneMention(username string) bool {
+	return username == "everyone" || username == "الجميع"
+}
+
+// ExtractEveryoneMention checks if content contains @everyone or @الجميع
+func ExtractEveryoneMention(content string) bool {
+	for _, username := range ExtractMentions(content) {
+		if IsEveryoneMention(username) {
+			return true
+		}
+	}
+	return false
 }
 
 // TelegramNotificationParams holds data needed for localized Telegram notifications
@@ -195,7 +210,13 @@ func (s *Service) CreateForComment(
 
 	// 1. Handle @mentions
 	mentions := ExtractMentions(content)
+	hasEveryoneMention := false
 	for _, username := range mentions {
+		if IsEveryoneMention(username) {
+			hasEveryoneMention = true
+			continue
+		}
+
 		userID, err := queries.GetUserIDByUsername(ctx, username)
 		if err != nil {
 			continue // User not found, skip
@@ -220,6 +241,31 @@ func (s *Service) CreateForComment(
 		if err != nil {
 			// Log but continue
 			continue
+		}
+	}
+
+	// 1b. Handle @everyone — notify all active users
+	if hasEveryoneMention {
+		allUserIDs, err := queries.GetAllActiveUserIDs(ctx)
+		if err == nil {
+			for _, userID := range allUserIDs {
+				if notified[userID] {
+					continue
+				}
+				notified[userID] = true
+
+				_ = s.Create(ctx, CreateParams{
+					UserID:           userID,
+					ActorID:          actorID,
+					ActorName:        actorName,
+					NotificationType: models.NotificationTypeMentionEveryone,
+					EntityType:       entityType,
+					EntityID:         entityID,
+					CommentID:        &commentID,
+					Title:            entityTitle,
+					Message:          fmt.Sprintf("%s mentioned everyone", actorName),
+				})
+			}
 		}
 	}
 
@@ -414,6 +460,9 @@ func (s *Service) CreateForContentMentions(
 	}
 
 	newMentions := ExtractMentions(newContent)
+	notified := make(map[int64]bool)
+	notified[actorID] = true // Don't notify the actor
+	hasNewEveryoneMention := false
 
 	// Only notify for NEW mentions (not in old content)
 	for _, username := range newMentions {
@@ -421,15 +470,20 @@ func (s *Service) CreateForContentMentions(
 			continue // Already mentioned before
 		}
 
+		if IsEveryoneMention(username) {
+			hasNewEveryoneMention = true
+			continue
+		}
+
 		userID, err := queries.GetUserIDByUsername(ctx, username)
 		if err != nil {
 			continue // User not found, skip
 		}
 
-		// Don't notify yourself
-		if userID == actorID {
+		if notified[userID] {
 			continue
 		}
+		notified[userID] = true
 
 		err = s.Create(ctx, CreateParams{
 			UserID:           userID,
@@ -444,6 +498,30 @@ func (s *Service) CreateForContentMentions(
 		if err != nil {
 			// Log but continue
 			continue
+		}
+	}
+
+	// Handle @everyone — notify all active users
+	if hasNewEveryoneMention {
+		allUserIDs, err := queries.GetAllActiveUserIDs(ctx)
+		if err == nil {
+			for _, userID := range allUserIDs {
+				if notified[userID] {
+					continue
+				}
+				notified[userID] = true
+
+				_ = s.Create(ctx, CreateParams{
+					UserID:           userID,
+					ActorID:          actorID,
+					ActorName:        actorName,
+					NotificationType: models.NotificationTypeMentionEveryone,
+					EntityType:       entityType,
+					EntityID:         entityID,
+					Title:            entityTitle,
+					Message:          fmt.Sprintf("%s mentioned everyone in %s", actorName, entityType),
+				})
+			}
 		}
 	}
 

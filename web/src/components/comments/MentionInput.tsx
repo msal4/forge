@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import { usersApi, type User } from '../../api/users';
 import { Avatar } from '../ui/Avatar';
+import { useTranslation } from 'react-i18next';
+import { Users } from 'lucide-react';
 
 // ============================================
 // Mention Input Component
@@ -33,6 +35,16 @@ interface DropdownPosition {
   left: number;
 }
 
+// Keywords that trigger the @everyone option
+const EVERYONE_KEYWORDS = ['everyone', 'every', 'all', 'الجميع', 'الكل'];
+
+// Special "everyone" entry used in dropdown
+interface EveryoneEntry {
+  type: 'everyone';
+}
+
+type DropdownItem = { type: 'user'; user: User } | EveryoneEntry;
+
 export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
   value,
   onChange,
@@ -43,9 +55,10 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
   className = '',
   disabled = false,
 }, ref) => {
+  const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
+
   const [showDropdown, setShowDropdown] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionStart, setMentionStart] = useState(-1);
@@ -85,6 +98,11 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
     queryFn: () => usersApi.list(),
   });
 
+  // Check if @everyone should appear in dropdown
+  const showEveryone = !mentionQuery || EVERYONE_KEYWORDS.some(kw =>
+    kw.startsWith(mentionQuery.toLowerCase()) || mentionQuery.toLowerCase().startsWith(kw)
+  );
+
   // Filter users based on mention query
   const filteredUsers = users.filter(user => {
     if (!mentionQuery) return true;
@@ -94,6 +112,12 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
       user.fullName.toLowerCase().includes(query)
     );
   }).slice(0, 5); // Limit to 5 results
+
+  // Build combined dropdown items: @everyone first (if matching), then users
+  const dropdownItems: DropdownItem[] = [
+    ...(showEveryone ? [{ type: 'everyone' as const }] : []),
+    ...filteredUsers.map(user => ({ type: 'user' as const, user })),
+  ];
 
   // Calculate dropdown position based on caret position in textarea
   const updateDropdownPosition = useCallback(() => {
@@ -239,65 +263,74 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
 
   // Handle keyboard navigation in dropdown
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (showDropdown && filteredUsers.length > 0) {
+    if (showDropdown && dropdownItems.length > 0) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setSelectedIndex(i => Math.min(i + 1, filteredUsers.length - 1));
+        setSelectedIndex(i => Math.min(i + 1, dropdownItems.length - 1));
         return;
       }
-      
+
       if (e.key === 'ArrowUp') {
         e.preventDefault();
         setSelectedIndex(i => Math.max(i - 1, 0));
         return;
       }
-      
+
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        insertMention(filteredUsers[selectedIndex]);
+        selectDropdownItem(dropdownItems[selectedIndex]);
         return;
       }
-      
+
       if (e.key === 'Tab') {
         e.preventDefault();
-        insertMention(filteredUsers[selectedIndex]);
+        selectDropdownItem(dropdownItems[selectedIndex]);
         return;
       }
-      
+
       if (e.key === 'Escape') {
         e.preventDefault();
         setShowDropdown(false);
         return;
       }
     }
-    
+
     // Pass through to parent handler
     onKeyDown?.(e);
   };
 
-  // Insert selected mention
-  const insertMention = (user: User) => {
+  // Insert a mention string at the current mention position
+  const insertMentionText = (mentionText: string) => {
     if (mentionStart < 0) return;
-    
+
     const cursorPos = textareaRef.current?.selectionStart ?? value.length;
     const before = value.substring(0, mentionStart);
     const after = value.substring(cursorPos);
-    const mention = `@${user.username} `;
-    
+    const mention = `@${mentionText} `;
+
     const newValue = before + mention + after;
     onChange(newValue);
-    
+
     // Reset state
     setShowDropdown(false);
     setMentionStart(-1);
     setMentionQuery('');
-    
+
     // Move cursor after mention
     requestAnimationFrame(() => {
       const newCursorPos = mentionStart + mention.length;
       textareaRef.current?.setSelectionRange(newCursorPos, newCursorPos);
       textareaRef.current?.focus();
     });
+  };
+
+  // Select a dropdown item (user or @everyone)
+  const selectDropdownItem = (item: DropdownItem) => {
+    if (item.type === 'everyone') {
+      insertMentionText('everyone');
+    } else {
+      insertMentionText(item.user.username);
+    }
   };
 
   // Close dropdown when clicking outside
@@ -379,8 +412,8 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
 
   // Render dropdown using portal to avoid clipping
   const renderDropdown = () => {
-    if (!showDropdown || filteredUsers.length === 0) return null;
-    
+    if (!showDropdown || dropdownItems.length === 0) return null;
+
     return createPortal(
       <div
         ref={dropdownRef}
@@ -396,39 +429,50 @@ export const MentionInput = forwardRef<MentionInputRef, MentionInputProps>(({
         }}
       >
         <ul className="py-1">
-          {filteredUsers.map((user, index) => (
-            <li key={user.id}>
+          {dropdownItems.map((item, index) => (
+            <li key={item.type === 'everyone' ? '__everyone__' : item.user.id}>
               <button
                 type="button"
-                onClick={() => insertMention(user)}
+                onClick={() => selectDropdownItem(item)}
                 className={`
                   w-full flex items-center gap-3 px-3 py-2
                   text-left text-sm
                   transition-colors
-                  ${index === selectedIndex 
-                    ? 'bg-lapis-100 dark:bg-lapis-700 text-lapis-700 dark:text-parchment-200' 
+                  ${index === selectedIndex
+                    ? 'bg-lapis-100 dark:bg-lapis-700 text-lapis-700 dark:text-parchment-200'
                     : 'text-lapis-600 dark:text-parchment-300 hover:bg-parchment-100 dark:hover:bg-lapis-700'
                   }
                 `}
               >
-                {/* Avatar */}
-                <div className="flex-shrink-0">
-                  <Avatar 
-                    name={user.fullName || user.username}
-                    avatarUrl={user.avatarUrl}
-                    size="sm"
-                  />
-                </div>
-                
-                {/* User info */}
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate">
-                    {user.fullName || user.username}
-                  </div>
-                  <div className="text-xs text-stone-500 dark:text-parchment-500 truncate">
-                    @{user.username}
-                  </div>
-                </div>
+                {item.type === 'everyone' ? (
+                  <>
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-lapis-200 dark:bg-lapis-600 flex items-center justify-center">
+                      <Users className="w-4 h-4 text-lapis-600 dark:text-parchment-300" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{t('mentions.everyone')}</div>
+                      <div className="text-xs text-stone-500 dark:text-parchment-500 truncate">@everyone</div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex-shrink-0">
+                      <Avatar
+                        name={item.user.fullName || item.user.username}
+                        avatarUrl={item.user.avatarUrl}
+                        size="sm"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">
+                        {item.user.fullName || item.user.username}
+                      </div>
+                      <div className="text-xs text-stone-500 dark:text-parchment-500 truncate">
+                        @{item.user.username}
+                      </div>
+                    </div>
+                  </>
+                )}
               </button>
             </li>
           ))}

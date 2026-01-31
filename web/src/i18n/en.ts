@@ -452,7 +452,7 @@ export default {
 	comments: {
 		title: 'Comments',
 		empty: 'No comments yet. Be the first to add one!',
-		placeholder: 'Add a comment... (Markdown supported, @mention users)',
+		placeholder: 'Add a comment... (Markdown supported, @mention users, @everyone)',
 		previewEmpty: 'Nothing to preview',
 		edit: 'Edit',
 		preview: 'Preview',
@@ -476,6 +476,7 @@ export default {
 		},
 		types: {
 			mention: '{{actor}} mentioned you',
+			mention_everyone: '{{actor}} mentioned everyone',
 			assigned: '{{actor}} assigned you',
 			comment_on_owned: '{{actor}} commented on your {{entityType}}',
 			comment_on_assigned: '{{actor}} commented',
@@ -502,6 +503,11 @@ export default {
 			updated: 'Updated release',
 			deleted: 'Deleted release',
 		},
+	},
+
+	// Mentions
+	mentions: {
+		everyone: 'Everyone',
 	},
 
 	// Reactions
