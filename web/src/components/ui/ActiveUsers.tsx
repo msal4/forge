@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Users } from 'lucide-react';
 import { useWebSocket } from '../../context/WebSocketContext';
+import { useAuth } from '../../context/AuthContext';
 import { usersApi, type User } from '../../api/users';
 import { Avatar } from './Avatar';
 
@@ -14,6 +15,7 @@ const MAX_VISIBLE_AVATARS = 4;
  */
 export function ActiveUsers() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const { lastEvent, status } = useWebSocket();
   const [activeUsers, setActiveUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,7 +121,7 @@ export function ActiveUsers() {
       </div>
 
       {/* Show "Just you" if only one user */}
-      {activeUsers.length === 1 && (
+      {activeUsers.length === 1 && user && activeUsers[0].id === user.id && (
         <p className="text-xs text-lapis-400 dark:text-parchment-500 mt-1.5">
           {t('presence.justYou')}
         </p>
