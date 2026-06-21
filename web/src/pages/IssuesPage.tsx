@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useWebSocket } from '../context/WebSocketContext';
+import { useWorkspace } from '../context/WorkspaceContext';
 import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
 import { IssueCard } from '../components/issues/IssueCard';
 import { IssueModal } from '../components/issues/IssueModal';
@@ -68,6 +69,7 @@ export function IssuesPage() {
   const { issueId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { workspacePath } = useWorkspace();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   
@@ -142,7 +144,7 @@ export function IssuesPage() {
       const issueExists = issues.some(i => i.id === selectedIssueId);
       if (!issueExists) {
         // Issue was deleted by another user
-        navigate('/issues');
+        navigate(workspacePath('/issues'));
       }
     }
   }, [issues, selectedIssueId, isModalOpen, modalMode, navigate]);
@@ -277,13 +279,13 @@ export function IssuesPage() {
 
   // View issue handler
   const handleViewIssue = (issue: Issue) => {
-    navigate(`/issues/${issue.id}`);
+    navigate(workspacePath(`/issues/${issue.id}`));
   };
 
   // Edit issue handler
   const handleEditIssue = (issue: Issue) => {
     setModalMode('edit');
-    navigate(`/issues/${issue.id}`);
+    navigate(workspacePath(`/issues/${issue.id}`));
   };
 
   // Handle mode change within modal
@@ -310,7 +312,7 @@ export function IssuesPage() {
       setSelectedIssueId(null);
       setModalMode('view');
     } else {
-      navigate('/issues');
+      navigate(workspacePath('/issues'));
     }
   };
 

@@ -6,6 +6,16 @@ import i18n from '../i18n';
 
 const API_BASE = '/api';
 
+let currentWorkspaceId: number | null = null;
+
+export function setApiWorkspaceId(id: number | null) {
+  currentWorkspaceId = id;
+}
+
+export function getApiWorkspaceId() {
+  return currentWorkspaceId;
+}
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -33,6 +43,7 @@ async function request<T>(
     headers: {
       'Content-Type': 'application/json',
       'Accept-Language': i18n.language || 'en',
+      ...(currentWorkspaceId ? { 'X-Workspace-Id': String(currentWorkspaceId) } : {}),
       ...options.headers,
     },
   });

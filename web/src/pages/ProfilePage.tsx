@@ -15,6 +15,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { usersApi, type UserComment } from '../api/users';
+import { useWorkspace } from '../context/WorkspaceContext';
 import type { Issue } from '../api/issues';
 import type { Doc } from '../api/docs';
 import type { Release } from '../api/releases';
@@ -35,6 +36,7 @@ export function ProfilePage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user: currentUser } = useAuth();
+  const { workspacePath } = useWorkspace();
 
   // Get tab from URL or default to 'issues'
   const tabFromUrl = searchParams.get('tab') as ProfileTab | null;
@@ -252,7 +254,7 @@ export function ProfilePage() {
             {/* Edit profile link for own profile */}
             {isOwnProfile && (
               <Link
-                to="/settings"
+                to={workspacePath('/settings')}
                 className="inline-flex items-center gap-1 mt-4 text-sm text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-200 transition-colors"
               >
                 <span>{t('profile.editProfile')}</span>

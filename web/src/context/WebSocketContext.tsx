@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useRef, useState, useCallb
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './AuthContext';
 import { queryKeys } from '../hooks/useApi';
+import { getApiWorkspaceId } from '../api/client';
 
 // ============================================
 // WebSocket Context - Real-time updates
@@ -12,6 +13,7 @@ export interface WSEvent {
   type: string;
   resource: 'issue' | 'doc' | 'release' | 'comment' | 'notification' | 'users' | 'chat';
   id: number;
+  workspaceId?: number;
   data?: unknown;
   userId: number;
 }
@@ -161,20 +163,20 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
 
   // Sync/refresh the item being edited (user chose to load latest changes)
   const syncEditingItem = useCallback(() => {
-    if (editingResourceRef.current && editingIdRef.current) {
+    const workspaceId = getApiWorkspaceId();
+    if (editingResourceRef.current && editingIdRef.current && workspaceId) {
       const resource = editingResourceRef.current;
       const id = editingIdRef.current;
-      
-      // Invalidate the specific item's query to refetch
+
       switch (resource) {
         case 'issue':
-          queryClient.invalidateQueries({ queryKey: queryKeys.issues.detail(id) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.issues.detail(workspaceId, id) });
           break;
         case 'doc':
-          queryClient.invalidateQueries({ queryKey: queryKeys.docs.detail(id) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.docs.detail(workspaceId, id) });
           break;
         case 'release':
-          queryClient.invalidateQueries({ queryKey: queryKeys.releases.detail(id) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.releases.detail(workspaceId, id) });
           break;
       }
     }
@@ -238,6 +240,11 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
         // Store the last event for components to react to
         setLastEvent(data);
 
+        const activeWorkspaceId = getApiWorkspaceId();
+        if (data.workspaceId && activeWorkspaceId && data.workspaceId !== activeWorkspaceId) {
+          continue;
+        }
+
         // Check if this affects the item being edited by the current user
         const isEditingThisItem = 
           editingResourceRef.current === data.resource &&
@@ -264,30 +271,28 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
         }
 
         // Invalidate queries based on resource type
-        // Skip the detail query for the item being edited to preserve user's work
+        const wsId = data.workspaceId ?? activeWorkspaceId;
+        if (!wsId) continue;
+
         switch (data.resource) {
           case 'issue':
-            // Always refresh the list
-            queryClient.invalidateQueries({ queryKey: queryKeys.issues.list() });
-            // Always refresh activity (new history entries)
-            queryClient.invalidateQueries({ queryKey: queryKeys.issues.activity(data.id) });
-            // Only refresh detail if not currently editing this item
+            queryClient.invalidateQueries({ queryKey: queryKeys.issues.list(wsId) });
+            queryClient.invalidateQueries({ queryKey: queryKeys.issues.activity(wsId, data.id) });
             if (!isEditingThisItem) {
-              queryClient.invalidateQueries({ queryKey: queryKeys.issues.detail(data.id) });
+              queryClient.invalidateQueries({ queryKey: queryKeys.issues.detail(wsId, data.id) });
             }
             break;
           case 'doc':
-            queryClient.invalidateQueries({ queryKey: queryKeys.docs.list() });
-            // Always refresh activity (new history entries)
-            queryClient.invalidateQueries({ queryKey: queryKeys.docs.activity(data.id) });
+            queryClient.invalidateQueries({ queryKey: queryKeys.docs.list(wsId) });
+            queryClient.invalidateQueries({ queryKey: queryKeys.docs.activity(wsId, data.id) });
             if (!isEditingThisItem) {
-              queryClient.invalidateQueries({ queryKey: queryKeys.docs.detail(data.id) });
+              queryClient.invalidateQueries({ queryKey: queryKeys.docs.detail(wsId, data.id) });
             }
             break;
           case 'release':
-            queryClient.invalidateQueries({ queryKey: queryKeys.releases.list() });
+            queryClient.invalidateQueries({ queryKey: queryKeys.releases.list(wsId) });
             if (!isEditingThisItem) {
-              queryClient.invalidateQueries({ queryKey: queryKeys.releases.detail(data.id) });
+              queryClient.invalidateQueries({ queryKey: queryKeys.releases.detail(wsId, data.id) });
             }
             break;
           case 'notification':

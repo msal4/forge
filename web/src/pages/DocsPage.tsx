@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { LoadingIndicator } from '../components/ui/LoadingIndicator';
 import { useWebSocket } from '../context/WebSocketContext';
+import { useWorkspace } from '../context/WorkspaceContext';
 import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
 import { useConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useKeyboardShortcuts } from '../hooks/useKeyboard';
@@ -49,6 +50,7 @@ export function DocsPage() {
   const { docId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { workspacePath } = useWorkspace();
   const queryClient = useQueryClient();
   
   // Get default tab from query params (for notification navigation)
@@ -176,7 +178,7 @@ export function DocsPage() {
       const docExists = docs.some(d => d.id === Number(docId));
       if (!docExists) {
         // Doc was deleted by another user
-        navigate('/docs');
+        navigate(workspacePath('/docs'));
       }
     }
   }, [docs, docId, mode, navigate]);
@@ -242,9 +244,9 @@ export function DocsPage() {
   // Helper to select doc and update URL
   const selectDoc = React.useCallback((doc: Doc | null) => {
     if (doc) {
-      navigate(`/docs/${doc.id}`);
+      navigate(workspacePath(`/docs/${doc.id}`));
     } else {
-      navigate('/docs');
+      navigate(workspacePath('/docs'));
     }
   }, [navigate]);
 
@@ -299,7 +301,7 @@ export function DocsPage() {
     setEditingItem(null, null);
     if (mode === 'create') {
       setMode('list');
-      navigate('/docs');
+      navigate(workspacePath('/docs'));
     } else {
       cleanupEditHistory();
       setMode('view');
@@ -332,7 +334,7 @@ export function DocsPage() {
     } else if (mode === 'create') {
       const created = await createDocMutation.mutateAsync(data as CreateDocRequest);
       setSelectedDoc(created);
-      navigate(`/docs/${created.id}`);
+      navigate(workspacePath(`/docs/${created.id}`));
       setMode('view');
     }
     setHasUnsavedChanges(false);
@@ -352,7 +354,7 @@ export function DocsPage() {
     if (selectedDoc?.id === doc.id) {
       setSelectedDoc(null);
       setMode('list');
-      navigate('/docs');
+      navigate(workspacePath('/docs'));
     }
   };
 

@@ -44,6 +44,24 @@ export default {
 		commandPalette: 'Command Palette',
 	},
 
+	// Workspaces
+	workspace: {
+		create: 'Create workspace',
+		createButton: 'Create workspace',
+		created: 'Workspace created',
+		createFailed: 'Failed to create workspace',
+		adminTitle: 'Workspaces',
+		adminDescription: 'Create isolated workspaces and assign team members.',
+		membersTitle: 'Workspace members',
+		saveMembers: 'Save members',
+		membersSaved: 'Members updated',
+		membersSaveFailed: 'Failed to update members',
+		keyPlaceholder: 'KEY (e.g. MYAPP)',
+		namePlaceholder: 'Display name',
+		descriptionPlaceholder: 'Description (optional)',
+		switch: 'Switch workspace',
+	},
+
 	// Home Page
 	home: {
 		welcome: 'Welcome back, {{name}}',

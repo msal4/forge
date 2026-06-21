@@ -15,6 +15,7 @@ export interface ReleaseFile {
 
 export interface Release {
   id: number;
+  projectId: number;
   version: string;
   title: string;
   description?: string;

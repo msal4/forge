@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme, type ThemeMode } from '../context/ThemeContext';
 import { Avatar } from '../components/ui/Avatar';
 import { useConfirmDialog } from '../components/ui/ConfirmDialog';
+import { WorkspaceAdminSection } from '../components/settings/WorkspaceAdminSection';
 
 // ============================================
 // Settings Page
@@ -271,6 +272,8 @@ export function SettingsPage() {
 
 			{/* Settings Sections */}
 			<div className="space-y-4">
+				{user?.isAdmin && <WorkspaceAdminSection />}
+
 				{/* Profile Section */}
 				<div className="tablet-card p-6">
 					<div className="flex items-start gap-4">

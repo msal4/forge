@@ -26,6 +26,9 @@ export type PriorityType = typeof Priority[keyof typeof Priority];
 // Issue type
 export interface Issue {
   id: number;
+  projectId: number;
+  issueNumber: number;
+  projectKey?: string;
   title: string;
   description?: string;
   status: IssueStatusType;

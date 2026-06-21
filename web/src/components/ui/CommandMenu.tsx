@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { LoadingIndicator } from './LoadingIndicator';
 import { useKeyboard } from '../../context/KeyboardContext';
+import { useWorkspace } from '../../context/WorkspaceContext';
 import { searchApi, type SearchResult } from '../../api';
 
 // ============================================
@@ -26,6 +27,7 @@ export function CommandMenu() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
+  const { workspacePath } = useWorkspace();
   const { t } = useTranslation();
 
   // Debounced search effect
@@ -73,12 +75,12 @@ export function CommandMenu() {
   // Handle search result selection
   const handleResultSelect = useCallback((result: SearchResult) => {
     if (result.type === 'issue') {
-      navigate(`/issues?issue=${result.id}`);
+      navigate(workspacePath(`/issues/${result.id}`));
     } else {
-      navigate(`/docs?doc=${result.id}`);
+      navigate(workspacePath(`/docs/${result.id}`));
     }
     closeCommandPalette();
-  }, [navigate, closeCommandPalette]);
+  }, [navigate, closeCommandPalette, workspacePath]);
 
   // Get status display text
   const getStatusDisplay = (status?: string) => {
@@ -171,7 +173,7 @@ export function CommandMenu() {
               >
                 <Command.Item
                   value="home"
-                  onSelect={() => goTo('/')}
+                  onSelect={() => goTo(workspacePath())}
                   className="command-item"
                 >
                   <Home size={18} className="text-lapis-400 dark:text-parchment-400" />
@@ -181,7 +183,7 @@ export function CommandMenu() {
 
                 <Command.Item
                   value="issues tablet"
-                  onSelect={() => goTo('/issues')}
+                  onSelect={() => goTo(workspacePath('/issues'))}
                   className="command-item"
                 >
                   <FileText size={18} className="text-lapis-400 dark:text-parchment-400" />
@@ -194,7 +196,7 @@ export function CommandMenu() {
 
                 <Command.Item
                   value="docs library documentation"
-                  onSelect={() => goTo('/docs')}
+                  onSelect={() => goTo(workspacePath('/docs'))}
                   className="command-item"
                 >
                   <BookOpen size={18} className="text-lapis-400 dark:text-parchment-400" />
@@ -207,7 +209,7 @@ export function CommandMenu() {
 
                 <Command.Item
                   value="releases granary"
-                  onSelect={() => goTo('/releases')}
+                  onSelect={() => goTo(workspacePath('/releases'))}
                   className="command-item"
                 >
                   <Package size={18} className="text-lapis-400 dark:text-parchment-400" />
@@ -220,7 +222,7 @@ export function CommandMenu() {
 
                 <Command.Item
                   value="settings"
-                  onSelect={() => goTo('/settings')}
+                  onSelect={() => goTo(workspacePath('/settings'))}
                   className="command-item"
                 >
                   <Settings size={18} className="text-lapis-400 dark:text-parchment-400" />
@@ -242,7 +244,7 @@ export function CommandMenu() {
               >
                 <Command.Item
                   value="create new issue"
-                  onSelect={() => goTo('/issues?new=true')}
+                  onSelect={() => goTo(workspacePath('/issues?new=true'))}
                   className="command-item"
                 >
                   <Plus size={18} className="text-clay-500 dark:text-clay-400" />
@@ -252,7 +254,7 @@ export function CommandMenu() {
 
                 <Command.Item
                   value="create new document"
-                  onSelect={() => goTo('/docs?new=true')}
+                  onSelect={() => goTo(workspacePath('/docs?new=true'))}
                   className="command-item"
                 >
                   <Plus size={18} className="text-clay-500 dark:text-clay-400" />
@@ -261,7 +263,7 @@ export function CommandMenu() {
 
                 <Command.Item
                   value="create new release"
-                  onSelect={() => goTo('/releases?new=true')}
+                  onSelect={() => goTo(workspacePath('/releases?new=true'))}
                   className="command-item"
                 >
                   <Plus size={18} className="text-clay-500 dark:text-clay-400" />

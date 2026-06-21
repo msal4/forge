@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useSearchParams, useLocation } 
 import { QueryClient, QueryClientProvider, useIsFetching } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { AuthProvider, ProtectedRoute, useAuth } from './context/AuthContext';
+import { WorkspaceProvider, WorkspaceRootRedirect } from './context/WorkspaceContext';
 import { KeyboardProvider } from './context/KeyboardContext';
 import { WebSocketProvider, useWebSocket } from './context/WebSocketContext';
 import { ToastProvider } from './context/ToastContext';
@@ -27,6 +28,7 @@ import { ReleasesPage } from './pages/ReleasesPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { DebugPage } from './pages/DebugPage';
+import { LegacyPathRedirect } from './components/routing/LegacyPathRedirect';
 
 // ============================================
 // Sarray Forge - Main Application
@@ -127,25 +129,33 @@ function AppRoutes() {
     <Routes>
       {/* Public routes */}
       <Route path="/login" element={<LoginPage />} />
-      
+
+      {/* Legacy redirects */}
+      <Route path="/" element={<WorkspaceRootRedirect />} />
+      <Route path="/issues/*" element={<LegacyPathRedirect />} />
+      <Route path="/docs/*" element={<LegacyPathRedirect />} />
+      <Route path="/releases/*" element={<LegacyPathRedirect />} />
+      <Route path="/settings" element={<LegacyPathRedirect />} />
+      <Route path="/debug" element={<LegacyPathRedirect />} />
+
       {/* Protected routes with layout */}
       <Route element={
         <ProtectedRoute>
           <Layout />
         </ProtectedRoute>
       }>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/issues" element={<IssuesPage />} />
-        <Route path="/issues/:issueId" element={<IssuesPage />} />
-        <Route path="/docs" element={<DocsPage />} />
-        <Route path="/docs/:docId" element={<DocsPage />} />
-        <Route path="/releases" element={<ReleasesPage />} />
-        <Route path="/releases/:releaseId" element={<ReleasesPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/w/:workspaceKey" element={<HomePage />} />
+        <Route path="/w/:workspaceKey/issues" element={<IssuesPage />} />
+        <Route path="/w/:workspaceKey/issues/:issueId" element={<IssuesPage />} />
+        <Route path="/w/:workspaceKey/docs" element={<DocsPage />} />
+        <Route path="/w/:workspaceKey/docs/:docId" element={<DocsPage />} />
+        <Route path="/w/:workspaceKey/releases" element={<ReleasesPage />} />
+        <Route path="/w/:workspaceKey/releases/:releaseId" element={<ReleasesPage />} />
+        <Route path="/w/:workspaceKey/settings" element={<SettingsPage />} />
+        <Route path="/w/:workspaceKey/debug" element={<DebugPage />} />
         <Route path="/profile/:username" element={<ProfilePage />} />
-        <Route path="/debug" element={<DebugPage />} />
       </Route>
-      
+
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
@@ -158,20 +168,22 @@ function App() {
       <BrowserRouter>
         <ThemeProvider>
           <AuthProvider>
-            <WebSocketProvider>
-              <KeyboardProvider>
-                <ToastProvider>
-                  <ChatProviderWithWebSocket>
-                    <GlobalLoadingIndicator />
-                    <CommandMenu />
-                    <ConflictWarning />
-                    <NotificationHandler />
-                    <ChatPanel />
-                    <AppRoutes />
-                  </ChatProviderWithWebSocket>
-                </ToastProvider>
-              </KeyboardProvider>
-            </WebSocketProvider>
+            <WorkspaceProvider>
+              <WebSocketProvider>
+                <KeyboardProvider>
+                  <ToastProvider>
+                    <ChatProviderWithWebSocket>
+                      <GlobalLoadingIndicator />
+                      <CommandMenu />
+                      <ConflictWarning />
+                      <NotificationHandler />
+                      <ChatPanel />
+                      <AppRoutes />
+                    </ChatProviderWithWebSocket>
+                  </ToastProvider>
+                </KeyboardProvider>
+              </WebSocketProvider>
+            </WorkspaceProvider>
           </AuthProvider>
         </ThemeProvider>
       </BrowserRouter>

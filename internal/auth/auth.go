@@ -223,7 +223,7 @@ func (h *Handler) ValidateSessionAndGetUserID(token string) (int64, error) {
 func (h *Handler) GetUserByID(userID int64) (*models.User, error) {
 	var user models.User
 	err := h.db.QueryRow(`
-		SELECT id, username, email, full_name, avatar_url, created_at, updated_at
+		SELECT id, username, email, full_name, avatar_url, language, is_admin, created_at, updated_at
 		FROM users WHERE id = ? AND is_active = 1
 	`, userID).Scan(
 		&user.ID,
@@ -231,6 +231,8 @@ func (h *Handler) GetUserByID(userID int64) (*models.User, error) {
 		&user.Email,
 		&user.FullName,
 		&user.AvatarURL,
+		&user.Language,
+		&user.IsAdmin,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -334,7 +336,7 @@ func (h *Handler) authenticateUser(username, email, password string) (*models.Us
 	var isActive bool
 
 	err := h.db.QueryRow(`
-		SELECT id, username, email, password_hash, full_name, avatar_url, is_active, created_at, updated_at
+		SELECT id, username, email, password_hash, full_name, avatar_url, language, is_admin, is_active, created_at, updated_at
 		FROM users 
 		WHERE (username = ? COLLATE NOCASE OR email = ? COLLATE NOCASE)
 	`, username, email).Scan(
@@ -344,6 +346,8 @@ func (h *Handler) authenticateUser(username, email, password string) (*models.Us
 		&passwordHash,
 		&user.FullName,
 		&user.AvatarURL,
+		&user.Language,
+		&user.IsAdmin,
 		&isActive,
 		&user.CreatedAt,
 		&user.UpdatedAt,

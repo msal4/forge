@@ -69,6 +69,11 @@ func main() {
 	// ============================================
 	requireAuth := middleware.RequireAuth(authHandler)
 
+	mux.Handle("GET /api/workspaces", requireAuth(http.HandlerFunc(h.ListWorkspaces)))
+	mux.Handle("POST /api/workspaces", requireAuth(http.HandlerFunc(h.CreateWorkspace)))
+	mux.Handle("GET /api/workspaces/{id}/members", requireAuth(http.HandlerFunc(h.ListWorkspaceMembers)))
+	mux.Handle("PUT /api/workspaces/{id}/members", requireAuth(http.HandlerFunc(h.SetWorkspaceMembers)))
+
 	// User routes
 	mux.Handle("GET /api/users/me", requireAuth(http.HandlerFunc(h.GetCurrentUser)))
 	mux.Handle("PUT /api/users/me/language", requireAuth(http.HandlerFunc(h.UpdateUserLanguage)))

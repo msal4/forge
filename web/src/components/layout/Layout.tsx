@@ -20,6 +20,8 @@ import { NotificationBell } from '../ui/NotificationBell';
 import { Avatar } from '../ui/Avatar';
 import { ActiveUsers } from '../ui/ActiveUsers';
 import { ChatToggle } from '../chat';
+import { WorkspaceSwitcher } from './WorkspaceSwitcher';
+import { useWorkspace } from '../../context/WorkspaceContext';
 
 // ============================================
 // Main Layout - Sidebar + Content
@@ -30,6 +32,7 @@ export function Layout() {
   const { openCommandPalette } = useKeyboard();
   const { user, logout } = useAuth();
   const { t } = useTranslation();
+  const { workspacePath } = useWorkspace();
   
   const handleLogout = async () => {
     await logout();
@@ -56,6 +59,10 @@ export function Layout() {
             </h1>
             <p className="text-xs text-lapis-500 dark:text-parchment-400 mt-1">{t('app.tagline')}</p>
           </div>
+
+          <div className="px-3 pb-2">
+            <WorkspaceSwitcher />
+          </div>
           
           {/* Command Palette Trigger + Notifications + Chat */}
           <div className="p-3 space-y-2">
@@ -77,13 +84,13 @@ export function Layout() {
           
           {/* Navigation */}
           <nav className="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-thin">
-            <NavItem to="/" icon={<Home size={18} />} label={t('nav.home')} shortcut="g+h" end />
-            <NavItem to="/issues" icon={<FileText size={18} />} label={t('nav.issues')} subtitle={t('nav.issuesSubtitle')} shortcut="g+i" />
-            <NavItem to="/docs" icon={<BookOpen size={18} />} label={t('nav.docs')} subtitle={t('nav.docsSubtitle')} shortcut="g+d" />
-            <NavItem to="/releases" icon={<Package size={18} />} label={t('nav.releases')} subtitle={t('nav.releasesSubtitle')} shortcut="g+r" />
+            <NavItem to={workspacePath()} icon={<Home size={18} />} label={t('nav.home')} shortcut="g+h" end />
+            <NavItem to={workspacePath('/issues')} icon={<FileText size={18} />} label={t('nav.issues')} subtitle={t('nav.issuesSubtitle')} shortcut="g+i" />
+            <NavItem to={workspacePath('/docs')} icon={<BookOpen size={18} />} label={t('nav.docs')} subtitle={t('nav.docsSubtitle')} shortcut="g+d" />
+            <NavItem to={workspacePath('/releases')} icon={<Package size={18} />} label={t('nav.releases')} subtitle={t('nav.releasesSubtitle')} shortcut="g+r" />
             
             <div className="pt-4 mt-4 border-t border-parchment-300 dark:border-lapis-700">
-              <NavItem to="/settings" icon={<Settings size={18} />} label={t('nav.settings')} shortcut="g+s" />
+              <NavItem to={workspacePath('/settings')} icon={<Settings size={18} />} label={t('nav.settings')} shortcut="g+s" />
             </div>
           </nav>
           

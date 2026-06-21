@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 
-	"sarray-forge/internal/middleware"
 	"sarray-forge/internal/models"
 	"sarray-forge/internal/websocket"
 )
@@ -34,14 +33,20 @@ func init() {
 
 // ListReleases handles GET /api/releases
 func (h *Handlers) ListReleases(w http.ResponseWriter, r *http.Request) {
+	_, workspaceID, ok := h.requireWorkspaceContext(w, r)
+	if !ok {
+		return
+	}
+
 	rows, err := h.db.Query(`
-		SELECT r.id, r.version, r.title, r.description, r.author_id,
+		SELECT r.id, r.project_id, r.version, r.title, r.description, r.author_id,
 		       r.published_at, r.created_at, r.updated_at,
 		       u.username, u.full_name
 		FROM releases r
 		JOIN users u ON r.author_id = u.id
+		WHERE r.project_id = ?
 		ORDER BY r.created_at DESC
-	`)
+	`, workspaceID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "db_error", "Failed to fetch releases")
 		return
@@ -54,7 +59,7 @@ func (h *Handlers) ListReleases(w http.ResponseWriter, r *http.Request) {
 		var authorUsername, authorFullName string
 
 		if err := rows.Scan(
-			&release.ID, &release.Version, &release.Title, &release.Description,
+			&release.ID, &release.ProjectID, &release.Version, &release.Title, &release.Description,
 			&release.AuthorID, &release.PublishedAt, &release.CreatedAt, &release.UpdatedAt,
 			&authorUsername, &authorFullName,
 		); err != nil {
@@ -82,9 +87,8 @@ func (h *Handlers) ListReleases(w http.ResponseWriter, r *http.Request) {
 
 // CreateRelease handles POST /api/releases
 func (h *Handlers) CreateRelease(w http.ResponseWriter, r *http.Request) {
-	userID, _, ok := middleware.GetUserFromContext(r.Context())
+	userID, workspaceID, ok := h.requireWorkspaceContext(w, r)
 	if !ok {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "Not authenticated")
 		return
 	}
 
@@ -103,18 +107,18 @@ func (h *Handlers) CreateRelease(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if version already exists
+	// Check if version already exists in workspace
 	var count int
-	h.db.QueryRow("SELECT COUNT(*) FROM releases WHERE version = ?", req.Version).Scan(&count)
+	h.db.QueryRow("SELECT COUNT(*) FROM releases WHERE project_id = ? AND version = ?", workspaceID, req.Version).Scan(&count)
 	if count > 0 {
 		writeError(w, http.StatusConflict, "duplicate_version", "Version already exists")
 		return
 	}
 
 	result, err := h.db.Exec(`
-		INSERT INTO releases (version, title, description, author_id)
-		VALUES (?, ?, ?, ?)
-	`, req.Version, req.Title, req.Description, userID)
+		INSERT INTO releases (project_id, version, title, description, author_id)
+		VALUES (?, ?, ?, ?, ?)
+	`, workspaceID, req.Version, req.Title, req.Description, userID)
 
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "db_error", "Failed to create release")
@@ -129,10 +133,11 @@ func (h *Handlers) CreateRelease(w http.ResponseWriter, r *http.Request) {
 
 	// Broadcast WebSocket event
 	h.hub.Broadcast(websocket.Event{
-		Type:     websocket.EventReleaseCreated,
-		Resource: websocket.ResourceRelease,
-		ID:       releaseID,
-		UserID:   userID,
+		Type:        websocket.EventReleaseCreated,
+		Resource:    websocket.ResourceRelease,
+		ID:          releaseID,
+		WorkspaceID: workspaceID,
+		UserID:      userID,
 	})
 
 	// Process @mentions in description
@@ -154,17 +159,24 @@ func (h *Handlers) GetRelease(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if _, _, ok := h.requireReleaseWorkspaceAccess(w, r, id); !ok {
+		return
+	}
+
 	h.getReleaseByID(w, id)
 }
 
 // DeleteRelease handles DELETE /api/releases/{id}
 func (h *Handlers) DeleteRelease(w http.ResponseWriter, r *http.Request) {
-	userID, _, _ := middleware.GetUserFromContext(r.Context())
-
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_id", "Invalid release ID")
+		return
+	}
+
+	userID, workspaceID, ok := h.requireReleaseWorkspaceAccess(w, r, id)
+	if !ok {
 		return
 	}
 
@@ -203,10 +215,11 @@ func (h *Handlers) DeleteRelease(w http.ResponseWriter, r *http.Request) {
 
 	// Broadcast WebSocket event
 	h.hub.Broadcast(websocket.Event{
-		Type:     websocket.EventReleaseDeleted,
-		Resource: websocket.ResourceRelease,
-		ID:       id,
-		UserID:   userID,
+		Type:        websocket.EventReleaseDeleted,
+		Resource:    websocket.ResourceRelease,
+		ID:          id,
+		WorkspaceID: workspaceID,
+		UserID:      userID,
 	})
 
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Release deleted"})
@@ -221,11 +234,8 @@ func (h *Handlers) UploadReleaseFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check release exists
-	var exists int
-	h.db.QueryRow("SELECT 1 FROM releases WHERE id = ?", releaseID).Scan(&exists)
-	if exists == 0 {
-		writeError(w, http.StatusNotFound, "not_found", "Release not found")
+	userID, workspaceID, ok := h.requireReleaseWorkspaceAccess(w, r, releaseID)
+	if !ok {
 		return
 	}
 
@@ -285,9 +295,6 @@ func (h *Handlers) UploadReleaseFile(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Get user ID for broadcast
-	userID, _, _ := middleware.GetUserFromContext(r.Context())
-
 	// Save to database
 	result, err := h.db.Exec(`
 		INSERT INTO release_files (release_id, filename, original_filename, file_path, file_size, mime_type)
@@ -304,10 +311,11 @@ func (h *Handlers) UploadReleaseFile(w http.ResponseWriter, r *http.Request) {
 
 	// Broadcast WebSocket event (file upload is a release update)
 	h.hub.Broadcast(websocket.Event{
-		Type:     websocket.EventReleaseUpdated,
-		Resource: websocket.ResourceRelease,
-		ID:       releaseID,
-		UserID:   userID,
+		Type:        websocket.EventReleaseUpdated,
+		Resource:    websocket.ResourceRelease,
+		ID:          releaseID,
+		WorkspaceID: workspaceID,
+		UserID:      userID,
 	})
 
 	writeJSON(w, http.StatusCreated, models.ReleaseFile{
@@ -325,6 +333,10 @@ func (h *Handlers) DownloadReleaseFile(w http.ResponseWriter, r *http.Request) {
 	releaseID, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_id", "Invalid release ID")
+		return
+	}
+
+	if _, _, ok := h.requireReleaseWorkspaceAccess(w, r, releaseID); !ok {
 		return
 	}
 
@@ -366,14 +378,14 @@ func (h *Handlers) getReleaseByID(w http.ResponseWriter, id int64) {
 	var authorUsername, authorFullName string
 
 	err := h.db.QueryRow(`
-		SELECT r.id, r.version, r.title, r.description, r.author_id,
+		SELECT r.id, r.project_id, r.version, r.title, r.description, r.author_id,
 		       r.published_at, r.created_at, r.updated_at,
 		       u.username, u.full_name
 		FROM releases r
 		JOIN users u ON r.author_id = u.id
 		WHERE r.id = ?
 	`, id).Scan(
-		&release.ID, &release.Version, &release.Title, &release.Description,
+		&release.ID, &release.ProjectID, &release.Version, &release.Title, &release.Description,
 		&release.AuthorID, &release.PublishedAt, &release.CreatedAt, &release.UpdatedAt,
 		&authorUsername, &authorFullName,
 	)

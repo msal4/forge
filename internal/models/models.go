@@ -10,8 +10,19 @@ type User struct {
 	FullName  string    `json:"fullName"`
 	AvatarURL string    `json:"avatarUrl,omitempty"`
 	Language  string    `json:"language"`
+	IsAdmin   bool      `json:"isAdmin"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// Workspace represents an isolated project space (backed by projects table)
+type Workspace struct {
+	ID          int64     `json:"id"`
+	Key         string    `json:"key"`
+	Name        string    `json:"name"`
+	Description string    `json:"description,omitempty"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 // Session represents an authenticated user session
@@ -46,6 +57,9 @@ const (
 // Issue represents a task/ticket in the Tablet (Kanban board)
 type Issue struct {
 	ID          int64         `json:"id"`
+	ProjectID   int64         `json:"projectId"`
+	IssueNumber int64         `json:"issueNumber"`
+	ProjectKey  string        `json:"projectKey,omitempty"`
 	Title       string        `json:"title"`
 	Description string        `json:"description"`
 	Status      IssueStatus   `json:"status"`
@@ -63,6 +77,7 @@ type Issue struct {
 // Doc represents a document in the Library
 type Doc struct {
 	ID        int64     `json:"id"`
+	ProjectID int64     `json:"projectId"`
 	Title     string    `json:"title"`
 	Content   string    `json:"content"` // Markdown content
 	ParentID  *int64    `json:"parentId,omitempty"`
@@ -76,6 +91,7 @@ type Doc struct {
 // Release represents a release in the Granary
 type Release struct {
 	ID          int64         `json:"id"`
+	ProjectID   int64         `json:"projectId"`
 	Version     string        `json:"version"`
 	Title       string        `json:"title"`
 	Description string        `json:"description"` // Markdown changelog
@@ -213,6 +229,18 @@ type CreateReleaseRequest struct {
 	Version     string `json:"version"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
+}
+
+// CreateWorkspaceRequest is the request body for creating a workspace
+type CreateWorkspaceRequest struct {
+	Key         string `json:"key"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+// SetWorkspaceMembersRequest is the request body for updating workspace members
+type SetWorkspaceMembersRequest struct {
+	UserIDs []int64 `json:"userIds"`
 }
 
 // CreateCommentRequest is the request body for creating a comment

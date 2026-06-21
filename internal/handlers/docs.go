@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"sarray-forge/internal/middleware"
 	"sarray-forge/internal/models"
 	"sarray-forge/internal/websocket"
 )
@@ -18,16 +17,21 @@ import (
 
 // ListDocs handles GET /api/docs
 func (h *Handlers) ListDocs(w http.ResponseWriter, r *http.Request) {
+	_, workspaceID, ok := h.requireWorkspaceContext(w, r)
+	if !ok {
+		return
+	}
+
 	parentID := r.URL.Query().Get("parent_id")
 
 	query := `
-		SELECT d.id, d.title, d.content, d.slug, d.parent_id, d.author_id,
+		SELECT d.id, d.project_id, d.title, d.content, d.slug, d.parent_id, d.author_id,
 		       d.created_at, d.updated_at, u.username, u.full_name
 		FROM docs d
 		JOIN users u ON d.author_id = u.id
-		WHERE 1=1
+		WHERE d.project_id = ?
 	`
-	args := []interface{}{}
+	args := []interface{}{workspaceID}
 
 	if parentID != "" {
 		if parentID == "null" || parentID == "root" {
@@ -53,7 +57,7 @@ func (h *Handlers) ListDocs(w http.ResponseWriter, r *http.Request) {
 		var authorUsername, authorFullName string
 
 		if err := rows.Scan(
-			&doc.ID, &doc.Title, &doc.Content, &doc.Slug, &doc.ParentID, &doc.AuthorID,
+			&doc.ID, &doc.ProjectID, &doc.Title, &doc.Content, &doc.Slug, &doc.ParentID, &doc.AuthorID,
 			&doc.CreatedAt, &doc.UpdatedAt, &authorUsername, &authorFullName,
 		); err != nil {
 			continue
@@ -77,9 +81,8 @@ func (h *Handlers) ListDocs(w http.ResponseWriter, r *http.Request) {
 
 // CreateDoc handles POST /api/docs
 func (h *Handlers) CreateDoc(w http.ResponseWriter, r *http.Request) {
-	userID, _, ok := middleware.GetUserFromContext(r.Context())
+	userID, workspaceID, ok := h.requireWorkspaceContext(w, r)
 	if !ok {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "Not authenticated")
 		return
 	}
 
@@ -97,13 +100,13 @@ func (h *Handlers) CreateDoc(w http.ResponseWriter, r *http.Request) {
 	// Generate slug from title
 	slug := generateSlug(req.Title)
 
-	// Ensure unique slug
-	slug = h.ensureUniqueSlug(slug)
+	// Ensure unique slug within workspace
+	slug = h.ensureUniqueSlug(workspaceID, slug)
 
 	result, err := h.db.Exec(`
-		INSERT INTO docs (title, content, slug, parent_id, author_id)
-		VALUES (?, ?, ?, ?, ?)
-	`, req.Title, req.Content, slug, req.ParentID, userID)
+		INSERT INTO docs (project_id, title, content, slug, parent_id, author_id)
+		VALUES (?, ?, ?, ?, ?, ?)
+	`, workspaceID, req.Title, req.Content, slug, req.ParentID, userID)
 
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "db_error", "Failed to create doc")
@@ -117,10 +120,11 @@ func (h *Handlers) CreateDoc(w http.ResponseWriter, r *http.Request) {
 
 	// Broadcast WebSocket event
 	h.hub.Broadcast(websocket.Event{
-		Type:     websocket.EventDocCreated,
-		Resource: websocket.ResourceDoc,
-		ID:       docID,
-		UserID:   userID,
+		Type:        websocket.EventDocCreated,
+		Resource:    websocket.ResourceDoc,
+		ID:          docID,
+		WorkspaceID: workspaceID,
+		UserID:      userID,
 	})
 
 	// Process @mentions in content
@@ -135,26 +139,37 @@ func (h *Handlers) CreateDoc(w http.ResponseWriter, r *http.Request) {
 
 // GetDoc handles GET /api/docs/{id}
 func (h *Handlers) GetDoc(w http.ResponseWriter, r *http.Request) {
+	_, workspaceID, ok := h.requireWorkspaceContext(w, r)
+	if !ok {
+		return
+	}
+
 	idStr := r.PathValue("id")
 
 	// Try to parse as ID first
 	if id, err := strconv.ParseInt(idStr, 10, 64); err == nil {
+		if _, _, ok := h.requireDocWorkspaceAccess(w, r, id); !ok {
+			return
+		}
 		h.getDocByID(w, id)
 		return
 	}
 
-	// Otherwise treat as slug
-	h.getDocBySlug(w, idStr)
+	// Otherwise treat as slug within workspace
+	h.getDocBySlug(w, workspaceID, idStr)
 }
 
 // UpdateDoc handles PUT /api/docs/{id}
 func (h *Handlers) UpdateDoc(w http.ResponseWriter, r *http.Request) {
-	userID, _, _ := middleware.GetUserFromContext(r.Context())
-
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_id", "Invalid doc ID")
+		return
+	}
+
+	userID, workspaceID, ok := h.requireDocWorkspaceAccess(w, r, id)
+	if !ok {
 		return
 	}
 
@@ -190,7 +205,7 @@ func (h *Handlers) UpdateDoc(w http.ResponseWriter, r *http.Request) {
 		newTitle = *req.Title
 		// Update slug when title changes
 		slug := generateSlug(*req.Title)
-		slug = h.ensureUniqueSlugExcluding(slug, id)
+		slug = h.ensureUniqueSlugExcluding(workspaceID, slug, id)
 		updates = append(updates, "slug = ?")
 		args = append(args, slug)
 	}
@@ -242,10 +257,11 @@ func (h *Handlers) UpdateDoc(w http.ResponseWriter, r *http.Request) {
 
 	// Broadcast WebSocket event
 	h.hub.Broadcast(websocket.Event{
-		Type:     websocket.EventDocUpdated,
-		Resource: websocket.ResourceDoc,
-		ID:       id,
-		UserID:   userID,
+		Type:        websocket.EventDocUpdated,
+		Resource:    websocket.ResourceDoc,
+		ID:          id,
+		WorkspaceID: workspaceID,
+		UserID:      userID,
 	})
 
 	h.getDocByID(w, id)
@@ -253,12 +269,15 @@ func (h *Handlers) UpdateDoc(w http.ResponseWriter, r *http.Request) {
 
 // DeleteDoc handles DELETE /api/docs/{id}
 func (h *Handlers) DeleteDoc(w http.ResponseWriter, r *http.Request) {
-	userID, _, _ := middleware.GetUserFromContext(r.Context())
-
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_id", "Invalid doc ID")
+		return
+	}
+
+	userID, workspaceID, ok := h.requireDocWorkspaceAccess(w, r, id)
+	if !ok {
 		return
 	}
 
@@ -297,10 +316,11 @@ func (h *Handlers) DeleteDoc(w http.ResponseWriter, r *http.Request) {
 
 	// Broadcast WebSocket event
 	h.hub.Broadcast(websocket.Event{
-		Type:     websocket.EventDocDeleted,
-		Resource: websocket.ResourceDoc,
-		ID:       id,
-		UserID:   userID,
+		Type:        websocket.EventDocDeleted,
+		Resource:    websocket.ResourceDoc,
+		ID:          id,
+		WorkspaceID: workspaceID,
+		UserID:      userID,
 	})
 
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Doc deleted"})
@@ -313,13 +333,13 @@ func (h *Handlers) getDocByID(w http.ResponseWriter, id int64) {
 	var authorUsername, authorFullName string
 
 	err := h.db.QueryRow(`
-		SELECT d.id, d.title, d.content, d.slug, d.parent_id, d.author_id,
+		SELECT d.id, d.project_id, d.title, d.content, d.slug, d.parent_id, d.author_id,
 		       d.created_at, d.updated_at, u.username, u.full_name
 		FROM docs d
 		JOIN users u ON d.author_id = u.id
 		WHERE d.id = ?
 	`, id).Scan(
-		&doc.ID, &doc.Title, &doc.Content, &doc.Slug, &doc.ParentID, &doc.AuthorID,
+		&doc.ID, &doc.ProjectID, &doc.Title, &doc.Content, &doc.Slug, &doc.ParentID, &doc.AuthorID,
 		&doc.CreatedAt, &doc.UpdatedAt, &authorUsername, &authorFullName,
 	)
 
@@ -337,18 +357,18 @@ func (h *Handlers) getDocByID(w http.ResponseWriter, id int64) {
 	writeJSON(w, http.StatusOK, doc)
 }
 
-func (h *Handlers) getDocBySlug(w http.ResponseWriter, slug string) {
+func (h *Handlers) getDocBySlug(w http.ResponseWriter, workspaceID int64, slug string) {
 	var doc models.Doc
 	var authorUsername, authorFullName string
 
 	err := h.db.QueryRow(`
-		SELECT d.id, d.title, d.content, d.slug, d.parent_id, d.author_id,
+		SELECT d.id, d.project_id, d.title, d.content, d.slug, d.parent_id, d.author_id,
 		       d.created_at, d.updated_at, u.username, u.full_name
 		FROM docs d
 		JOIN users u ON d.author_id = u.id
-		WHERE d.slug = ?
-	`, slug).Scan(
-		&doc.ID, &doc.Title, &doc.Content, &doc.Slug, &doc.ParentID, &doc.AuthorID,
+		WHERE d.project_id = ? AND d.slug = ?
+	`, workspaceID, slug).Scan(
+		&doc.ID, &doc.ProjectID, &doc.Title, &doc.Content, &doc.Slug, &doc.ParentID, &doc.AuthorID,
 		&doc.CreatedAt, &doc.UpdatedAt, &authorUsername, &authorFullName,
 	)
 
@@ -382,13 +402,13 @@ func generateSlug(title string) string {
 	return slug
 }
 
-func (h *Handlers) ensureUniqueSlug(slug string) string {
+func (h *Handlers) ensureUniqueSlug(workspaceID int64, slug string) string {
 	baseSlug := slug
 	counter := 1
 
 	for {
 		var count int
-		h.db.QueryRow("SELECT COUNT(*) FROM docs WHERE slug = ?", slug).Scan(&count)
+		h.db.QueryRow("SELECT COUNT(*) FROM docs WHERE project_id = ? AND slug = ?", workspaceID, slug).Scan(&count)
 		if count == 0 {
 			return slug
 		}
@@ -397,13 +417,13 @@ func (h *Handlers) ensureUniqueSlug(slug string) string {
 	}
 }
 
-func (h *Handlers) ensureUniqueSlugExcluding(slug string, excludeID int64) string {
+func (h *Handlers) ensureUniqueSlugExcluding(workspaceID int64, slug string, excludeID int64) string {
 	baseSlug := slug
 	counter := 1
 
 	for {
 		var count int
-		h.db.QueryRow("SELECT COUNT(*) FROM docs WHERE slug = ? AND id != ?", slug, excludeID).Scan(&count)
+		h.db.QueryRow("SELECT COUNT(*) FROM docs WHERE project_id = ? AND slug = ? AND id != ?", workspaceID, slug, excludeID).Scan(&count)
 		if count == 0 {
 			return slug
 		}

@@ -15,6 +15,7 @@ export interface User {
   fullName: string;
   avatarUrl?: string;
   language: string;
+  isAdmin?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -59,6 +60,8 @@ export interface TelegramLinkResponse {
 export const usersApi = {
   // List all users
   list: (options?: RequestOptions) => api.get<User[]>('/users', options),
+
+  listAll: (options?: RequestOptions) => api.get<User[]>('/users?all=true', options),
 
   // Get current user
   me: (options?: RequestOptions) => api.get<User>('/users/me', options),

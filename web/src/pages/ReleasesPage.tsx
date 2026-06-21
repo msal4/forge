@@ -22,6 +22,7 @@ import {
   HardDrive
 } from 'lucide-react';
 import { LoadingIndicator } from '../components/ui/LoadingIndicator';
+import { useWorkspace } from '../context/WorkspaceContext';
 import { ButtonWithHotkey } from '../components/ui/HotkeyBadge';
 import { useConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useKeyboardShortcuts } from '../hooks/useKeyboard';
@@ -36,6 +37,7 @@ export function ReleasesPage() {
   const { t } = useTranslation();
   const { releaseId } = useParams();
   const navigate = useNavigate();
+  const { workspacePath, currentWorkspace } = useWorkspace();
   const queryClient = useQueryClient();
   
   // React Query hooks
@@ -62,9 +64,9 @@ export function ReleasesPage() {
   // Helper to select release and update URL
   const selectRelease = React.useCallback((release: Release | null) => {
     if (release) {
-      navigate(`/releases/${release.id}`);
+      navigate(workspacePath(`/releases/${release.id}`));
     } else {
-      navigate('/releases');
+      navigate(workspacePath('/releases'));
     }
   }, [navigate]);
 
@@ -76,7 +78,7 @@ export function ReleasesPage() {
         setSelectedRelease(release);
       } else {
         // Release was deleted by another user
-        navigate('/releases');
+        navigate(workspacePath('/releases'));
       }
     } else if (!releaseId) {
       setSelectedRelease(null);
@@ -139,7 +141,9 @@ export function ReleasesPage() {
     }
     
     // Refresh the selected release from updated data
-    queryClient.invalidateQueries({ queryKey: queryKeys.releases.list() });
+    if (currentWorkspace) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.releases.list(currentWorkspace.id) });
+    }
   };
 
   // Update selectedRelease when releases data changes (after upload)

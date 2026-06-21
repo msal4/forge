@@ -18,6 +18,7 @@ import {
 import { useIssues, useReleases, useDocs } from '../hooks/useApi';
 import { IssueStatus, type Issue } from '../api/issues';
 import { useAuth } from '../context/AuthContext';
+import { useWorkspace } from '../context/WorkspaceContext';
 import { Avatar } from '../components/ui/Avatar';
 import { LoadingIndicator } from '../components/ui/LoadingIndicator';
 
@@ -27,6 +28,7 @@ import { LoadingIndicator } from '../components/ui/LoadingIndicator';
 
 export function HomePage() {
   const { user } = useAuth();
+  const { workspacePath } = useWorkspace();
   const { t } = useTranslation();
 
   // Pick a random wisdom on mount (changes on page refresh)
@@ -165,7 +167,7 @@ export function HomePage() {
       {/* Quick Actions */}
       <div className="grid gap-6 md:grid-cols-3">
         <QuickActionCard
-          to="/issues"
+          to={workspacePath('/issues')}
           icon={<FileText size={24} />}
           title={t('home.tablet.title')}
           description={t('home.tablet.description')}
@@ -173,7 +175,7 @@ export function HomePage() {
           shortcut="g+i"
         />
         <QuickActionCard
-          to="/docs"
+          to={workspacePath('/docs')}
           icon={<BookOpen size={24} />}
           title={t('home.library.title')}
           description={t('home.library.description')}
@@ -181,7 +183,7 @@ export function HomePage() {
           shortcut="g+d"
         />
         <QuickActionCard
-          to="/releases"
+          to={workspacePath('/releases')}
           icon={<Package size={24} />}
           title={t('home.granary.title')}
           description={t('home.granary.description')}
@@ -199,7 +201,7 @@ export function HomePage() {
               {t('home.recentInscriptions')}
             </h2>
             <Link 
-              to="/issues" 
+              to={workspacePath('/issues')} 
               className="text-sm text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-200 flex items-center gap-1"
             >
               {t('home.viewAll')} <ArrowRight size={14} className="rtl:rotate-180" />
@@ -233,7 +235,7 @@ export function HomePage() {
                 {t('home.latestRelease')}
               </h2>
               <Link 
-                to="/releases" 
+                to={workspacePath('/releases')} 
                 className="text-sm text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-200"
               >
                 {t('home.allReleases')}
@@ -283,7 +285,7 @@ export function HomePage() {
                 {t('home.recentDocuments')}
               </h2>
               <Link 
-                to="/docs" 
+                to={workspacePath('/docs')} 
                 className="text-sm text-lapis-500 dark:text-parchment-400 hover:text-lapis-600 dark:hover:text-parchment-200"
               >
                 {t('home.libraryLink')}

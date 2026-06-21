@@ -2,11 +2,12 @@ package websocket
 
 // Event represents a WebSocket event message
 type Event struct {
-	Type     string      `json:"type"`     // e.g., "issue_created", "doc_updated"
-	Resource string      `json:"resource"` // "issue", "doc", "release"
-	ID       int64       `json:"id"`       // ID of the affected resource
-	Data     interface{} `json:"data,omitempty"`
-	UserID   int64       `json:"userId"` // Who triggered the change
+	Type        string      `json:"type"`     // e.g., "issue_created", "doc_updated"
+	Resource    string      `json:"resource"` // "issue", "doc", "release"
+	ID          int64       `json:"id"`       // ID of the affected resource
+	WorkspaceID int64       `json:"workspaceId,omitempty"`
+	Data        interface{} `json:"data,omitempty"`
+	UserID      int64       `json:"userId"` // Who triggered the change
 }
 
 // Event types

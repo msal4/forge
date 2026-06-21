@@ -150,11 +150,11 @@ func (h *Handlers) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 
 	var user models.User
 	err := h.db.QueryRow(`
-		SELECT id, username, email, full_name, avatar_url, language, created_at, updated_at
+		SELECT id, username, email, full_name, avatar_url, language, is_admin, created_at, updated_at
 		FROM users WHERE id = ?
 	`, userID).Scan(
 		&user.ID, &user.Username, &user.Email, &user.FullName,
-		&user.AvatarURL, &user.Language, &user.CreatedAt, &user.UpdatedAt,
+		&user.AvatarURL, &user.Language, &user.IsAdmin, &user.CreatedAt, &user.UpdatedAt,
 	)
 
 	if err != nil {
@@ -202,10 +202,51 @@ func (h *Handlers) UpdateUserLanguage(w http.ResponseWriter, r *http.Request) {
 
 // ListUsers handles GET /api/users
 func (h *Handlers) ListUsers(w http.ResponseWriter, r *http.Request) {
+	userID, _, authOK := middleware.GetUserFromContext(r.Context())
+	if !authOK {
+		writeError(w, http.StatusUnauthorized, "unauthorized", "Not authenticated")
+		return
+	}
+
+	// Admin can list all users for member assignment
+	if r.URL.Query().Get("all") == "true" && h.userIsAdmin(userID) {
+		rows, err := h.db.Query(`
+			SELECT id, username, email, full_name, avatar_url, language, is_admin, created_at, updated_at
+			FROM users WHERE is_active = 1 ORDER BY username
+		`)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "db_error", "Failed to fetch users")
+			return
+		}
+		defer rows.Close()
+
+		users := []models.User{}
+		for rows.Next() {
+			var user models.User
+			if err := rows.Scan(
+				&user.ID, &user.Username, &user.Email, &user.FullName,
+				&user.AvatarURL, &user.Language, &user.IsAdmin, &user.CreatedAt, &user.UpdatedAt,
+			); err != nil {
+				continue
+			}
+			users = append(users, user)
+		}
+		writeJSON(w, http.StatusOK, users)
+		return
+	}
+
+	_, workspaceID, ok := h.requireWorkspaceContext(w, r)
+	if !ok {
+		return
+	}
+
 	rows, err := h.db.Query(`
-		SELECT id, username, email, full_name, avatar_url, created_at, updated_at
-		FROM users ORDER BY username
-	`)
+		SELECT u.id, u.username, u.email, u.full_name, u.avatar_url, u.language, u.is_admin, u.created_at, u.updated_at
+		FROM workspace_members wm
+		JOIN users u ON wm.user_id = u.id
+		WHERE wm.project_id = ? AND u.is_active = 1
+		ORDER BY u.username
+	`, workspaceID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "db_error", "Failed to fetch users")
 		return
@@ -217,11 +258,15 @@ func (h *Handlers) ListUsers(w http.ResponseWriter, r *http.Request) {
 		var user models.User
 		if err := rows.Scan(
 			&user.ID, &user.Username, &user.Email, &user.FullName,
-			&user.AvatarURL, &user.CreatedAt, &user.UpdatedAt,
+			&user.AvatarURL, &user.Language, &user.IsAdmin, &user.CreatedAt, &user.UpdatedAt,
 		); err != nil {
 			continue
 		}
 		users = append(users, user)
+	}
+
+	if users == nil {
+		users = []models.User{}
 	}
 
 	writeJSON(w, http.StatusOK, users)
@@ -299,22 +344,28 @@ func (h *Handlers) GetOnlineUserIDs(w http.ResponseWriter, r *http.Request) {
 
 // ListIssues handles GET /api/issues
 func (h *Handlers) ListIssues(w http.ResponseWriter, r *http.Request) {
+	_, workspaceID, ok := h.requireWorkspaceContext(w, r)
+	if !ok {
+		return
+	}
+
 	// Parse query parameters for filtering
 	status := r.URL.Query().Get("status")
 	assigneeID := r.URL.Query().Get("assignee_id")
 
 	query := `
-		SELECT i.id, i.title, i.description, i.status, i.priority,
+		SELECT i.id, i.project_id, i.issue_number, p.key, i.title, i.description, i.status, i.priority,
 		       i.assignee_id, i.reporter_id, i.labels, i.due_date,
 		       i.created_at, i.updated_at,
 		       COALESCE(a.username, ''), COALESCE(a.full_name, ''),
 		       r.username, r.full_name
 		FROM issues i
+		JOIN projects p ON i.project_id = p.id
 		LEFT JOIN users a ON i.assignee_id = a.id
 		JOIN users r ON i.reporter_id = r.id
-		WHERE 1=1
+		WHERE i.project_id = ?
 	`
-	args := []interface{}{}
+	args := []interface{}{workspaceID}
 
 	if status != "" {
 		query += " AND i.status = ?"
@@ -344,7 +395,8 @@ func (h *Handlers) ListIssues(w http.ResponseWriter, r *http.Request) {
 		var dueDate *string
 
 		if err := rows.Scan(
-			&issue.ID, &issue.Title, &issue.Description, &issue.Status, &issue.Priority,
+			&issue.ID, &issue.ProjectID, &issue.IssueNumber, &issue.ProjectKey,
+			&issue.Title, &issue.Description, &issue.Status, &issue.Priority,
 			&assigneeID, &issue.ReporterID, &labelsJSON, &dueDate,
 			&issue.CreatedAt, &issue.UpdatedAt,
 			&assigneeUsername, &assigneeFullName,
@@ -388,9 +440,8 @@ func (h *Handlers) ListIssues(w http.ResponseWriter, r *http.Request) {
 
 // CreateIssue handles POST /api/issues
 func (h *Handlers) CreateIssue(w http.ResponseWriter, r *http.Request) {
-	userID, _, ok := middleware.GetUserFromContext(r.Context())
+	userID, workspaceID, ok := h.requireWorkspaceContext(w, r)
 	if !ok {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "Not authenticated")
 		return
 	}
 
@@ -416,11 +467,11 @@ func (h *Handlers) CreateIssue(w http.ResponseWriter, r *http.Request) {
 		labelsJSON = []byte("[]")
 	}
 
-	// Use project_id = 1 (default project) and issue_number = 0 (trigger will auto-assign)
+	// Use current workspace and issue_number = 0 (trigger will auto-assign)
 	result, err := h.db.Exec(`
 		INSERT INTO issues (project_id, issue_number, title, description, priority, assignee_id, reporter_id, labels, due_date)
-		VALUES (1, 0, ?, ?, ?, ?, ?, ?, ?)
-	`, req.Title, req.Description, req.Priority, req.AssigneeID, userID, string(labelsJSON), req.DueDate)
+		VALUES (?, 0, ?, ?, ?, ?, ?, ?, ?)
+	`, workspaceID, req.Title, req.Description, req.Priority, req.AssigneeID, userID, string(labelsJSON), req.DueDate)
 
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "db_error", "Failed to create issue")
@@ -434,10 +485,11 @@ func (h *Handlers) CreateIssue(w http.ResponseWriter, r *http.Request) {
 
 	// Broadcast WebSocket event
 	h.hub.Broadcast(websocket.Event{
-		Type:     websocket.EventIssueCreated,
-		Resource: websocket.ResourceIssue,
-		ID:       issueID,
-		UserID:   userID,
+		Type:        websocket.EventIssueCreated,
+		Resource:    websocket.ResourceIssue,
+		ID:          issueID,
+		WorkspaceID: workspaceID,
+		UserID:      userID,
 	})
 
 	// Process @mentions in description
@@ -467,17 +519,24 @@ func (h *Handlers) GetIssue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if _, _, ok := h.requireIssueWorkspaceAccess(w, r, id); !ok {
+		return
+	}
+
 	h.getIssueByID(w, id)
 }
 
 // UpdateIssue handles PUT /api/issues/{id}
 func (h *Handlers) UpdateIssue(w http.ResponseWriter, r *http.Request) {
-	userID, _, _ := middleware.GetUserFromContext(r.Context())
-
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_id", "Invalid issue ID")
+		return
+	}
+
+	userID, workspaceID, ok := h.requireIssueWorkspaceAccess(w, r, id)
+	if !ok {
 		return
 	}
 
@@ -619,10 +678,11 @@ func (h *Handlers) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 
 	// Broadcast WebSocket event
 	h.hub.Broadcast(websocket.Event{
-		Type:     websocket.EventIssueUpdated,
-		Resource: websocket.ResourceIssue,
-		ID:       id,
-		UserID:   userID,
+		Type:        websocket.EventIssueUpdated,
+		Resource:    websocket.ResourceIssue,
+		ID:          id,
+		WorkspaceID: workspaceID,
+		UserID:      userID,
 	})
 
 	h.getIssueByID(w, id)
@@ -630,12 +690,15 @@ func (h *Handlers) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 
 // DeleteIssue handles DELETE /api/issues/{id}
 func (h *Handlers) DeleteIssue(w http.ResponseWriter, r *http.Request) {
-	userID, _, _ := middleware.GetUserFromContext(r.Context())
-
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_id", "Invalid issue ID")
+		return
+	}
+
+	userID, workspaceID, ok := h.requireIssueWorkspaceAccess(w, r, id)
+	if !ok {
 		return
 	}
 
@@ -675,10 +738,11 @@ func (h *Handlers) DeleteIssue(w http.ResponseWriter, r *http.Request) {
 
 	// Broadcast WebSocket event
 	h.hub.Broadcast(websocket.Event{
-		Type:     websocket.EventIssueDeleted,
-		Resource: websocket.ResourceIssue,
-		ID:       id,
-		UserID:   userID,
+		Type:        websocket.EventIssueDeleted,
+		Resource:    websocket.ResourceIssue,
+		ID:          id,
+		WorkspaceID: workspaceID,
+		UserID:      userID,
 	})
 
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Issue deleted"})
@@ -686,12 +750,15 @@ func (h *Handlers) DeleteIssue(w http.ResponseWriter, r *http.Request) {
 
 // UpdateIssueStatus handles PATCH /api/issues/{id}/status
 func (h *Handlers) UpdateIssueStatus(w http.ResponseWriter, r *http.Request) {
-	userID, _, _ := middleware.GetUserFromContext(r.Context())
-
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_id", "Invalid issue ID")
+		return
+	}
+
+	userID, workspaceID, ok := h.requireIssueWorkspaceAccess(w, r, id)
+	if !ok {
 		return
 	}
 
@@ -752,10 +819,11 @@ func (h *Handlers) UpdateIssueStatus(w http.ResponseWriter, r *http.Request) {
 
 	// Broadcast WebSocket event
 	h.hub.Broadcast(websocket.Event{
-		Type:     websocket.EventIssueUpdated,
-		Resource: websocket.ResourceIssue,
-		ID:       id,
-		UserID:   userID,
+		Type:        websocket.EventIssueUpdated,
+		Resource:    websocket.ResourceIssue,
+		ID:          id,
+		WorkspaceID: workspaceID,
+		UserID:      userID,
 	})
 
 	h.getIssueByID(w, id)
@@ -763,12 +831,15 @@ func (h *Handlers) UpdateIssueStatus(w http.ResponseWriter, r *http.Request) {
 
 // PatchIssue handles PATCH /api/issues/{id} - partial update (for Kanban column moves)
 func (h *Handlers) PatchIssue(w http.ResponseWriter, r *http.Request) {
-	userID, _, _ := middleware.GetUserFromContext(r.Context())
-
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_id", "Invalid issue ID")
+		return
+	}
+
+	userID, workspaceID, ok := h.requireIssueWorkspaceAccess(w, r, id)
+	if !ok {
 		return
 	}
 
@@ -918,10 +989,11 @@ func (h *Handlers) PatchIssue(w http.ResponseWriter, r *http.Request) {
 
 	// Broadcast WebSocket event
 	h.hub.Broadcast(websocket.Event{
-		Type:     websocket.EventIssueUpdated,
-		Resource: websocket.ResourceIssue,
-		ID:       id,
-		UserID:   userID,
+		Type:        websocket.EventIssueUpdated,
+		Resource:    websocket.ResourceIssue,
+		ID:          id,
+		WorkspaceID: workspaceID,
+		UserID:      userID,
 	})
 
 	h.getIssueByID(w, id)
@@ -936,17 +1008,19 @@ func (h *Handlers) getIssueByID(w http.ResponseWriter, id int64) {
 	var reporterUsername, reporterFullName string
 
 	err := h.db.QueryRow(`
-		SELECT i.id, i.title, i.description, i.status, i.priority, 
+		SELECT i.id, i.project_id, i.issue_number, p.key, i.title, i.description, i.status, i.priority, 
 		       i.assignee_id, i.reporter_id, i.labels, i.due_date, 
 		       i.created_at, i.updated_at,
 		       COALESCE(a.username, ''), COALESCE(a.full_name, ''),
 		       r.username, r.full_name
 		FROM issues i
+		JOIN projects p ON i.project_id = p.id
 		LEFT JOIN users a ON i.assignee_id = a.id
 		JOIN users r ON i.reporter_id = r.id
 		WHERE i.id = ?
 	`, id).Scan(
-		&issue.ID, &issue.Title, &issue.Description, &issue.Status, &issue.Priority,
+		&issue.ID, &issue.ProjectID, &issue.IssueNumber, &issue.ProjectKey,
+		&issue.Title, &issue.Description, &issue.Status, &issue.Priority,
 		&assigneeID, &issue.ReporterID, &labelsJSON, &issue.DueDate,
 		&issue.CreatedAt, &issue.UpdatedAt,
 		&assigneeUsername, &assigneeFullName,
@@ -1020,6 +1094,11 @@ func joinStrings(strs []string, sep string) string {
 
 // GlobalSearch handles GET /api/search?q=searchterm
 func (h *Handlers) GlobalSearch(w http.ResponseWriter, r *http.Request) {
+	_, workspaceID, ok := h.requireWorkspaceContext(w, r)
+	if !ok {
+		return
+	}
+
 	query := r.URL.Query().Get("q")
 	if query == "" {
 		writeJSON(w, http.StatusOK, models.SearchResponse{Results: []models.SearchResult{}})
@@ -1034,10 +1113,10 @@ func (h *Handlers) GlobalSearch(w http.ResponseWriter, r *http.Request) {
 	issueRows, err := h.db.Query(`
 		SELECT id, title, status
 		FROM issues
-		WHERE title LIKE ?
+		WHERE project_id = ? AND title LIKE ?
 		ORDER BY updated_at DESC
 		LIMIT 10
-	`, pattern)
+	`, workspaceID, pattern)
 	if err == nil {
 		for issueRows.Next() {
 			var result models.SearchResult
@@ -1053,10 +1132,10 @@ func (h *Handlers) GlobalSearch(w http.ResponseWriter, r *http.Request) {
 	docRows, err := h.db.Query(`
 		SELECT id, title
 		FROM docs
-		WHERE title LIKE ? OR content LIKE ?
+		WHERE project_id = ? AND (title LIKE ? OR content LIKE ?)
 		ORDER BY updated_at DESC
 		LIMIT 10
-	`, pattern, pattern)
+	`, workspaceID, pattern, pattern)
 	if err == nil {
 		for docRows.Next() {
 			var result models.SearchResult

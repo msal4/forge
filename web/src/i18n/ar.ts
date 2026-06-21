@@ -44,6 +44,24 @@ export default {
 		commandPalette: 'لوحة الأوامر',
 	},
 
+	// Workspaces
+	workspace: {
+		create: 'إنشاء مساحة عمل',
+		createButton: 'إنشاء مساحة عمل',
+		created: 'تم إنشاء مساحة العمل',
+		createFailed: 'فشل إنشاء مساحة العمل',
+		adminTitle: 'مساحات العمل',
+		adminDescription: 'أنشئ مساحات عمل معزولة وعيّن أعضاء الفريق.',
+		membersTitle: 'أعضاء مساحة العمل',
+		saveMembers: 'حفظ الأعضاء',
+		membersSaved: 'تم تحديث الأعضاء',
+		membersSaveFailed: 'فشل تحديث الأعضاء',
+		keyPlaceholder: 'المفتاح (مثل MYAPP)',
+		namePlaceholder: 'الاسم المعروض',
+		descriptionPlaceholder: 'الوصف (اختياري)',
+		switch: 'تبديل مساحة العمل',
+	},
+
 	// Home Page
 	home: {
 		welcome: 'مرحباً بعودتك، {{name}}',

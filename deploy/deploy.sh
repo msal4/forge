@@ -49,11 +49,22 @@ command -v ssh >/dev/null 2>&1 || error "ssh is not installed"
 # ==============================================
 # 1. Build Backend
 # ==============================================
-log "Building Go backend..."
+log "Building Go backend for linux/amd64..."
 mkdir -p bin
 
-# CGO is required for SQLite
-CGO_ENABLED=1 go build -ldflags="-s -w" -o bin/sarray-forge ./cmd/server
+BUILD_GOARCH="${DEPLOY_GOARCH:-amd64}"
+
+if [[ "$(uname -s)" == "Linux" ]] && { [[ "$(uname -m)" == "x86_64" && "${BUILD_GOARCH}" == "amd64" ]] || [[ "$(uname -m)" == "aarch64" && "${BUILD_GOARCH}" == "arm64" ]]; }; then
+    CGO_ENABLED=1 go build -ldflags='-s -w' -o bin/sarray-forge ./cmd/server
+elif command -v docker >/dev/null 2>&1; then
+    docker run --platform "linux/${BUILD_GOARCH}" --rm \
+        -v "$(pwd)":/src -w /src \
+        -e CGO_ENABLED=1 \
+        golang:1.24-bookworm \
+        bash -c "apt-get update -qq && apt-get install -y -qq gcc libsqlite3-dev >/dev/null && go build -ldflags='-s -w' -o bin/sarray-forge ./cmd/server"
+else
+    error "Cross-compilation requires Docker when deploying from macOS"
+fi
 
 if [[ ! -f "bin/sarray-forge" ]]; then
     error "Backend build failed"

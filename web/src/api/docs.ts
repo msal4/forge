@@ -6,6 +6,7 @@ import { api, type RequestOptions } from './client';
 
 export interface Doc {
   id: number;
+  projectId: number;
   title: string;
   content?: string;
   slug: string;
