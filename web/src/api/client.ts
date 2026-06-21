@@ -16,6 +16,43 @@ export function getApiWorkspaceId() {
   return currentWorkspaceId;
 }
 
+function buildHeaders(extra?: HeadersInit, body?: BodyInit | null): HeadersInit {
+  const headers: Record<string, string> = {
+    'Accept-Language': i18n.language || 'en',
+  };
+
+  if (currentWorkspaceId) {
+    headers['X-Workspace-Id'] = String(currentWorkspaceId);
+  }
+
+  if (extra) {
+    if (extra instanceof Headers) {
+      extra.forEach((value, key) => {
+        headers[key] = value;
+      });
+    } else if (Array.isArray(extra)) {
+      for (const [key, value] of extra) {
+        headers[key] = value;
+      }
+    } else {
+      Object.assign(headers, extra);
+    }
+  }
+
+  // Let the browser set multipart boundaries for FormData uploads.
+  if (body instanceof FormData) {
+    delete headers['Content-Type'];
+  }
+
+  return headers;
+}
+
+export function appendWorkspaceQuery(endpoint: string): string {
+  if (!currentWorkspaceId) return endpoint;
+  const separator = endpoint.includes('?') ? '&' : '?';
+  return `${endpoint}${separator}workspace_id=${currentWorkspaceId}`;
+}
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -36,22 +73,52 @@ async function request<T>(
   options: RequestOptions = {}
 ): Promise<T> {
   const url = `${API_BASE}${endpoint}`;
-  
+  const body = options.body ?? null;
+
   const response = await fetch(url, {
     ...options,
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept-Language': i18n.language || 'en',
-      ...(currentWorkspaceId ? { 'X-Workspace-Id': String(currentWorkspaceId) } : {}),
-      ...options.headers,
-    },
+    headers: buildHeaders(
+      {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      body
+    ),
   });
 
   // Handle no-content responses
   if (response.status === 204) {
     return undefined as T;
   }
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      data.error || 'unknown_error',
+      data.message || 'An error occurred'
+    );
+  }
+
+  return data;
+}
+
+async function uploadForm<T>(
+  endpoint: string,
+  formData: FormData,
+  options: RequestOptions = {}
+): Promise<T> {
+  const url = `${API_BASE}${endpoint}`;
+
+  const response = await fetch(url, {
+    ...options,
+    method: 'POST',
+    credentials: 'include',
+    body: formData,
+    headers: buildHeaders(options.headers, formData),
+  });
 
   const data = await response.json();
 
@@ -93,4 +160,7 @@ export const api = {
   
   delete: <T>(endpoint: string, options?: RequestOptions) =>
     request<T>(endpoint, { ...options, method: 'DELETE' }),
+
+  uploadForm: <T>(endpoint: string, formData: FormData, options?: RequestOptions) =>
+    uploadForm<T>(endpoint, formData, options),
 };

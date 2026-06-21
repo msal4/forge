@@ -1,11 +1,16 @@
 import React, { createContext, useContext, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { workspacesApi, type Workspace } from '../api/workspaces';
-import { setApiWorkspaceId } from '../api/client';
+import { setApiWorkspaceId, getApiWorkspaceId } from '../api/client';
 import { useAuth } from './AuthContext';
 
 const LAST_WORKSPACE_KEY = 'sarray-forge:last-workspace';
+
+function parseWorkspaceKeyFromPath(pathname: string): string | undefined {
+  const match = pathname.match(/^\/w\/([^/]+)/);
+  return match?.[1];
+}
 
 interface WorkspaceContextValue {
   workspaces: Workspace[];
@@ -38,7 +43,7 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { workspaceKey } = useParams<{ workspaceKey?: string }>();
+  const workspaceKey = parseWorkspaceKeyFromPath(location.pathname);
 
   const { data: workspaces = [], isLoading: workspacesLoading } = useQuery({
     queryKey: ['workspaces'],
@@ -62,16 +67,20 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
     return workspaces[0] ?? null;
   }, [workspaces, workspaceKey]);
 
-  useEffect(() => {
-    setApiWorkspaceId(currentWorkspace?.id ?? null);
-    return () => setApiWorkspaceId(null);
-  }, [currentWorkspace?.id]);
+  const workspaceId = currentWorkspace?.id ?? null;
+  if (getApiWorkspaceId() !== workspaceId) {
+    setApiWorkspaceId(workspaceId);
+  }
 
   useEffect(() => {
-    if (currentWorkspace) {
+    return () => setApiWorkspaceId(null);
+  }, []);
+
+  useEffect(() => {
+    if (currentWorkspace && workspaceKey) {
       localStorage.setItem(LAST_WORKSPACE_KEY, currentWorkspace.key);
     }
-  }, [currentWorkspace]);
+  }, [currentWorkspace, workspaceKey]);
 
   const workspacePath = useCallback(
     (subpath = '') => {
