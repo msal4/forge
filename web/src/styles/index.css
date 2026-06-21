@@ -1,16 +1,9 @@
 /* Import fonts - must be first */
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&family=El+Messiri:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Arabic font with Unicode range - auto-applies to Arabic characters */
-@font-face {
-  font-family: 'Arabic Auto';
-  src: local('Noto Naskh Arabic');
-  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
-}
 
 /* ============================================
    Sarray Forge - Modern Mesopotamian Theme
@@ -31,11 +24,20 @@
     min-height: 100vh;
   }
   
-  /* Arabic text support - auto-detect RTL content */
-  :lang(ar),
-  [lang="ar"],
-  [dir="rtl"] {
-    font-family: 'Noto Naskh Arabic', 'Crimson Pro', serif;
+  /* Arabic typography — explicit overrides beat Latin-first Tailwind stacks */
+  [dir="rtl"] body,
+  [dir="rtl"] .font-body {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+  }
+
+  [dir="rtl"] h1,
+  [dir="rtl"] h2,
+  [dir="rtl"] h3,
+  [dir="rtl"] h4,
+  [dir="rtl"] h5,
+  [dir="rtl"] h6,
+  [dir="rtl"] .font-inscription {
+    font-family: 'El Messiri', 'IBM Plex Sans Arabic', serif;
   }
   
   /* Inscription-style headers */
@@ -349,6 +351,20 @@
   @apply mt-1 w-4 h-4 rounded border-parchment-400 text-lapis-500 
          focus:ring-gold-400 focus:ring-offset-0 cursor-default;
   @apply dark:border-lapis-600 dark:bg-lapis-800 dark:text-gold-500;
+}
+
+/* Arabic typography in markdown prose */
+[dir="rtl"] .prose-mesopotamian {
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+}
+
+[dir="rtl"] .prose-mesopotamian h1,
+[dir="rtl"] .prose-mesopotamian h2,
+[dir="rtl"] .prose-mesopotamian h3,
+[dir="rtl"] .prose-mesopotamian h4,
+[dir="rtl"] .prose-mesopotamian h5,
+[dir="rtl"] .prose-mesopotamian h6 {
+  font-family: 'El Messiri', 'IBM Plex Sans Arabic', serif;
 }
 
 /* @mention styling */

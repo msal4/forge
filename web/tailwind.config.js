@@ -88,11 +88,13 @@ export default {
       // ============================================
       fontFamily: {
         // Serif for headers - evokes stone inscriptions
-        inscription: ['Crimson Pro', 'Noto Naskh Arabic', 'Crimson Text', 'Georgia', 'serif'],
+        inscription: ['Crimson Pro', 'El Messiri', 'IBM Plex Sans Arabic', 'Georgia', 'serif'],
         // Sans for body text - modern readability
-        body: ['Inter', 'Noto Naskh Arabic', 'system-ui', '-apple-system', 'sans-serif'],
-        // Arabic - Noto Naskh for authentic Mesopotamian feel
-        arabic: ['Noto Naskh Arabic', 'Amiri', 'serif'],
+        body: ['Inter', 'IBM Plex Sans Arabic', 'system-ui', '-apple-system', 'sans-serif'],
+        // Arabic body text
+        arabic: ['IBM Plex Sans Arabic', 'sans-serif'],
+        // Arabic headers - calligraphic inscription feel
+        arabicInscription: ['El Messiri', 'IBM Plex Sans Arabic', 'serif'],
         // Monospace for code
         code: ['JetBrains Mono', 'Fira Code', 'Monaco', 'Consolas', 'monospace'],
       },
