@@ -1,2 +1,2 @@
--- Normalize empty full_name values so COALESCE-style lookups behave consistently.
-UPDATE users SET full_name = NULL WHERE TRIM(full_name) = '';
+-- Backfill empty full_name values with username for consistent display names.
+UPDATE users SET full_name = username WHERE TRIM(full_name) = '';
