@@ -243,6 +243,60 @@ type SetWorkspaceMembersRequest struct {
 	UserIDs []int64 `json:"userIds"`
 }
 
+// AddWorkspaceMembersRequest is the request body for adding workspace members
+type AddWorkspaceMembersRequest struct {
+	UserID  *int64  `json:"userId,omitempty"`
+	UserIDs []int64 `json:"userIds,omitempty"`
+}
+
+// CreateInviteRequest is the request body for creating a user invite
+type CreateInviteRequest struct {
+	Username      string   `json:"username"`
+	FullName      string   `json:"fullName"`
+	Email         string   `json:"email"`
+	WorkspaceKeys []string `json:"workspaceKeys"`
+	ExpiresInDays *int     `json:"expiresInDays,omitempty"`
+}
+
+// AcceptInviteRequest is the request body for accepting an invite
+type AcceptInviteRequest struct {
+	Password string `json:"password"`
+}
+
+// InviteWorkspaceSummary is a workspace included in an invite
+type InviteWorkspaceSummary struct {
+	ID   int64  `json:"id"`
+	Key  string `json:"key"`
+	Name string `json:"name"`
+}
+
+// InvitePreview is the public preview of an invite
+type InvitePreview struct {
+	Username   string                   `json:"username"`
+	FullName   string                   `json:"fullName"`
+	Email      string                   `json:"email"`
+	Workspaces []InviteWorkspaceSummary `json:"workspaces"`
+	ExpiresAt  time.Time                `json:"expiresAt"`
+	Status     string                   `json:"status"`
+}
+
+// UserInvite is an admin-facing invite record
+type UserInvite struct {
+	ID         int64                    `json:"id"`
+	Username   string                   `json:"username"`
+	FullName   string                   `json:"fullName"`
+	Email      string                   `json:"email"`
+	Workspaces []InviteWorkspaceSummary `json:"workspaces"`
+	InviteURL  string                   `json:"inviteUrl"`
+	ExpiresAt  time.Time                `json:"expiresAt"`
+	CreatedAt  time.Time                `json:"createdAt"`
+}
+
+// CreateInviteResponse is returned when an invite is created
+type CreateInviteResponse struct {
+	UserInvite
+}
+
 // CreateCommentRequest is the request body for creating a comment
 type CreateCommentRequest struct {
 	Content string `json:"content"`

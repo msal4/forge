@@ -268,13 +268,27 @@ Agents can create and manage Forge issues via the MCP server in `mcp/forge/`.
 | Tool | API |
 |------|-----|
 | `forge_list_workspaces` | `GET /api/workspaces` |
+| `forge_list_users` | `GET /api/users` |
+| `forge_list_all_users` | `GET /api/users?all=true` |
 | `forge_list_issues` | `GET /api/issues` |
 | `forge_get_issue` | `GET /api/issues/{id}` |
 | `forge_create_issue` | `POST /api/issues` |
 | `forge_update_issue` | `PUT /api/issues/{id}` |
+| `forge_delete_issue` | `DELETE /api/issues/{id}` |
+| `forge_list_docs` | `GET /api/docs` |
+| `forge_get_doc` | `GET /api/docs/{id}` |
+| `forge_create_doc` | `POST /api/docs` |
+| `forge_update_doc` | `PUT /api/docs/{id}` |
+| `forge_delete_doc` | `DELETE /api/docs/{id}` |
 | `forge_search` | `GET /api/search?q=` |
+| `forge_create_invite` | `POST /api/invites` |
+| `forge_list_invites` | `GET /api/invites` |
+| `forge_revoke_invite` | `DELETE /api/invites/{id}` |
+| `forge_add_workspace_member` | `POST /api/workspaces/{id}/members` |
 
-All scoped calls send `Authorization: Bearer forge_…` and `X-Workspace-Id`.
+Public invite accept flow: `GET /api/invites/{token}`, `POST /api/invites/{token}/accept`
+
+All scoped calls send `Authorization: Bearer forge_…` and `X-Workspace-Id`. Scoped tools accept an optional `workspace` param (e.g. `"ALFA"`) per call; when omitted, `FORGE_WORKSPACE` env is the default.
 
 ### Workflow: issues from repo work
 

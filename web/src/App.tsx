@@ -22,6 +22,7 @@ import './i18n';
 // Pages
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
+import { InvitePage } from './pages/InvitePage';
 import { IssuesPage } from './pages/IssuesPage';
 import { DocsPage } from './pages/DocsPage';
 import { ReleasesPage } from './pages/ReleasesPage';
@@ -129,6 +130,7 @@ function AppRoutes() {
     <Routes>
       {/* Public routes */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/invite/:token" element={<InvitePage />} />
 
       {/* Legacy redirects */}
       <Route path="/" element={<WorkspaceRootRedirect />} />

@@ -315,6 +315,31 @@ func (h *Handler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 // Private Methods
 // ============================================
 
+// normalizeUsername extracts and normalizes the username from input.
+func NormalizeUsername(input string) string {
+	return normalizeUsername(input)
+}
+
+// EstablishSession creates a session token, stores it, and sets the session cookie.
+func (h *Handler) EstablishSession(w http.ResponseWriter, r *http.Request, userID int64) (string, error) {
+	token, err := h.createSession(userID, r.UserAgent(), getClientIP(r))
+	if err != nil {
+		return "", err
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     CookieName,
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   r.TLS != nil,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   int(SessionDuration.Seconds()),
+	})
+
+	return token, nil
+}
+
 // normalizeUsername extracts and normalizes the username
 func normalizeUsername(input string) string {
 	// Trim whitespace and convert to lowercase

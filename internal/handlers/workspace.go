@@ -353,3 +353,55 @@ func (h *Handlers) SetWorkspaceMembers(w http.ResponseWriter, r *http.Request) {
 
 	h.ListWorkspaceMembers(w, r)
 }
+
+// AddWorkspaceMembers handles POST /api/workspaces/{id}/members
+func (h *Handlers) AddWorkspaceMembers(w http.ResponseWriter, r *http.Request) {
+	userID, _, ok := middleware.GetUserFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized", "Not authenticated")
+		return
+	}
+	if !h.userIsAdmin(userID) {
+		writeError(w, http.StatusForbidden, "forbidden", "Only admins can manage workspace members")
+		return
+	}
+
+	workspaceID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_id", "Invalid workspace ID")
+		return
+	}
+
+	var req models.AddWorkspaceMembersRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", "Invalid request body")
+		return
+	}
+
+	userIDs := req.UserIDs
+	if req.UserID != nil {
+		userIDs = append(userIDs, *req.UserID)
+	}
+	if len(userIDs) == 0 {
+		writeError(w, http.StatusBadRequest, "missing_users", "userId or userIds is required")
+		return
+	}
+
+	var exists int
+	if err := h.db.QueryRow("SELECT 1 FROM projects WHERE id = ?", workspaceID).Scan(&exists); err != nil {
+		writeError(w, http.StatusNotFound, "workspace_not_found", "Workspace not found")
+		return
+	}
+
+	for _, memberID := range userIDs {
+		if _, err := h.db.Exec(`
+			INSERT OR IGNORE INTO workspace_members (user_id, project_id)
+			SELECT id, ? FROM users WHERE id = ? AND is_active = 1
+		`, workspaceID, memberID); err != nil {
+			writeError(w, http.StatusInternalServerError, "db_error", "Failed to add workspace member")
+			return
+		}
+	}
+
+	h.ListWorkspaceMembers(w, r)
+}

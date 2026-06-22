@@ -8,6 +8,7 @@ import { docsApi, type Doc, type CreateDocRequest, type UpdateDocRequest } from 
 import { releasesApi, type Release, type CreateReleaseRequest } from '../api/releases';
 import { usersApi } from '../api/users';
 import { workspacesApi, type CreateWorkspaceRequest } from '../api/workspaces';
+import { invitesApi, type CreateInviteRequest } from '../api/invites';
 import { activityApi } from '../api/activity';
 import { useWorkspace } from '../context/WorkspaceContext';
 
@@ -19,6 +20,9 @@ export const queryKeys = {
   workspaces: {
     all: ['workspaces'] as const,
     members: (workspaceId: number) => ['workspaces', workspaceId, 'members'] as const,
+  },
+  invites: {
+    all: ['invites'] as const,
   },
   issues: {
     all: ['issues'] as const,
@@ -88,6 +92,46 @@ export function useSetWorkspaceMembers() {
     onSuccess: (_, { workspaceId }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.members(workspaceId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.users.list(workspaceId) });
+    },
+  });
+}
+
+export function useAddWorkspaceMembers() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ workspaceId, userIds }: { workspaceId: number; userIds: number[] }) =>
+      workspacesApi.addMembers(workspaceId, userIds),
+    onSuccess: (_, { workspaceId }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.members(workspaceId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.list(workspaceId) });
+    },
+  });
+}
+
+export function useInvites() {
+  return useQuery({
+    queryKey: queryKeys.invites.all,
+    queryFn: () => invitesApi.list(),
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useCreateInvite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateInviteRequest) => invitesApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.invites.all });
+    },
+  });
+}
+
+export function useRevokeInvite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => invitesApi.revoke(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.invites.all });
     },
   });
 }

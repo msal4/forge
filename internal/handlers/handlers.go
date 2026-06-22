@@ -5,7 +5,9 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
+	"sarray-forge/internal/auth"
 	"sarray-forge/internal/db"
 	"sarray-forge/internal/middleware"
 	"sarray-forge/internal/models"
@@ -22,6 +24,8 @@ type Handlers struct {
 	hub          *websocket.Hub
 	Notification *notifications.Service
 	telegram     *telegram.Service
+	baseURL      string
+	authHandler  *auth.Handler
 }
 
 // New creates a new Handlers instance
@@ -36,6 +40,16 @@ func New(database *db.DB, hub *websocket.Hub) *Handlers {
 // SetTelegram sets the Telegram service (optional, may be nil if not configured)
 func (h *Handlers) SetTelegram(tg *telegram.Service) {
 	h.telegram = tg
+}
+
+// SetBaseURL sets the public base URL for invite links
+func (h *Handlers) SetBaseURL(baseURL string) {
+	h.baseURL = strings.TrimRight(strings.TrimSpace(baseURL), "/")
+}
+
+// SetAuthHandler sets the auth handler for session creation
+func (h *Handlers) SetAuthHandler(authHandler *auth.Handler) {
+	h.authHandler = authHandler
 }
 
 // sendChatNotificationToOfflineUser sends a Telegram notification for a chat DM to an offline user

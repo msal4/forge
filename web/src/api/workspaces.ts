@@ -27,4 +27,7 @@ export const workspacesApi = {
 
   setMembers: (workspaceId: number, userIds: number[]) =>
     api.put<User[]>(`/workspaces/${workspaceId}/members`, { userIds }),
+
+  addMembers: (workspaceId: number, userIds: number[]) =>
+    api.post<User[]>(`/workspaces/${workspaceId}/members`, { userIds }),
 };

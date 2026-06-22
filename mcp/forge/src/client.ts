@@ -5,6 +5,18 @@ export interface Workspace {
   description?: string;
 }
 
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  fullName: string;
+  avatarUrl?: string;
+  language?: string;
+  isAdmin: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Issue {
   id: number;
   projectId: number;
@@ -21,6 +33,23 @@ export interface Issue {
   updatedAt: string;
 }
 
+export interface Doc {
+  id: number;
+  projectId: number;
+  title: string;
+  content?: string;
+  slug: string;
+  parentId?: number;
+  authorId: number;
+  author?: {
+    id: number;
+    username: string;
+    fullName: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface SearchResult {
   type: 'issue' | 'doc';
   id: number;
@@ -28,29 +57,60 @@ export interface SearchResult {
   status?: string;
 }
 
+export interface InviteWorkspaceSummary {
+  id: number;
+  key: string;
+  name: string;
+}
+
+export interface UserInvite {
+  id: number;
+  username: string;
+  fullName: string;
+  email: string;
+  workspaces: InviteWorkspaceSummary[];
+  inviteUrl: string;
+  expiresAt: string;
+  createdAt: string;
+}
+
 export class ForgeClient {
   private baseUrl: string;
   private token: string;
-  private workspaceId: number | null = null;
+  private workspaceMap: Map<string, Workspace>;
+  private defaultWorkspaceKey: string;
 
-  constructor(baseUrl: string, token: string) {
+  constructor(baseUrl: string, token: string, workspaces: Workspace[], defaultWorkspaceKey: string) {
     this.baseUrl = baseUrl.replace(/\/$/, '');
     this.token = token;
+    this.defaultWorkspaceKey = defaultWorkspaceKey.toUpperCase();
+    this.workspaceMap = new Map(workspaces.map((ws) => [ws.key.toUpperCase(), ws]));
   }
 
-  setWorkspaceId(id: number) {
-    this.workspaceId = id;
+  getDefaultWorkspaceKey() {
+    return this.defaultWorkspaceKey;
   }
 
-  getWorkspaceId() {
-    return this.workspaceId;
+  resolveWorkspaceKey(workspaceKey?: string): string {
+    return (workspaceKey ?? this.defaultWorkspaceKey).toUpperCase();
+  }
+
+  private resolveWorkspaceId(workspaceKey?: string): number {
+    const key = this.resolveWorkspaceKey(workspaceKey);
+    const workspace = this.workspaceMap.get(key);
+    if (!workspace) {
+      const available = [...this.workspaceMap.keys()].join(', ') || '(none)';
+      throw new Error(`Workspace "${key}" not found. Available: ${available}`);
+    }
+    return workspace.id;
   }
 
   private async request<T>(
     method: string,
     path: string,
     body?: unknown,
-    scoped = true
+    scoped = true,
+    workspaceKey?: string
   ): Promise<T> {
     const headers: Record<string, string> = {
       Authorization: `Bearer ${this.token}`,
@@ -62,10 +122,7 @@ export class ForgeClient {
     }
 
     if (scoped) {
-      if (!this.workspaceId) {
-        throw new Error('Workspace not configured');
-      }
-      headers['X-Workspace-Id'] = String(this.workspaceId);
+      headers['X-Workspace-Id'] = String(this.resolveWorkspaceId(workspaceKey));
     }
 
     const response = await fetch(`${this.baseUrl}${path}`, {
@@ -111,27 +168,77 @@ export class ForgeClient {
     return this.request<Workspace[]>('GET', '/api/workspaces', undefined, false);
   }
 
-  async listIssues(params?: { status?: string; assigneeId?: number }): Promise<Issue[]> {
+  async listUsers(workspaceKey?: string): Promise<User[]> {
+    return this.request<User[]>('GET', '/api/users', undefined, true, workspaceKey);
+  }
+
+  async listAllUsers(): Promise<User[]> {
+    return this.request<User[]>('GET', '/api/users?all=true', undefined, false);
+  }
+
+  async createInvite(data: {
+    username: string;
+    fullName?: string;
+    email?: string;
+    workspaceKeys: string[];
+    expiresInDays?: number;
+  }): Promise<UserInvite> {
+    return this.request<UserInvite>('POST', '/api/invites', data, false);
+  }
+
+  async listInvites(): Promise<UserInvite[]> {
+    return this.request<UserInvite[]>('GET', '/api/invites', undefined, false);
+  }
+
+  async revokeInvite(id: number): Promise<{ message: string }> {
+    return this.request<{ message: string }>('DELETE', `/api/invites/${id}`, undefined, false);
+  }
+
+  async addWorkspaceMembers(
+    workspaceKey: string,
+    userIds: number[]
+  ): Promise<User[]> {
+    const workspaceId = this.resolveWorkspaceId(workspaceKey);
+    return this.request<User[]>(
+      'POST',
+      `/api/workspaces/${workspaceId}/members`,
+      { userIds },
+      false
+    );
+  }
+
+  async listIssues(
+    params?: { status?: string; assigneeId?: number; workspaceKey?: string }
+  ): Promise<Issue[]> {
     const search = new URLSearchParams();
     if (params?.status) search.set('status', params.status);
     if (params?.assigneeId) search.set('assignee_id', String(params.assigneeId));
     const query = search.toString();
-    return this.request<Issue[]>('GET', `/api/issues${query ? `?${query}` : ''}`);
+    return this.request<Issue[]>(
+      'GET',
+      `/api/issues${query ? `?${query}` : ''}`,
+      undefined,
+      true,
+      params?.workspaceKey
+    );
   }
 
-  async getIssue(id: number) {
-    return this.request<Issue>('GET', `/api/issues/${id}`);
+  async getIssue(id: number, workspaceKey?: string) {
+    return this.request<Issue>('GET', `/api/issues/${id}`, undefined, true, workspaceKey);
   }
 
-  async createIssue(data: {
-    title: string;
-    description?: string;
-    priority?: string;
-    assigneeId?: number;
-    labels?: string[];
-    dueDate?: string;
-  }): Promise<Issue> {
-    return this.request<Issue>('POST', '/api/issues', data);
+  async createIssue(
+    data: {
+      title: string;
+      description?: string;
+      priority?: string;
+      assigneeId?: number;
+      labels?: string[];
+      dueDate?: string;
+    },
+    workspaceKey?: string
+  ): Promise<Issue> {
+    return this.request<Issue>('POST', '/api/issues', data, true, workspaceKey);
   }
 
   async updateIssue(
@@ -144,15 +251,82 @@ export class ForgeClient {
       assigneeId?: number | null;
       labels?: string[];
       dueDate?: string | null;
-    }
+    },
+    workspaceKey?: string
   ): Promise<Issue> {
-    return this.request<Issue>('PUT', `/api/issues/${id}`, data);
+    return this.request<Issue>('PUT', `/api/issues/${id}`, data, true, workspaceKey);
   }
 
-  async search(query: string) {
+  async deleteIssue(id: number, workspaceKey?: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(
+      'DELETE',
+      `/api/issues/${id}`,
+      undefined,
+      true,
+      workspaceKey
+    );
+  }
+
+  async listDocs(params?: {
+    parentId?: number | 'root';
+    workspaceKey?: string;
+  }): Promise<Doc[]> {
+    const search = new URLSearchParams();
+    if (params?.parentId !== undefined) {
+      search.set('parent_id', params.parentId === 'root' ? 'root' : String(params.parentId));
+    }
+    const query = search.toString();
+    return this.request<Doc[]>(
+      'GET',
+      `/api/docs${query ? `?${query}` : ''}`,
+      undefined,
+      true,
+      params?.workspaceKey
+    );
+  }
+
+  async getDoc(idOrSlug: number | string, workspaceKey?: string): Promise<Doc> {
+    return this.request<Doc>(
+      'GET',
+      `/api/docs/${idOrSlug}`,
+      undefined,
+      true,
+      workspaceKey
+    );
+  }
+
+  async createDoc(
+    data: { title: string; content?: string; parentId?: number },
+    workspaceKey?: string
+  ): Promise<Doc> {
+    return this.request<Doc>('POST', '/api/docs', data, true, workspaceKey);
+  }
+
+  async updateDoc(
+    id: number,
+    data: { title?: string; content?: string; parentId?: number | null },
+    workspaceKey?: string
+  ): Promise<Doc> {
+    return this.request<Doc>('PUT', `/api/docs/${id}`, data, true, workspaceKey);
+  }
+
+  async deleteDoc(id: number, workspaceKey?: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(
+      'DELETE',
+      `/api/docs/${id}`,
+      undefined,
+      true,
+      workspaceKey
+    );
+  }
+
+  async search(query: string, workspaceKey?: string) {
     return this.request<{ results: SearchResult[] }>(
       'GET',
-      `/api/search?q=${encodeURIComponent(query)}`
+      `/api/search?q=${encodeURIComponent(query)}`,
+      undefined,
+      true,
+      workspaceKey
     );
   }
 }
@@ -174,16 +348,17 @@ export function getConfig() {
 
 export async function initClient(): Promise<{ client: ForgeClient; workspaceKey: string }> {
   const { baseUrl, token, workspaceKey } = getConfig();
-  const client = new ForgeClient(baseUrl, token);
+  const bootstrap = new ForgeClient(baseUrl, token, [], workspaceKey);
 
-  await client.validateAuth();
-  const workspaces = await client.listWorkspaces();
-  const workspace = workspaces.find((ws) => ws.key.toUpperCase() === workspaceKey);
-  if (!workspace) {
+  await bootstrap.validateAuth();
+  const workspaces = await bootstrap.listWorkspaces();
+
+  if (!workspaces.find((ws) => ws.key.toUpperCase() === workspaceKey)) {
     const keys = workspaces.map((ws) => ws.key).join(', ') || '(none)';
     throw new Error(`Workspace "${workspaceKey}" not found. Available: ${keys}`);
   }
 
-  client.setWorkspaceId(workspace.id);
+  const client = new ForgeClient(baseUrl, token, workspaces, workspaceKey);
+  const workspace = workspaces.find((ws) => ws.key.toUpperCase() === workspaceKey)!;
   return { client, workspaceKey: workspace.key };
 }

@@ -44,13 +44,15 @@ func main() {
 	// Create handler dependencies
 	h := handlers.New(database, hub)
 	h.SetTelegram(tg)
+	h.SetBaseURL(cfg.BaseURL)
+
+	authHandler := auth.NewHandler(database)
+	h.SetAuthHandler(authHandler)
 
 	// Connect telegram to notification service
 	if tg != nil {
 		h.Notification.SetTelegram(tg)
 	}
-
-	authHandler := auth.NewHandler(database)
 
 	// Create the main router using Go 1.22 http.NewServeMux
 	mux := http.NewServeMux()
@@ -63,6 +65,8 @@ func main() {
 	mux.HandleFunc("GET /api/auth/me", authHandler.GetCurrentUser)
 	mux.HandleFunc("POST /api/auth/change-password", authHandler.ChangePassword)
 	mux.HandleFunc("GET /api/health", handlers.HealthCheck)
+	mux.HandleFunc("GET /api/invites/{token}", h.GetInvitePreview)
+	mux.HandleFunc("POST /api/invites/{token}/accept", h.AcceptInvite)
 
 	// ============================================
 	// Protected API Routes (With Auth Middleware)
@@ -72,7 +76,12 @@ func main() {
 	mux.Handle("GET /api/workspaces", requireAuth(http.HandlerFunc(h.ListWorkspaces)))
 	mux.Handle("POST /api/workspaces", requireAuth(http.HandlerFunc(h.CreateWorkspace)))
 	mux.Handle("GET /api/workspaces/{id}/members", requireAuth(http.HandlerFunc(h.ListWorkspaceMembers)))
+	mux.Handle("POST /api/workspaces/{id}/members", requireAuth(http.HandlerFunc(h.AddWorkspaceMembers)))
 	mux.Handle("PUT /api/workspaces/{id}/members", requireAuth(http.HandlerFunc(h.SetWorkspaceMembers)))
+
+	mux.Handle("GET /api/invites", requireAuth(http.HandlerFunc(h.ListInvites)))
+	mux.Handle("POST /api/invites", requireAuth(http.HandlerFunc(h.CreateInvite)))
+	mux.Handle("DELETE /api/invites/{id}", requireAuth(http.HandlerFunc(h.RevokeInvite)))
 
 	// User routes
 	mux.Handle("GET /api/users/me", requireAuth(http.HandlerFunc(h.GetCurrentUser)))
