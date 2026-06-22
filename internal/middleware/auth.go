@@ -29,15 +29,15 @@ func RequireAuth(authHandler *auth.Handler) func(http.Handler) http.Handler {
 				return
 			}
 
-			// Validate the session token
-			session, err := authHandler.ValidateSession(token)
+			// Validate session or API token
+			userID, err := authHandler.ResolveUserIDFromToken(token)
 			if err != nil {
-				writeAuthError(w, http.StatusUnauthorized, "session_invalid", "Invalid or expired session")
+				writeAuthError(w, http.StatusUnauthorized, "session_invalid", "Invalid or expired credentials")
 				return
 			}
 
 			// Get full user info
-			user, err := authHandler.GetUserByID(session.UserID)
+			user, err := authHandler.GetUserByID(userID)
 			if err != nil {
 				writeAuthError(w, http.StatusUnauthorized, "user_not_found", "User not found")
 				return
@@ -45,10 +45,9 @@ func RequireAuth(authHandler *auth.Handler) func(http.Handler) http.Handler {
 
 			// Add user info to context
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, UserIDKey, session.UserID)
-			ctx = context.WithValue(ctx, UserEmailKey, session.Email)
+			ctx = context.WithValue(ctx, UserIDKey, userID)
+			ctx = context.WithValue(ctx, UserEmailKey, user.Email)
 			ctx = context.WithValue(ctx, UsernameKey, user.Username)
-			ctx = context.WithValue(ctx, SessionKey, session)
 
 			// Continue with the request
 			next.ServeHTTP(w, r.WithContext(ctx))

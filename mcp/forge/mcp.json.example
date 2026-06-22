@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "forge": {
+      "command": "bun",
+      "args": ["run", "mcp/forge/src/index.ts"],
+      "env": {
+        "FORGE_URL": "https://forge.sarray.de",
+        "FORGE_TOKEN": "forge_REPLACE_WITH_TOKEN_FROM_SETTINGS",
+        "FORGE_WORKSPACE": "FORGE"
+      }
+    }
+  }
+}

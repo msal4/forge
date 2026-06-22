@@ -130,8 +130,8 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 	// Get token from cookie or header
 	token := extractToken(r)
 
-	// Delete session from database if token exists
-	if token != "" {
+	// Delete session from database if token exists (skip API keys)
+	if token != "" && !IsAPIToken(token) {
 		_, _ = h.db.Exec("DELETE FROM sessions WHERE token = ?", token)
 	}
 
@@ -157,13 +157,13 @@ func (h *Handler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := h.ValidateSession(token)
+	userID, err := h.ResolveUserIDFromToken(token)
 	if err != nil {
-		writeError(w, http.StatusUnauthorized, "unauthorized", "Invalid or expired session")
+		writeError(w, http.StatusUnauthorized, "unauthorized", "Invalid or expired credentials")
 		return
 	}
 
-	user, err := h.GetUserByID(session.UserID)
+	user, err := h.GetUserByID(userID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "user_error", "Failed to get user")
 		return

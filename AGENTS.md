@@ -249,3 +249,38 @@ e37348c feat: improve markdown, navigation, and releases UX
 - The useEffect that syncs URL to modal state must check `modalMode !== 'create'` before closing
 - `handleCloseModal` handles create mode separately (just closes state, no navigation)
 - Backdrop click calls `onClose`, modal content has `onClick={e => e.stopPropagation()}`
+
+## Using Forge MCP (Agent Issue Creation)
+
+Agents can create and manage Forge issues via the MCP server in `mcp/forge/`.
+
+### Setup
+
+1. **Create an API key** in Forge: Settings → API Keys (session login required)
+2. Copy `mcp/forge/mcp.json.example` into your Cursor MCP config
+3. Set environment variables:
+   - `FORGE_URL` — e.g. `https://forge.sarray.de` or `http://localhost:8080`
+   - `FORGE_TOKEN` — `forge_…` secret shown once at creation
+   - `FORGE_WORKSPACE` — workspace key (default `FORGE`)
+
+### MCP tools
+
+| Tool | API |
+|------|-----|
+| `forge_list_workspaces` | `GET /api/workspaces` |
+| `forge_list_issues` | `GET /api/issues` |
+| `forge_get_issue` | `GET /api/issues/{id}` |
+| `forge_create_issue` | `POST /api/issues` |
+| `forge_update_issue` | `PUT /api/issues/{id}` |
+| `forge_search` | `GET /api/search?q=` |
+
+All scoped calls send `Authorization: Bearer forge_…` and `X-Workspace-Id`.
+
+### Workflow: issues from repo work
+
+1. Agent reads git diff/log with normal tools
+2. `forge_search` to deduplicate
+3. `forge_create_issue` per follow-up with markdown linking commits/files
+4. Label with `agent` when created by automation
+
+See `mcp/forge/SKILL.md` for detailed agent workflow.

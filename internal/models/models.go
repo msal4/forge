@@ -331,3 +331,24 @@ type ToggleReactionResponse struct {
 	Added    bool      `json:"added"`    // true if added, false if removed
 	Reaction *Reaction `json:"reaction"` // The reaction (only if added)
 }
+
+// APIToken represents a personal API token (list view — never includes secret)
+type APIToken struct {
+	ID         int64      `json:"id"`
+	Name       string     `json:"name"`
+	TokenPrefix string    `json:"tokenPrefix"`
+	LastUsedAt *time.Time `json:"lastUsedAt,omitempty"`
+	CreatedAt  time.Time  `json:"createdAt"`
+	RevokedAt  *time.Time `json:"revokedAt,omitempty"`
+}
+
+// CreateAPITokenRequest is the request body for creating an API token
+type CreateAPITokenRequest struct {
+	Name string `json:"name"`
+}
+
+// CreateAPITokenResponse includes the full secret once at creation
+type CreateAPITokenResponse struct {
+	Token APIToken `json:"token"`
+	Secret string  `json:"secret"`
+}
