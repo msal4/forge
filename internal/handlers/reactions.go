@@ -958,8 +958,7 @@ func (h *Handlers) notifyReaction(ctx context.Context, actorID int64, entityType
 	}
 
 	// Get actor name
-	var actorName string
-	h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", actorID).Scan(&actorName)
+	actorName := h.lookupUserDisplayName(actorID)
 
 	// Create notification
 	h.Notification.Create(ctx, notifications.CreateParams{
@@ -1027,8 +1026,7 @@ func (h *Handlers) notifyCommentReaction(ctx context.Context, actorID int64, com
 	}
 
 	// Get actor name
-	var actorName string
-	h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", actorID).Scan(&actorName)
+	actorName := h.lookupUserDisplayName(actorID)
 
 	// Create notification
 	h.Notification.Create(ctx, notifications.CreateParams{

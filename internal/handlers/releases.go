@@ -142,8 +142,7 @@ func (h *Handlers) CreateRelease(w http.ResponseWriter, r *http.Request) {
 
 	// Process @mentions in description
 	if req.Description != "" {
-		var actorName string
-		h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+		actorName := h.lookupUserDisplayName(userID)
 		h.Notification.CreateForContentMentions(r.Context(), userID, actorName, "release", releaseID, req.Title, "", req.Description)
 	}
 
@@ -190,8 +189,7 @@ func (h *Handlers) DeleteRelease(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get actor name for notifications
-	var actorName string
-	h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+	actorName := h.lookupUserDisplayName(userID)
 
 	// Create deletion notification BEFORE deleting (releases don't have assignees, so pass nil)
 	h.Notification.CreateForEntityDeleted(r.Context(), userID, actorName, "release", id, title, authorID, nil)

@@ -129,8 +129,7 @@ func (h *Handlers) CreateDoc(w http.ResponseWriter, r *http.Request) {
 
 	// Process @mentions in content
 	if req.Content != "" {
-		var actorName string
-		h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+		actorName := h.lookupUserDisplayName(userID)
 		h.Notification.CreateForContentMentions(r.Context(), userID, actorName, "doc", docID, req.Title, "", req.Content)
 	}
 
@@ -242,8 +241,7 @@ func (h *Handlers) UpdateDoc(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get actor name for notifications
-	var actorName string
-	h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+	actorName := h.lookupUserDisplayName(userID)
 
 	// Process @mentions in content if it changed
 	if req.Content != nil && oldContent != newContent {
@@ -291,8 +289,7 @@ func (h *Handlers) DeleteDoc(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get actor name for notifications
-	var actorName string
-	h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+	actorName := h.lookupUserDisplayName(userID)
 
 	// Create deletion notification BEFORE deleting (docs don't have assignees, so pass nil)
 	h.Notification.CreateForEntityDeleted(r.Context(), userID, actorName, "doc", id, title, authorID, nil)

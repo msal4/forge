@@ -2,12 +2,45 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"sarray-forge/internal/models"
 )
+
+// userDisplayNameSelect returns SQL for a user's display name, preferring non-empty full_name over username.
+func userDisplayNameSelect(tableAlias string) string {
+	prefix := ""
+	if tableAlias != "" {
+		prefix = tableAlias + "."
+	}
+	return fmt.Sprintf(
+		"COALESCE(NULLIF(TRIM(%sfull_name), ''), NULLIF(TRIM(%susername), ''))",
+		prefix, prefix,
+	)
+}
+
+// formatUserDisplayName picks the best display name from full_name and username.
+func formatUserDisplayName(fullName, username string) string {
+	if strings.TrimSpace(fullName) != "" {
+		return strings.TrimSpace(fullName)
+	}
+	return strings.TrimSpace(username)
+}
+
+// lookupUserDisplayName fetches the display name for a user ID.
+func (h *Handlers) lookupUserDisplayName(userID int64) string {
+	var fullName, username string
+	if err := h.db.QueryRow(
+		"SELECT full_name, username FROM users WHERE id = ?",
+		userID,
+	).Scan(&fullName, &username); err != nil {
+		return ""
+	}
+	return formatUserDisplayName(fullName, username)
+}
 
 // ============================================
 // Activity Log Handlers

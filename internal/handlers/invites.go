@@ -96,6 +96,9 @@ func (h *Handlers) CreateInvite(w http.ResponseWriter, r *http.Request) {
 	workspaceIDsJSON, _ := json.Marshal(workspaceIDs)
 	expiresAt := time.Now().UTC().Add(time.Duration(expiresInDays) * 24 * time.Hour)
 	fullName := strings.TrimSpace(req.FullName)
+	if fullName == "" {
+		fullName = username
+	}
 
 	result, err := h.db.Exec(`
 		INSERT INTO user_invites (token, username, email, full_name, workspace_ids, created_by, expires_at)
@@ -284,6 +287,10 @@ func (h *Handlers) AcceptInvite(w http.ResponseWriter, r *http.Request) {
 	if existing > 0 {
 		writeError(w, http.StatusConflict, "user_exists", "A user with this username or email already exists")
 		return
+	}
+
+	if strings.TrimSpace(fullName) == "" {
+		fullName = username
 	}
 
 	passwordHash, err := auth.HashPassword(req.Password)

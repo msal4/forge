@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -508,15 +509,13 @@ func (h *Handlers) CreateIssue(w http.ResponseWriter, r *http.Request) {
 
 	// Process @mentions in description
 	if req.Description != "" {
-		var actorName string
-		h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+		actorName := h.lookupUserDisplayName(userID)
 		h.Notification.CreateForContentMentions(r.Context(), userID, actorName, "issue", issueID, req.Title, "", req.Description)
 	}
 
 	// Notify assignee if assigned on creation
 	if req.AssigneeID != nil && *req.AssigneeID != 0 && *req.AssigneeID != userID {
-		var actorName string
-		h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+		actorName := h.lookupUserDisplayName(userID)
 		h.Notification.CreateForAssignment(r.Context(), userID, actorName, issueID, *req.AssigneeID)
 	}
 
@@ -566,13 +565,13 @@ func (h *Handlers) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 	var oldAssigneeName *string
 	var oldDueDate *string
 	var reporterID int64
-	err = h.db.QueryRow(`
+	err = h.db.QueryRow(fmt.Sprintf(`
 		SELECT i.title, i.description, i.status, i.priority, i.assignee_id, i.labels, i.due_date,
-		       COALESCE(u.full_name, u.username), i.reporter_id
+		       %s, i.reporter_id
 		FROM issues i
 		LEFT JOIN users u ON i.assignee_id = u.id
 		WHERE i.id = ?
-	`, id).Scan(&oldTitle, &oldDescription, &oldStatus, &oldPriority, &oldAssigneeID, &oldLabelsJSON, &oldDueDate, &oldAssigneeName, &reporterID)
+	`, userDisplayNameSelect("u")), id).Scan(&oldTitle, &oldDescription, &oldStatus, &oldPriority, &oldAssigneeID, &oldLabelsJSON, &oldDueDate, &oldAssigneeName, &reporterID)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "not_found", "Issue not found")
 		return
@@ -618,10 +617,8 @@ func (h *Handlers) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 		updates = append(updates, "assignee_id = ?")
 		args = append(args, *req.AssigneeID)
 		newAssigneeID = req.AssigneeID
-		// Fetch new assignee name
 		if *req.AssigneeID != 0 {
-			var name string
-			h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", *req.AssigneeID).Scan(&name)
+			name := h.lookupUserDisplayName(*req.AssigneeID)
 			newAssigneeName = &name
 		} else {
 			newAssigneeName = nil
@@ -672,8 +669,7 @@ func (h *Handlers) UpdateIssue(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get actor name for notifications
-	var actorName string
-	h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+	actorName := h.lookupUserDisplayName(userID)
 
 	// Create notification if assignee changed
 	if newAssigneeID != nil && (oldAssigneeID == nil || *oldAssigneeID != *newAssigneeID) {
@@ -727,8 +723,7 @@ func (h *Handlers) DeleteIssue(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get actor name for notifications
-	var actorName string
-	h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+	actorName := h.lookupUserDisplayName(userID)
 
 	// Create deletion notifications BEFORE deleting
 	h.Notification.CreateForEntityDeleted(r.Context(), userID, actorName, "issue", id, title, reporterID, assigneeID)
@@ -826,8 +821,7 @@ func (h *Handlers) UpdateIssueStatus(w http.ResponseWriter, r *http.Request) {
 		})
 
 		// Get actor name and notify reporter/assignee about the update
-		var actorName string
-		h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+		actorName := h.lookupUserDisplayName(userID)
 		h.Notification.CreateForEntityUpdate(r.Context(), userID, actorName, "issue", id, title, reporterID, assigneeID)
 	}
 
@@ -869,13 +863,13 @@ func (h *Handlers) PatchIssue(w http.ResponseWriter, r *http.Request) {
 	var oldAssigneeName *string
 	var oldDueDate *string
 	var reporterID int64
-	err = h.db.QueryRow(`
+	err = h.db.QueryRow(fmt.Sprintf(`
 		SELECT i.title, i.description, i.status, i.priority, i.assignee_id, i.labels, i.due_date,
-		       COALESCE(u.full_name, u.username), i.reporter_id
+		       %s, i.reporter_id
 		FROM issues i
 		LEFT JOIN users u ON i.assignee_id = u.id
 		WHERE i.id = ?
-	`, id).Scan(&oldTitle, &oldDescription, &oldStatus, &oldPriority, &oldAssigneeID, &oldLabelsJSON, &oldDueDate, &oldAssigneeName, &reporterID)
+	`, userDisplayNameSelect("u")), id).Scan(&oldTitle, &oldDescription, &oldStatus, &oldPriority, &oldAssigneeID, &oldLabelsJSON, &oldDueDate, &oldAssigneeName, &reporterID)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "not_found", "Issue not found")
 		return
@@ -930,8 +924,7 @@ func (h *Handlers) PatchIssue(w http.ResponseWriter, r *http.Request) {
 		newAssigneeID = req.AssigneeID
 		// Fetch new assignee name
 		if *req.AssigneeID != 0 {
-			var name string
-			h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", *req.AssigneeID).Scan(&name)
+			name := h.lookupUserDisplayName(*req.AssigneeID)
 			newAssigneeName = &name
 		} else {
 			newAssigneeName = nil
@@ -988,8 +981,7 @@ func (h *Handlers) PatchIssue(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get actor name for notifications
-	var actorName string
-	h.db.QueryRow("SELECT COALESCE(full_name, username) FROM users WHERE id = ?", userID).Scan(&actorName)
+	actorName := h.lookupUserDisplayName(userID)
 
 	// Create notification if assignee changed
 	if newAssigneeID != nil && (oldAssigneeID == nil || *oldAssigneeID != *newAssigneeID) {

@@ -418,13 +418,23 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
 
   // Handle assignee change (new format with names)
   if (field === 'assignee') {
-    const oldName = (change as Record<string, unknown>).oldName as string || t('history.changes.unassigned');
-    const newName = (change as Record<string, unknown>).newName as string || t('history.changes.unassigned');
+    const changeRecord = change as Record<string, unknown>;
+    const oldId = changeRecord.oldId as number | null | undefined;
+    const newId = changeRecord.newId as number | null | undefined;
+    const unassigned = t('history.changes.unassigned');
+    const resolveName = (name: unknown, id: number | null | undefined) => {
+      const trimmed = typeof name === 'string' ? name.trim() : '';
+      if (trimmed) return trimmed;
+      if (id) return `User #${id}`;
+      return unassigned;
+    };
+    const oldName = resolveName(changeRecord.oldName, oldId);
+    const newName = resolveName(changeRecord.newName, newId);
     return (
       <div className="text-xs text-lapis-500 dark:text-parchment-400">
-        {t('history.changes.changedAssignee')} <span className="text-stone-500 dark:text-parchment-500 line-through">{oldName || t('history.changes.unassigned')}</span>
+        {t('history.changes.changedAssignee')} <span className="text-stone-500 dark:text-parchment-500 line-through">{oldName}</span>
         <ArrowRight size={10} className="inline mx-1" />
-        <span className="text-lapis-600 dark:text-parchment-300">{newName || t('history.changes.unassigned')}</span>
+        <span className="text-lapis-600 dark:text-parchment-300">{newName}</span>
       </div>
     );
   }
