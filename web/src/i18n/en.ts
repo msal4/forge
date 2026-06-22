@@ -66,16 +66,18 @@ export default {
 	home: {
 		welcome: 'Welcome back, {{name}}',
 		wisdoms: [
-			'Where ancient wisdom meets modern development.',
 			'The reed that bends in the storm does not break.',
-			'A journey of a thousand tablets begins with a single inscription.',
 			'The wise scribe measures twice, carves once.',
-			'Even the mightiest ziggurat was built one brick at a time.',
-			'Knowledge shared is knowledge multiplied.',
 			'The clay remembers what the hand forgets.',
-			'Patience turns raw clay into lasting monuments.',
-			'In the library of Ashurbanipal, all knowledge finds its home.',
-			'The stars guided the ancients; let purpose guide your work.',
+			'Even the mightiest ziggurat was built one brick at a time.',
+			'A journey of a thousand tablets begins with a single inscription.',
+			'A scribe who cannot read his own tablets is no scribe at all.',
+			'The kiln judges every inscription.',
+			'Write it on the tablet. Slack will not remember.',
+			'Friendship lasts a day; the commit log lasts forever.',
+			'A tablet left in the rain becomes mud.',
+			'He who carves without a plan fills the library with rubble.',
+			'The granary does not open itself.',
 		],
 		toInscribe: 'To Inscribe',
 		carving: 'Carving',
@@ -95,15 +97,15 @@ export default {
 		keyboardHint: 'Press Ctrl+K to open the command palette.',
 		tablet: {
 			title: 'The Tablet',
-			description: 'Inscribe and track your tasks on clay tablets',
+			description: 'Track issues on the board',
 		},
 		library: {
 			title: 'The Library',
-			description: 'Store your knowledge in the great library',
+			description: 'Team documentation',
 		},
 		granary: {
 			title: 'The Granary',
-			description: 'Store and distribute your harvest',
+			description: 'Release management and file uploads',
 		},
 		enter: 'Enter',
 	},
@@ -220,7 +222,7 @@ export default {
 	// Docs Page
 	docs: {
 		title: 'The Library',
-		tagline: 'Scrolls of knowledge, preserved for eternity',
+		tagline: 'Team documentation',
 		newDocument: 'New Document',
 		retrieving: 'Retrieving scrolls...',
 		emptyLibrary: 'The Library awaits your scrolls',
@@ -266,7 +268,7 @@ export default {
 	// Releases Page
 	releases: {
 		title: 'The Granary',
-		tagline: 'Store and distribute your harvest',
+		tagline: 'Release management and file uploads',
 		newRelease: 'New Release',
 		opening: 'Opening the granary...',
 		emptyGranary: 'The Granary is empty',
@@ -401,7 +403,7 @@ export default {
 	// Login Page
 	login: {
 		title: 'Enter the Workshop',
-		subtitle: 'Enter the ancient workshop',
+		subtitle: 'Sign in to continue',
 		username: 'Username',
 		usernamePlaceholder: 'Enter your username',
 		usernameHint: "Just enter your username — we'll add the domain",

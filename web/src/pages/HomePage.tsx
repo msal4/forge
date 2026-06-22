@@ -31,12 +31,11 @@ export function HomePage() {
   const { workspacePath } = useWorkspace();
   const { t } = useTranslation();
 
-  // Pick a random wisdom on mount (changes on page refresh)
   const randomWisdom = React.useMemo(() => {
     const wisdoms = t('home.wisdoms', { returnObjects: true }) as string[];
     return wisdoms[Math.floor(Math.random() * wisdoms.length)];
   }, [t]);
-  
+
   // React Query hooks
   const { data: issues = [], isLoading: issuesLoading, isError: issuesError } = useIssues();
   const { data: releases = [], isLoading: releasesLoading } = useReleases();
