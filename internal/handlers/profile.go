@@ -785,6 +785,7 @@ func (h *Handlers) getUserActivityInternal(w http.ResponseWriter, r *http.Reques
 	defer rows.Close()
 
 	var activities []models.ActivityLog
+	nameCache := make(map[int64]string)
 	for rows.Next() {
 		var activity models.ActivityLog
 		var metadataJSON string
@@ -802,13 +803,14 @@ func (h *Handlers) getUserActivityInternal(w http.ResponseWriter, r *http.Reques
 		}
 
 		json.Unmarshal([]byte(metadataJSON), &activity.Changes)
+		h.enrichActivityChanges(activity.Changes, nameCache)
 		activity.EntityTitle = entityTitle
 
 		if actorID != nil {
 			activity.User = &models.User{
 				ID:        *actorID,
 				Username:  actorUsername,
-				FullName:  actorFullName,
+				FullName:  formatUserDisplayName(actorFullName, actorUsername),
 				AvatarURL: actorAvatarURL,
 			}
 		}

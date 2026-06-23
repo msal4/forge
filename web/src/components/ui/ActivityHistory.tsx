@@ -419,17 +419,13 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
   // Handle assignee change (new format with names)
   if (field === 'assignee') {
     const changeRecord = change as Record<string, unknown>;
-    const oldId = changeRecord.oldId as number | null | undefined;
-    const newId = changeRecord.newId as number | null | undefined;
     const unassigned = t('history.changes.unassigned');
-    const resolveName = (name: unknown, id: number | null | undefined) => {
+    const resolveName = (name: unknown) => {
       const trimmed = typeof name === 'string' ? name.trim() : '';
-      if (trimmed) return trimmed;
-      if (id) return `User #${id}`;
-      return unassigned;
+      return trimmed || unassigned;
     };
-    const oldName = resolveName(changeRecord.oldName, oldId);
-    const newName = resolveName(changeRecord.newName, newId);
+    const oldName = resolveName(changeRecord.oldName);
+    const newName = resolveName(changeRecord.newName);
     return (
       <div className="text-xs text-lapis-500 dark:text-parchment-400">
         {t('history.changes.changedAssignee')} <span className="text-stone-500 dark:text-parchment-500 line-through">{oldName}</span>
@@ -441,8 +437,12 @@ function ChangeDetail({ field, change, onViewDiff }: ChangeDetailProps) {
 
   // Handle legacy assigneeId format (for old activity logs)
   if (field === 'assigneeId') {
-    const oldVal = change.old ? `User #${change.old}` : t('history.changes.unassigned');
-    const newVal = change.new ? `User #${change.new}` : t('history.changes.unassigned');
+    const oldVal = typeof change.old === 'string' && change.old.trim()
+      ? change.old.trim()
+      : t('history.changes.unassigned');
+    const newVal = typeof change.new === 'string' && change.new.trim()
+      ? change.new.trim()
+      : t('history.changes.unassigned');
     return (
       <div className="text-xs text-lapis-500 dark:text-parchment-400">
         {t('history.changes.changedAssignee')} <span className="text-stone-500 dark:text-parchment-500 line-through">{oldVal}</span>

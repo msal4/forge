@@ -32,14 +32,109 @@ func formatUserDisplayName(fullName, username string) string {
 
 // lookupUserDisplayName fetches the display name for a user ID.
 func (h *Handlers) lookupUserDisplayName(userID int64) string {
+	return h.lookupUserDisplayNameCached(userID, nil)
+}
+
+// lookupUserDisplayNameCached fetches a display name, using an optional per-request cache.
+func (h *Handlers) lookupUserDisplayNameCached(userID int64, cache map[int64]string) string {
+	if cache != nil {
+		if name, ok := cache[userID]; ok {
+			return name
+		}
+	}
+
 	var fullName, username string
 	if err := h.db.QueryRow(
 		"SELECT full_name, username FROM users WHERE id = ?",
 		userID,
 	).Scan(&fullName, &username); err != nil {
+		if cache != nil {
+			cache[userID] = ""
+		}
 		return ""
 	}
-	return formatUserDisplayName(fullName, username)
+
+	name := formatUserDisplayName(fullName, username)
+	if cache != nil {
+		cache[userID] = name
+	}
+	return name
+}
+
+// enrichActivityChanges fills in missing assignee display names from stored user IDs.
+func (h *Handlers) enrichActivityChanges(changes map[string]interface{}, cache map[int64]string) {
+	if changes == nil {
+		return
+	}
+
+	if raw, ok := changes["assignee"]; ok {
+		if assignee, ok := raw.(map[string]interface{}); ok {
+			enrichAssigneeNames(h, assignee, cache)
+		}
+	}
+
+	if raw, ok := changes["assigneeId"]; ok {
+		if assignee, ok := raw.(map[string]interface{}); ok {
+			legacy := map[string]interface{}{
+				"oldId":   assignee["old"],
+				"newId":   assignee["new"],
+				"oldName": assignee["old"],
+				"newName": assignee["new"],
+			}
+			enrichAssigneeNames(h, legacy, cache)
+			if oldName, ok := legacy["oldName"].(string); ok && strings.TrimSpace(oldName) != "" {
+				assignee["old"] = oldName
+			}
+			if newName, ok := legacy["newName"].(string); ok && strings.TrimSpace(newName) != "" {
+				assignee["new"] = newName
+			}
+		}
+	}
+}
+
+func enrichAssigneeNames(h *Handlers, assignee map[string]interface{}, cache map[int64]string) {
+	if name, ok := assignee["oldName"].(string); !ok || strings.TrimSpace(name) == "" {
+		if id := activityUserID(assignee["oldId"]); id != nil {
+			assignee["oldName"] = h.lookupUserDisplayNameCached(*id, cache)
+		}
+	}
+	if name, ok := assignee["newName"].(string); !ok || strings.TrimSpace(name) == "" {
+		if id := activityUserID(assignee["newId"]); id != nil {
+			assignee["newName"] = h.lookupUserDisplayNameCached(*id, cache)
+		}
+	}
+}
+
+func activityUserID(value interface{}) *int64 {
+	if value == nil {
+		return nil
+	}
+
+	switch v := value.(type) {
+	case float64:
+		id := int64(v)
+		if id == 0 {
+			return nil
+		}
+		return &id
+	case int64:
+		if v == 0 {
+			return nil
+		}
+		return &v
+	case int:
+		id := int64(v)
+		if id == 0 {
+			return nil
+		}
+		return &id
+	case json.Number:
+		if parsed, err := v.Int64(); err == nil && parsed != 0 {
+			return &parsed
+		}
+	}
+
+	return nil
 }
 
 // ============================================
@@ -109,6 +204,7 @@ func (h *Handlers) getEntityActivity(w http.ResponseWriter, r *http.Request, ent
 	defer rows.Close()
 
 	var activities []models.ActivityLog
+	nameCache := make(map[int64]string)
 	for rows.Next() {
 		var activity models.ActivityLog
 		var metadataJSON string
@@ -127,13 +223,14 @@ func (h *Handlers) getEntityActivity(w http.ResponseWriter, r *http.Request, ent
 		if metadataJSON != "" && metadataJSON != "{}" {
 			json.Unmarshal([]byte(metadataJSON), &activity.Changes)
 		}
+		h.enrichActivityChanges(activity.Changes, nameCache)
 
 		// Set user if present
 		if userID != nil {
 			activity.User = &models.User{
 				ID:       *userID,
 				Username: safeString(username),
-				FullName: safeString(fullName),
+				FullName: formatUserDisplayName(safeString(fullName), safeString(username)),
 			}
 		}
 
