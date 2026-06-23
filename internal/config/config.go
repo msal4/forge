@@ -18,8 +18,9 @@ type Config struct {
 	TLSKey  string
 
 	// Telegram settings
-	TelegramBotToken    string
-	TelegramBotUsername string
+	TelegramBotToken       string
+	TelegramBotUsername    string
+	TelegramWebhookSecret  string
 }
 
 // Load reads configuration from environment variables with defaults
@@ -37,8 +38,9 @@ func Load() *Config {
 		TLSKey:  getEnv("TLS_KEY", "./certs/key.pem"),
 
 		// Telegram
-		TelegramBotToken:    os.Getenv("TELEGRAM_BOT_TOKEN"),
-		TelegramBotUsername: os.Getenv("TELEGRAM_BOT_USERNAME"),
+		TelegramBotToken:      os.Getenv("TELEGRAM_BOT_TOKEN"),
+		TelegramBotUsername:   os.Getenv("TELEGRAM_BOT_USERNAME"),
+		TelegramWebhookSecret: os.Getenv("TELEGRAM_WEBHOOK_SECRET"),
 	}
 }
 

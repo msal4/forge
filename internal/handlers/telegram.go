@@ -20,6 +20,12 @@ func (h *Handlers) TelegramWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !h.telegram.ValidateWebhookSecret(r.Header.Get("X-Telegram-Bot-Api-Secret-Token")) {
+		log.Printf("[Telegram] Webhook rejected: invalid secret token")
+		writeError(w, http.StatusUnauthorized, "unauthorized", "Invalid webhook secret")
+		return
+	}
+
 	var update telegram.Update
 	if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
 		log.Printf("[Telegram] Failed to decode webhook: %v", err)
@@ -28,14 +34,20 @@ func (h *Handlers) TelegramWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Handle /start command with token
-	if update.Message != nil && strings.HasPrefix(update.Message.Text, "/start") {
-		parts := strings.Fields(update.Message.Text)
-		if len(parts) >= 2 {
-			token := parts[1]
-			chatID := update.Message.Chat.ID
+	if update.Message != nil {
+		log.Printf("[Telegram] Webhook update %d from chat %d: %q",
+			update.UpdateID, update.Message.Chat.ID, update.Message.Text)
+	}
 
-			userID, err := h.telegram.HandleStartCommand(r.Context(), chatID, token)
+	startToken := ""
+	if update.Message != nil {
+		startToken = telegram.ParseStartToken(update.Message.Text)
+	}
+
+	if update.Message != nil && strings.HasPrefix(strings.TrimSpace(update.Message.Text), "/start") {
+		chatID := update.Message.Chat.ID
+		if startToken != "" {
+			userID, err := h.telegram.HandleStartCommand(r.Context(), chatID, startToken)
 			if err != nil {
 				log.Printf("[Telegram] Failed to handle /start: %v", err)
 				// Send error message to user
@@ -51,7 +63,7 @@ func (h *Handlers) TelegramWebhook(w http.ResponseWriter, r *http.Request) {
 		} else {
 			// /start without token - just greet
 			h.telegram.SendMessage(
-				formatChatID(update.Message.Chat.ID),
+				formatChatID(chatID),
 				"Welcome to Sarray Forge! To receive notifications, please link your account from Settings > Telegram in Sarray Forge.",
 			)
 		}

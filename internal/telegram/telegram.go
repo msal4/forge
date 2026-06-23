@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -25,24 +26,26 @@ const (
 
 // Service handles Telegram Bot API interactions
 type Service struct {
-	botToken    string
-	botUsername string
-	baseURL     string // Base URL for generating entity links
-	client      *http.Client
-	database    *sql.DB
+	botToken      string
+	botUsername   string
+	baseURL       string // Base URL for generating entity links
+	webhookSecret string
+	client        *http.Client
+	database      *sql.DB
 }
 
 // NewService creates a new Telegram service
 // Returns nil if bot token is not configured
-func NewService(botToken, botUsername, baseURL string, database *sql.DB) *Service {
+func NewService(botToken, botUsername, baseURL, webhookSecret string, database *sql.DB) *Service {
 	if botToken == "" || botUsername == "" {
 		return nil
 	}
 
 	return &Service{
-		botToken:    botToken,
-		botUsername: botUsername,
-		baseURL:     strings.TrimSuffix(baseURL, "/"),
+		botToken:      botToken,
+		botUsername:   botUsername,
+		baseURL:       strings.TrimSuffix(baseURL, "/"),
+		webhookSecret: webhookSecret,
 		client: &http.Client{
 			Timeout: 10 * time.Second,
 		},
@@ -53,6 +56,128 @@ func NewService(botToken, botUsername, baseURL string, database *sql.DB) *Servic
 // IsConfigured returns true if the service is properly configured
 func (s *Service) IsConfigured() bool {
 	return s != nil && s.botToken != ""
+}
+
+// WebhookURL returns the public webhook endpoint for Telegram updates.
+func (s *Service) WebhookURL() string {
+	return s.baseURL + "/api/telegram/webhook"
+}
+
+// ValidateWebhookSecret checks the Telegram secret token header when configured.
+func (s *Service) ValidateWebhookSecret(header string) bool {
+	if s.webhookSecret == "" {
+		return true
+	}
+	return header == s.webhookSecret
+}
+
+// RegisterWebhook tells Telegram to deliver bot updates to this server.
+func (s *Service) RegisterWebhook(ctx context.Context) error {
+	if !s.IsConfigured() {
+		return fmt.Errorf("telegram not configured")
+	}
+	if s.baseURL == "" {
+		return fmt.Errorf("BASE_URL is required to register Telegram webhook")
+	}
+
+	payload := map[string]interface{}{
+		"url":             s.WebhookURL(),
+		"allowed_updates": []string{"message"},
+	}
+	if s.webhookSecret != "" {
+		payload["secret_token"] = s.webhookSecret
+	}
+
+	var result map[string]interface{}
+	if err := s.callAPI(ctx, "setWebhook", payload, &result); err != nil {
+		return err
+	}
+	if ok, _ := result["ok"].(bool); !ok {
+		return fmt.Errorf("setWebhook failed: %v", result)
+	}
+	return nil
+}
+
+// LogWebhookInfo logs the current Telegram webhook configuration.
+func (s *Service) LogWebhookInfo(ctx context.Context) {
+	if !s.IsConfigured() {
+		return
+	}
+
+	var result struct {
+		OK     bool `json:"ok"`
+		Result struct {
+			URL                string `json:"url"`
+			PendingUpdateCount int    `json:"pending_update_count"`
+			LastErrorMessage   string `json:"last_error_message"`
+		} `json:"result"`
+	}
+	if err := s.callAPI(ctx, "getWebhookInfo", nil, &result); err != nil {
+		log.Printf("[Telegram] Failed to get webhook info: %v", err)
+		return
+	}
+	if !result.OK {
+		log.Printf("[Telegram] getWebhookInfo returned not ok")
+		return
+	}
+
+	info := result.Result
+	if info.URL == "" {
+		log.Printf("[Telegram] Webhook is not registered with Telegram")
+		return
+	}
+
+	log.Printf("[Telegram] Webhook URL: %s (pending updates: %d)", info.URL, info.PendingUpdateCount)
+	if info.LastErrorMessage != "" {
+		log.Printf("[Telegram] Webhook last error: %s", info.LastErrorMessage)
+	}
+}
+
+func (s *Service) callAPI(ctx context.Context, method string, payload map[string]interface{}, result interface{}) error {
+	var body io.Reader
+	if payload != nil {
+		encoded, err := json.Marshal(payload)
+		if err != nil {
+			return fmt.Errorf("failed to marshal payload: %w", err)
+		}
+		body = bytes.NewReader(encoded)
+	}
+
+	url := fmt.Sprintf("%s%s/%s", telegramAPIBase, s.botToken, method)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("telegram API request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
+		return fmt.Errorf("failed to decode telegram response: %w", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("telegram API HTTP %d", resp.StatusCode)
+	}
+	return nil
+}
+
+// ParseStartToken extracts the link token from a /start command message.
+func ParseStartToken(text string) string {
+	text = strings.TrimSpace(text)
+	if !strings.HasPrefix(text, "/start") {
+		return ""
+	}
+	parts := strings.Fields(text)
+	if len(parts) < 2 {
+		return ""
+	}
+	return parts[1]
 }
 
 // SendMessage sends a text message to a Telegram chat

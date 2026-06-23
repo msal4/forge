@@ -381,6 +381,7 @@ export default {
 		unlinkTelegramConfirmTitle: 'Unlink Telegram',
 		unlinkTelegramConfirmMessage: 'Are you sure you want to unlink your Telegram account? You will stop receiving notifications via Telegram.',
 		telegramLinkFailed: 'Failed to generate Telegram link. Please try again.',
+		telegramWaitingLink: 'Complete linking in Telegram — this page will update automatically.',
 		telegramUnlinkFailed: 'Failed to unlink Telegram. Please try again.',
 		// API Tokens
 		apiTokens: 'API Keys',

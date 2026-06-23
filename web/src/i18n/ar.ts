@@ -381,6 +381,7 @@ export default {
 		unlinkTelegramConfirmTitle: 'إلغاء ربط تيليجرام',
 		unlinkTelegramConfirmMessage: 'هل أنت متأكد من إلغاء ربط حساب تيليجرام؟ لن تستلم الإشعارات عبر تيليجرام بعد ذلك.',
 		telegramLinkFailed: 'فشل إنشاء رابط تيليجرام. يرجى المحاولة مرة أخرى.',
+		telegramWaitingLink: 'أكمل الربط في تيليجرام — ستُحدَّث هذه الصفحة تلقائياً.',
 		telegramUnlinkFailed: 'فشل إلغاء ربط تيليجرام. يرجى المحاولة مرة أخرى.',
 		// API Tokens
 		apiTokens: 'مفاتيح API',

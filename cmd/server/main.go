@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -32,10 +33,18 @@ func main() {
 	// Initialize Telegram service (optional)
 	var tg *telegram.Service
 	if cfg.TelegramEnabled() {
-		tg = telegram.NewService(cfg.TelegramBotToken, cfg.TelegramBotUsername, cfg.BaseURL, database.DB)
+		tg = telegram.NewService(cfg.TelegramBotToken, cfg.TelegramBotUsername, cfg.BaseURL, cfg.TelegramWebhookSecret, database.DB)
 		log.Printf("Telegram notifications enabled (bot: @%s)", cfg.TelegramBotUsername)
 		if cfg.BaseURL != "" {
 			log.Printf("Telegram notifications will include links to %s", cfg.BaseURL)
+			if err := tg.RegisterWebhook(context.Background()); err != nil {
+				log.Printf("[Telegram] WARNING: failed to register webhook: %v", err)
+			} else {
+				log.Printf("[Telegram] Webhook registered at %s", tg.WebhookURL())
+			}
+			tg.LogWebhookInfo(context.Background())
+		} else {
+			log.Printf("[Telegram] BASE_URL not set — webhook registration skipped (linking will not work without a public URL)")
 		}
 	} else {
 		log.Printf("Telegram notifications disabled (TELEGRAM_BOT_TOKEN or TELEGRAM_BOT_USERNAME not set)")

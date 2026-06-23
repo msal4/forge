@@ -58,14 +58,20 @@ export function SettingsPage() {
 	const [isLinkingTelegram, setIsLinkingTelegram] = useState(false);
 	const [isUnlinkingTelegram, setIsUnlinkingTelegram] = useState(false);
 	const [telegramError, setTelegramError] = useState('');
+	const [isWaitingForTelegramLink, setIsWaitingForTelegramLink] = useState(false);
 
 	// Load Telegram status on mount
 	const loadTelegramStatus = useCallback(async () => {
 		try {
 			const status = await usersApi.getTelegramStatus();
 			setTelegramStatus(status);
+			if (status.linked) {
+				setIsWaitingForTelegramLink(false);
+			}
+			return status;
 		} catch (err) {
 			console.error('Failed to load Telegram status:', err);
+			return null;
 		} finally {
 			setIsLoadingTelegram(false);
 		}
@@ -81,6 +87,26 @@ export function SettingsPage() {
 			loadTelegramStatus();
 		}
 	}, [lastEvent, loadTelegramStatus]);
+
+	// Poll Telegram status while waiting for user to complete linking in the app
+	useEffect(() => {
+		if (!isWaitingForTelegramLink || telegramStatus?.linked) {
+			return;
+		}
+
+		const interval = window.setInterval(() => {
+			void loadTelegramStatus();
+		}, 3000);
+
+		const timeout = window.setTimeout(() => {
+			setIsWaitingForTelegramLink(false);
+		}, 2 * 60 * 1000);
+
+		return () => {
+			window.clearInterval(interval);
+			window.clearTimeout(timeout);
+		};
+	}, [isWaitingForTelegramLink, telegramStatus?.linked, loadTelegramStatus]);
 
 	// Close dropdown when clicking outside
 	useEffect(() => {
@@ -121,6 +147,7 @@ export function SettingsPage() {
 			const { linkUrl } = await usersApi.generateTelegramLink();
 			// Open Telegram deep link in new tab
 			window.open(linkUrl, '_blank');
+			setIsWaitingForTelegramLink(true);
 		} catch (err) {
 			setTelegramError(t('settings.telegramLinkFailed'));
 			console.error('Failed to generate Telegram link:', err);
@@ -600,6 +627,12 @@ export function SettingsPage() {
 												</>
 											)}
 										</button>
+										{isWaitingForTelegramLink && !telegramStatus?.linked && (
+											<p className="text-sm text-lapis-500 dark:text-parchment-400 flex items-center gap-2">
+												<LoadingIndicator size="sm" inline />
+												<span>{t('settings.telegramWaitingLink')}</span>
+											</p>
+										)}
 									</div>
 								)}
 
