@@ -108,12 +108,10 @@ function isEveryoneMention(username: string): boolean {
   return username === 'everyone' || username === 'الجميع';
 }
 
-// Preprocess markdown to convert @mentions to clickable links
-function preprocessMentions(text: string, users?: MentionUser[]): string {
-  // Match @username but not inside code blocks or inline code
+function replaceMentions(text: string, users?: MentionUser[]): string {
   // Supports Unicode word chars for Arabic @الجميع
   return text.replace(
-    /(?<!`)@([\w\p{L}]+)(?!`)/gu,
+    /@([\w\p{L}]+)/gu,
     (_match, mentionedUsername) => {
       // Handle @everyone / @الجميع with distinct styling
       if (isEveryoneMention(mentionedUsername)) {
@@ -128,6 +126,31 @@ function preprocessMentions(text: string, users?: MentionUser[]): string {
       return `<span class="mention">@${mentionedUsername}</span>`;
     }
   );
+}
+
+function maskCodeRegions(text: string): { masked: string; regions: string[] } {
+  const regions: string[] = [];
+
+  const mask = (match: string) => {
+    const index = regions.length;
+    regions.push(match);
+    return `\uE000${index}\uE000`;
+  };
+
+  let masked = text.replace(/```[\s\S]*?```/g, mask);
+  masked = masked.replace(/`[^`\n]+`/g, mask);
+
+  return { masked, regions };
+}
+
+function restoreCodeRegions(masked: string, regions: string[]): string {
+  return masked.replace(/\uE000(\d+)\uE000/g, (_match, index) => regions[Number(index)] ?? _match);
+}
+
+// Preprocess markdown to convert @mentions to clickable links
+function preprocessMentions(text: string, users?: MentionUser[]): string {
+  const { masked, regions } = maskCodeRegions(text);
+  return restoreCodeRegions(replaceMentions(masked, users), regions);
 }
 
 // Custom code block component
