@@ -64,6 +64,7 @@ type Issue struct {
 	Description string        `json:"description"`
 	Status      IssueStatus   `json:"status"`
 	Priority    IssuePriority `json:"priority"`
+	Rank        string        `json:"rank"`
 	AssigneeID  *int64        `json:"assigneeId,omitempty"`
 	Assignee    *User         `json:"assignee,omitempty"`
 	ReporterID  int64         `json:"reporterId"`
@@ -208,6 +209,17 @@ type UpdateIssueRequest struct {
 // UpdateIssueStatusRequest is the request body for updating issue status
 type UpdateIssueStatusRequest struct {
 	Status IssueStatus `json:"status"`
+}
+
+// MoveIssueRequest is the request body for a Kanban drag-and-drop move. The
+// client sends the destination status plus the issue IDs that should end up
+// directly above (BeforeID) and below (AfterID) the dropped card; the server
+// computes a fractional rank between their ranks. Either neighbor may be nil
+// (dropping at the top, bottom, or into an empty column).
+type MoveIssueRequest struct {
+	Status   IssueStatus `json:"status"`
+	BeforeID *int64      `json:"beforeId,omitempty"`
+	AfterID  *int64      `json:"afterId,omitempty"`
 }
 
 // CreateDocRequest is the request body for creating a doc

@@ -16,9 +16,9 @@ import { useIssue } from '../hooks/useApi';
 import { 
   useIssues, 
   useUsers, 
-  useCreateIssue, 
-  useUpdateIssue, 
-  useUpdateIssueStatus, 
+  useCreateIssue,
+  useUpdateIssue,
+  useMoveIssue,
   useDeleteIssue,
   queryKeys,
 } from '../hooks/useApi';
@@ -81,7 +81,7 @@ export function IssuesPage() {
   const { data: users = [] } = useUsers();
   const createIssueMutation = useCreateIssue();
   const updateIssueMutation = useUpdateIssue();
-  const updateStatusMutation = useUpdateIssueStatus();
+  const moveIssueMutation = useMoveIssue();
   const deleteIssueMutation = useDeleteIssue();
   
   // Track if we've ever loaded (for UI stability)
@@ -98,6 +98,8 @@ export function IssuesPage() {
   // Drag and drop state
   const [draggedIssue, setDraggedIssue] = React.useState<Issue | null>(null);
   const [dragOverColumn, setDragOverColumn] = React.useState<IssueStatusType | null>(null);
+  // Insertion slot (0..n) within the hovered column where the card would land.
+  const [dropTarget, setDropTarget] = React.useState<{ status: IssueStatusType; index: number } | null>(null);
 
   // Filtering
   const {
@@ -239,6 +241,7 @@ export function IssuesPage() {
     target.style.opacity = '1';
     setDraggedIssue(null);
     setDragOverColumn(null);
+    setDropTarget(null);
   };
 
   const handleDragOver = (e: React.DragEvent, status: IssueStatusType) => {
@@ -247,6 +250,23 @@ export function IssuesPage() {
     if (dragOverColumn !== status) {
       setDragOverColumn(status);
     }
+
+    // Insertion slot = number of cards whose vertical midpoint is above the cursor.
+    const cards = Array.from(
+      (e.currentTarget as HTMLElement).querySelectorAll('[data-issue-card]')
+    ) as HTMLElement[];
+    let index = cards.length;
+    for (let i = 0; i < cards.length; i++) {
+      const rect = cards[i].getBoundingClientRect();
+      if (e.clientY < rect.top + rect.height / 2) {
+        index = i;
+        break;
+      }
+    }
+    // Throttle: only update state when the target slot actually changes.
+    setDropTarget((prev) =>
+      prev && prev.status === status && prev.index === index ? prev : { status, index }
+    );
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
@@ -258,23 +278,45 @@ export function IssuesPage() {
       e.clientY > rect.bottom
     ) {
       setDragOverColumn(null);
+      setDropTarget(null);
     }
   };
 
   const handleDrop = async (e: React.DragEvent, status: IssueStatusType) => {
     e.preventDefault();
-    
-    if (!draggedIssue || draggedIssue.status === status) {
-      setDraggedIssue(null);
-      setDragOverColumn(null);
-      return;
-    }
 
+    const dragged = draggedIssue;
+    const target = dropTarget;
     setDraggedIssue(null);
     setDragOverColumn(null);
+    setDropTarget(null);
 
-    // Use mutation with optimistic update
-    updateStatusMutation.mutate({ id: draggedIssue.id, status });
+    if (!dragged) return;
+
+    // The cards as the user sees them in the destination column (filtered view).
+    const rendered = issuesByStatus[status];
+    let index = target && target.status === status ? target.index : rendered.length;
+
+    // The dragged card is still rendered (and measured) in its source column;
+    // exclude it and shift the insertion index down if it sat above the slot.
+    const dragIdx = rendered.findIndex((i) => i.id === dragged.id);
+    const list = rendered.filter((i) => i.id !== dragged.id);
+    if (dragIdx !== -1 && dragIdx < index) index -= 1;
+    if (index < 0) index = 0;
+    if (index > list.length) index = list.length;
+
+    const beforeId = index > 0 ? list[index - 1].id : null;
+    const afterId = index < list.length ? list[index].id : null;
+
+    // No-op: dropped back into its current slot (same column, same neighbors).
+    if (dragged.status === status) {
+      const curIdx = rendered.findIndex((i) => i.id === dragged.id);
+      const curBefore = curIdx > 0 ? rendered[curIdx - 1].id : null;
+      const curAfter = curIdx < rendered.length - 1 ? rendered[curIdx + 1].id : null;
+      if (beforeId === curBefore && afterId === curAfter) return;
+    }
+
+    moveIssueMutation.mutate({ id: dragged.id, status, beforeId, afterId });
   };
 
   // View issue handler
@@ -424,6 +466,7 @@ export function IssuesPage() {
               onDrop={handleDrop}
               isDragOver={dragOverColumn === column.id}
               draggedIssueId={draggedIssue?.id}
+              insertionIndex={dropTarget?.status === column.id ? dropTarget.index : undefined}
               onCreateIssue={() => {
                 setSelectedIssueId(null);
                 setModalMode('create');
@@ -484,6 +527,7 @@ interface KanbanColumnProps {
   onDrop: (e: React.DragEvent, status: IssueStatusType) => void;
   isDragOver: boolean;
   draggedIssueId?: number;
+  insertionIndex?: number;
   onCreateIssue: () => void;
   isFiltering?: boolean;
 }
@@ -501,11 +545,17 @@ function KanbanColumn({
   onDrop,
   isDragOver,
   draggedIssueId,
+  insertionIndex,
   onCreateIssue,
   isFiltering = false,
 }: KanbanColumnProps) {
   const { t } = useTranslation();
-  
+
+  // Thin horizontal line showing where the dragged card will land.
+  const insertionLine = (
+    <div className="h-0.5 -my-1 bg-lapis-400 dark:bg-gold-500 rounded-full" />
+  );
+
   return (
     <div
       className={`
@@ -549,30 +599,39 @@ function KanbanColumn({
         `}
       >
         {issues.length === 0 ? (
-          <EmptyColumnState 
-            columnId={column.id} 
-            isDragOver={isDragOver}
-            onCreateIssue={onCreateIssue}
-            isFiltering={isFiltering}
-          />
+          <>
+            {insertionIndex === 0 && insertionLine}
+            <EmptyColumnState
+              columnId={column.id}
+              isDragOver={isDragOver}
+              onCreateIssue={onCreateIssue}
+              isFiltering={isFiltering}
+            />
+          </>
         ) : (
-          issues.map(issue => (
-            <div
-              key={issue.id}
-              draggable
-              onDragStart={(e) => onDragStart(e, issue)}
-              onDragEnd={onDragEnd}
-              className="transform transition-transform duration-150"
-            >
-              <IssueCard
-                issue={issue}
-                onView={onViewIssue}
-                onEdit={onEditIssue}
-                onDelete={onDeleteIssue}
-                isDragging={draggedIssueId === issue.id}
-              />
-            </div>
-          ))
+          <>
+            {issues.map((issue, i) => (
+              <React.Fragment key={issue.id}>
+                {insertionIndex === i && insertionLine}
+                <div
+                  data-issue-card
+                  draggable
+                  onDragStart={(e) => onDragStart(e, issue)}
+                  onDragEnd={onDragEnd}
+                  className="transform transition-transform duration-150"
+                >
+                  <IssueCard
+                    issue={issue}
+                    onView={onViewIssue}
+                    onEdit={onEditIssue}
+                    onDelete={onDeleteIssue}
+                    isDragging={draggedIssueId === issue.id}
+                  />
+                </div>
+              </React.Fragment>
+            ))}
+            {insertionIndex === issues.length && insertionLine}
+          </>
         )}
       </div>
     </div>

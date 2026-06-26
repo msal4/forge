@@ -3,7 +3,7 @@
 // ============================================
 
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
-import { issuesApi, type Issue, type CreateIssueRequest, type UpdateIssueRequest, type IssueStatusType } from '../api/issues';
+import { issuesApi, type Issue, type CreateIssueRequest, type UpdateIssueRequest, type IssueStatusType, type MoveIssueRequest } from '../api/issues';
 import { docsApi, type Doc, type CreateDocRequest, type UpdateDocRequest } from '../api/docs';
 import { releasesApi, type Release, type CreateReleaseRequest } from '../api/releases';
 import { usersApi } from '../api/users';
@@ -215,6 +215,56 @@ export function useUpdateIssueStatus() {
     },
     onSettled: () => {
       if (workspaceId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.issues.list(workspaceId) });
+      }
+    },
+  });
+}
+
+export function useMoveIssue() {
+  const queryClient = useQueryClient();
+  const workspaceId = useWorkspaceId();
+
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: number } & MoveIssueRequest) =>
+      issuesApi.move(id, data),
+    onMutate: async ({ id, status, beforeId, afterId }) => {
+      if (!workspaceId) return {};
+      const listKey = queryKeys.issues.list(workspaceId);
+      await queryClient.cancelQueries({ queryKey: listKey });
+      const previousIssues = queryClient.getQueryData<Issue[]>(listKey);
+
+      // Optimistically reorder the flat list (IssuesPage groups by status while
+      // preserving array order, so position in the array drives display order).
+      queryClient.setQueryData<Issue[]>(listKey, (old) => {
+        if (!old) return old;
+        const moved = old.find((i) => i.id === id);
+        if (!moved) return old;
+        const rest = old.filter((i) => i.id !== id);
+        const updated = { ...moved, status };
+
+        // Insert before afterId, else after beforeId, else at the end (top/empty).
+        let insertAt = rest.length;
+        if (afterId != null) {
+          const idx = rest.findIndex((i) => i.id === afterId);
+          if (idx !== -1) insertAt = idx;
+        } else if (beforeId != null) {
+          const idx = rest.findIndex((i) => i.id === beforeId);
+          if (idx !== -1) insertAt = idx + 1;
+        }
+        return [...rest.slice(0, insertAt), updated, ...rest.slice(insertAt)];
+      });
+
+      return { previousIssues, workspaceId };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousIssues && context.workspaceId) {
+        queryClient.setQueryData(queryKeys.issues.list(context.workspaceId), context.previousIssues);
+      }
+    },
+    onSettled: () => {
+      if (workspaceId) {
+        // Reconcile against the server's authoritative rank order.
         queryClient.invalidateQueries({ queryKey: queryKeys.issues.list(workspaceId) });
       }
     },

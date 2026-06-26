@@ -33,6 +33,7 @@ export interface Issue {
   description?: string;
   status: IssueStatusType;
   priority: PriorityType;
+  rank: string;
   assigneeId?: number;
   reporterId: number;
   labels: string[];
@@ -78,6 +79,15 @@ export interface UpdateIssueStatusRequest {
   status: IssueStatusType;
 }
 
+// Move an issue to a position on the board (Kanban drag-and-drop). beforeId is
+// the issue that ends up directly above the dropped card, afterId the one
+// directly below; either may be null (top, bottom, or empty column).
+export interface MoveIssueRequest {
+  status: IssueStatusType;
+  beforeId?: number | null;
+  afterId?: number | null;
+}
+
 // API functions
 export const issuesApi = {
   // List all issues, optionally filtered
@@ -105,6 +115,10 @@ export const issuesApi = {
   // Update just the status (for drag-and-drop)
   updateStatus: (id: number, status: IssueStatusType, options?: RequestOptions) =>
     api.patch<Issue>(`/issues/${id}/status`, { status }, options),
+
+  // Move an issue to a dropped position (for drag-and-drop reordering)
+  move: (id: number, data: MoveIssueRequest, options?: RequestOptions) =>
+    api.patch<Issue>(`/issues/${id}/move`, data, options),
 
   // Delete issue
   delete: (id: number, options?: RequestOptions) => 
