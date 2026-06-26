@@ -30,6 +30,7 @@ import { LoadingIndicator } from '../ui/LoadingIndicator';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboard';
 import { useWebSocket } from '../../context/WebSocketContext';
 import { HotkeyBadge } from '../ui/HotkeyBadge';
+import { IssueIdBadge } from './IssueIdBadge';
 import type { Issue, CreateIssueRequest, UpdateIssueRequest, PriorityType, IssueStatusType } from '../../api/issues';
 import { Priority, IssueStatus } from '../../api/issues';
 import type { User as UserType } from '../../api/users';
@@ -426,6 +427,9 @@ export function IssueModal({
 					<div className="flex-1 pr-4">
 						{/* Status & Priority badges */}
 						<div className="flex items-center gap-2 mb-3">
+							{/* Issue ID */}
+							{issue && <IssueIdBadge issue={issue} className="text-sm" iconSize={14} />}
+
 							{/* Status dropdown/badge */}
 							<div className="relative">
 								<button
