@@ -13,6 +13,7 @@ import (
 	"sarray-forge/internal/middleware"
 	"sarray-forge/internal/models"
 	"sarray-forge/internal/notifications"
+	"sarray-forge/internal/rank"
 	"sarray-forge/internal/telegram"
 	"sarray-forge/internal/websocket"
 
@@ -369,7 +370,7 @@ func (h *Handlers) ListIssues(w http.ResponseWriter, r *http.Request) {
 	assigneeID := r.URL.Query().Get("assignee_id")
 
 	query := `
-		SELECT i.id, i.project_id, i.issue_number, p.key, i.title, i.description, i.status, i.priority,
+		SELECT i.id, i.project_id, i.issue_number, p.key, i.title, i.description, i.status, i.priority, i.rank,
 		       i.assignee_id, i.reporter_id, i.labels, i.due_date,
 		       i.created_at, i.updated_at,
 		       COALESCE(a.username, ''), COALESCE(a.full_name, ''),
@@ -391,7 +392,7 @@ func (h *Handlers) ListIssues(w http.ResponseWriter, r *http.Request) {
 		args = append(args, assigneeID)
 	}
 
-	query += " ORDER BY i.created_at DESC"
+	query += " ORDER BY i.status, i.rank, i.created_at DESC"
 
 	rows, err := h.db.Query(query, args...)
 	if err != nil {
@@ -411,7 +412,7 @@ func (h *Handlers) ListIssues(w http.ResponseWriter, r *http.Request) {
 
 		if err := rows.Scan(
 			&issue.ID, &issue.ProjectID, &issue.IssueNumber, &issue.ProjectKey,
-			&issue.Title, &issue.Description, &issue.Status, &issue.Priority,
+			&issue.Title, &issue.Description, &issue.Status, &issue.Priority, &issue.Rank,
 			&assigneeID, &issue.ReporterID, &labelsJSON, &dueDate,
 			&issue.CreatedAt, &issue.UpdatedAt,
 			&assigneeUsername, &assigneeFullName,
@@ -837,6 +838,130 @@ func (h *Handlers) UpdateIssueStatus(w http.ResponseWriter, r *http.Request) {
 	h.getIssueByID(w, id)
 }
 
+// MoveIssue handles PATCH /api/issues/{id}/move - Kanban drag-and-drop that
+// places the card at the dropped position. The client sends the destination
+// status plus the issue IDs that should end up directly above (beforeId) and
+// below (afterId) the card; we compute a fractional rank strictly between their
+// ranks. This handles both cross-column moves and same-column reordering.
+func (h *Handlers) MoveIssue(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_id", "Invalid issue ID")
+		return
+	}
+
+	userID, workspaceID, ok := h.requireIssueWorkspaceAccess(w, r, id)
+	if !ok {
+		return
+	}
+
+	var req models.MoveIssueRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", "Invalid request body")
+		return
+	}
+
+	// Validate destination status
+	switch req.Status {
+	case models.StatusToInscribe, models.StatusCarving, models.StatusBaked:
+		// Valid status
+	default:
+		writeError(w, http.StatusBadRequest, "invalid_status", "Status must be: to_inscribe, carving, or baked")
+		return
+	}
+
+	// Fetch the moving issue's current state for rank lookup, change tracking and notifications.
+	var oldStatus, title, oldRank string
+	var projectID, reporterID int64
+	var assigneeID *int64
+	err = h.db.QueryRow("SELECT status, project_id, title, reporter_id, assignee_id, rank FROM issues WHERE id = ?", id).
+		Scan(&oldStatus, &projectID, &title, &reporterID, &assigneeID, &oldRank)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "not_found", "Issue not found")
+		return
+	}
+
+	// Resolve neighbor ranks. Neighbors must live in the destination column; if a
+	// neighbor can't be found (stale client state), treat it as an open bound
+	// rather than failing the move.
+	neighborRank := func(nid *int64) string {
+		if nid == nil {
+			return ""
+		}
+		var nr string
+		if err := h.db.QueryRow(
+			"SELECT rank FROM issues WHERE id = ? AND project_id = ? AND status = ?",
+			*nid, projectID, string(req.Status),
+		).Scan(&nr); err != nil {
+			return ""
+		}
+		return nr
+	}
+	prevRank := neighborRank(req.BeforeID)
+	nextRank := neighborRank(req.AfterID)
+
+	// No-op: dropped back into its current slot (same column, same neighbors).
+	// Avoids a needless write/broadcast and rank churn.
+	if oldStatus == string(req.Status) && prevRank == oldRank {
+		h.getIssueByID(w, id)
+		return
+	}
+
+	newRank, err := rank.Between(prevRank, nextRank)
+	if err != nil {
+		// Bounds out of order (stale client). Fall back to appending below prevRank.
+		newRank, err = rank.Between(prevRank, "")
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "rank_error", "Failed to compute position")
+			return
+		}
+	}
+
+	// Mirror /status behavior: update status + rank, leave resolved_at untouched.
+	// Concurrency: fresh midpoints make rank collisions astronomically unlikely;
+	// the ORDER BY rank, created_at tiebreaker keeps output deterministic and the
+	// next move re-splits, so no locking is needed.
+	result, err := h.db.Exec(
+		"UPDATE issues SET status = ?, rank = ?, updated_at = datetime('now') WHERE id = ?",
+		req.Status, newRank, id,
+	)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "db_error", "Failed to move issue")
+		return
+	}
+	if rowsAffected, _ := result.RowsAffected(); rowsAffected == 0 {
+		writeError(w, http.StatusNotFound, "not_found", "Issue not found")
+		return
+	}
+
+	// Log activity + notify only on an actual column (status) change; pure
+	// reorders don't warrant a status-change entry or notification.
+	newStatus := string(req.Status)
+	if oldStatus != newStatus {
+		h.logActivity(userID, "issue.status_changed", "issue", id, map[string]interface{}{
+			"status": map[string]interface{}{
+				"old": oldStatus,
+				"new": newStatus,
+			},
+		})
+
+		actorName := h.lookupUserDisplayName(userID)
+		h.Notification.CreateForEntityUpdate(r.Context(), userID, actorName, "issue", id, title, reporterID, assigneeID)
+	}
+
+	// Broadcast WebSocket event so other clients reorder live.
+	h.hub.Broadcast(websocket.Event{
+		Type:        websocket.EventIssueUpdated,
+		Resource:    websocket.ResourceIssue,
+		ID:          id,
+		WorkspaceID: workspaceID,
+		UserID:      userID,
+	})
+
+	h.getIssueByID(w, id)
+}
+
 // PatchIssue handles PATCH /api/issues/{id} - partial update (for Kanban column moves)
 func (h *Handlers) PatchIssue(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
@@ -1014,8 +1139,8 @@ func (h *Handlers) getIssueByID(w http.ResponseWriter, id int64) {
 	var reporterUsername, reporterFullName string
 
 	err := h.db.QueryRow(`
-		SELECT i.id, i.project_id, i.issue_number, p.key, i.title, i.description, i.status, i.priority, 
-		       i.assignee_id, i.reporter_id, i.labels, i.due_date, 
+		SELECT i.id, i.project_id, i.issue_number, p.key, i.title, i.description, i.status, i.priority, i.rank,
+		       i.assignee_id, i.reporter_id, i.labels, i.due_date,
 		       i.created_at, i.updated_at,
 		       COALESCE(a.username, ''), COALESCE(a.full_name, ''),
 		       r.username, r.full_name
@@ -1026,7 +1151,7 @@ func (h *Handlers) getIssueByID(w http.ResponseWriter, id int64) {
 		WHERE i.id = ?
 	`, id).Scan(
 		&issue.ID, &issue.ProjectID, &issue.IssueNumber, &issue.ProjectKey,
-		&issue.Title, &issue.Description, &issue.Status, &issue.Priority,
+		&issue.Title, &issue.Description, &issue.Status, &issue.Priority, &issue.Rank,
 		&assigneeID, &issue.ReporterID, &labelsJSON, &issue.DueDate,
 		&issue.CreatedAt, &issue.UpdatedAt,
 		&assigneeUsername, &assigneeFullName,
