@@ -496,6 +496,12 @@ export default {
 		},
 	},
 
+	// Issue ID badge
+	issueId: {
+		copy: 'نسخ المعرّف',
+		copied: 'تم النسخ',
+	},
+
 	// WebSocket / Real-time
 	ws: {
 		connected: 'مباشر',

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import type { Issue, PriorityType } from '../../api/issues';
 import { Avatar } from '../ui/Avatar';
+import { IssueIdBadge } from './IssueIdBadge';
 
 // Strip markdown syntax for plain text preview
 function stripMarkdown(text: string): string {
@@ -162,6 +163,9 @@ export function IssueCard({ issue, onView, onEdit, onDelete, isDragging }: Issue
 
       {/* Content */}
       <div className="p-3 pl-5">
+        {/* Issue ID */}
+        <IssueIdBadge issue={issue} className="text-[10px] mb-1" iconSize={11} />
+
         {/* Title */}
         <h4 className="text-sm font-medium text-lapis-700 dark:text-parchment-200 line-clamp-2 pr-6 leading-snug">
           {issue.title}
