@@ -35,6 +35,38 @@ const updateIssueSchema = z.object({
   dueDate: z.string().nullable().optional(),
 });
 
+const moveIssueSchema = z.object({
+  workspace: workspaceSchema,
+  id: z.number().int().positive(),
+  status: z.enum(['to_inscribe', 'carving', 'baked']).optional(),
+  beforeId: z.number().int().positive().nullable().optional(),
+  afterId: z.number().int().positive().nullable().optional(),
+});
+
+const setIssueStatusSchema = z.object({
+  workspace: workspaceSchema,
+  id: z.number().int().positive(),
+  status: z.enum(['to_inscribe', 'carving', 'baked']),
+});
+
+const listIssueCommentsSchema = z.object({
+  workspace: workspaceSchema,
+  id: z.number().int().positive(),
+});
+
+const createIssueCommentSchema = z.object({
+  workspace: workspaceSchema,
+  id: z.number().int().positive(),
+  content: z.string().min(1),
+});
+
+const getIssueActivitySchema = z.object({
+  workspace: workspaceSchema,
+  id: z.number().int().positive(),
+  limit: z.number().int().positive().max(100).optional(),
+  offset: z.number().int().nonnegative().optional(),
+});
+
 const listIssuesSchema = z.object({
   workspace: workspaceSchema,
   status: z.enum(['to_inscribe', 'carving', 'baked']).optional(),
@@ -145,7 +177,7 @@ async function main() {
   const server = new Server(
     {
       name: 'forge',
-      version: '1.2.0',
+      version: '1.3.0',
     },
     {
       capabilities: {
@@ -265,6 +297,87 @@ async function main() {
           properties: {
             ...workspaceProperty,
             id: { type: 'number', description: 'Issue ID' },
+          },
+          required: ['id'],
+        },
+      },
+      {
+        name: 'forge_move_issue',
+        description:
+          'Reorder or move an issue on the Kanban board to a position between two neighbors. Use beforeId/afterId from forge_list_issues output.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            ...workspaceProperty,
+            id: { type: 'number', description: 'Issue ID to move' },
+            status: {
+              type: 'string',
+              enum: ['to_inscribe', 'carving', 'baked'],
+              description: 'Destination column. Omit to keep the current status (reorder in place).',
+            },
+            beforeId: {
+              type: ['number', 'null'],
+              description: 'ID of the issue that should end up directly ABOVE the moved card. Null/omit to drop at the top.',
+            },
+            afterId: {
+              type: ['number', 'null'],
+              description: 'ID of the issue that should end up directly BELOW the moved card. Null/omit to drop at the bottom.',
+            },
+          },
+          required: ['id'],
+        },
+      },
+      {
+        name: 'forge_set_issue_status',
+        description: 'Move an issue to a different Kanban column (status only).',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            ...workspaceProperty,
+            id: { type: 'number', description: 'Issue ID' },
+            status: {
+              type: 'string',
+              enum: ['to_inscribe', 'carving', 'baked'],
+            },
+          },
+          required: ['id', 'status'],
+        },
+      },
+      {
+        name: 'forge_list_issue_comments',
+        description: 'List comments on an issue.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            ...workspaceProperty,
+            id: { type: 'number', description: 'Issue ID' },
+          },
+          required: ['id'],
+        },
+      },
+      {
+        name: 'forge_add_issue_comment',
+        description: 'Add a comment to an issue.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            ...workspaceProperty,
+            id: { type: 'number', description: 'Issue ID' },
+            content: { type: 'string', description: 'Comment markdown content' },
+          },
+          required: ['id', 'content'],
+        },
+      },
+      {
+        name: 'forge_get_issue_activity',
+        description: 'Get the activity/change history for an issue.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            ...workspaceProperty,
+            id: { type: 'number', description: 'Issue ID' },
+            limit: { type: 'number', description: 'Max entries (1-100, default 10)' },
+            offset: { type: 'number', description: 'Pagination offset' },
           },
           required: ['id'],
         },
@@ -466,6 +579,45 @@ async function main() {
           const ws = resolveWorkspaceArg(args, defaultWorkspaceKey);
           const result = await client.deleteIssue(args.id, ws);
           return jsonText({ workspace: ws, id: args.id, ...result });
+        }
+        case 'forge_move_issue': {
+          const args = moveIssueSchema.parse(request.params.arguments ?? {});
+          const ws = resolveWorkspaceArg(args, defaultWorkspaceKey);
+          const status = args.status ?? (await client.getIssue(args.id, ws)).status;
+          const issue = await client.moveIssue(
+            args.id,
+            { status, beforeId: args.beforeId, afterId: args.afterId },
+            ws
+          );
+          return jsonText({ workspace: ws, issue });
+        }
+        case 'forge_set_issue_status': {
+          const args = setIssueStatusSchema.parse(request.params.arguments ?? {});
+          const ws = resolveWorkspaceArg(args, defaultWorkspaceKey);
+          const issue = await client.setIssueStatus(args.id, args.status, ws);
+          return jsonText({ workspace: ws, issue });
+        }
+        case 'forge_list_issue_comments': {
+          const args = listIssueCommentsSchema.parse(request.params.arguments ?? {});
+          const ws = resolveWorkspaceArg(args, defaultWorkspaceKey);
+          const comments = await client.listIssueComments(args.id, ws);
+          return jsonText({ workspace: ws, count: comments.length, comments });
+        }
+        case 'forge_add_issue_comment': {
+          const args = createIssueCommentSchema.parse(request.params.arguments ?? {});
+          const ws = resolveWorkspaceArg(args, defaultWorkspaceKey);
+          const comment = await client.createIssueComment(args.id, args.content, ws);
+          return jsonText({ workspace: ws, comment });
+        }
+        case 'forge_get_issue_activity': {
+          const args = getIssueActivitySchema.parse(request.params.arguments ?? {});
+          const ws = resolveWorkspaceArg(args, defaultWorkspaceKey);
+          const activity = await client.getIssueActivity(
+            args.id,
+            { limit: args.limit, offset: args.offset },
+            ws
+          );
+          return jsonText({ workspace: ws, ...activity });
         }
         case 'forge_list_docs': {
           const args = listDocsSchema.parse(request.params.arguments ?? {});

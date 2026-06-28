@@ -25,12 +25,50 @@ export interface Issue {
   description?: string;
   status: string;
   priority: string;
+  rank: string;
   assigneeId?: number;
   reporterId: number;
   labels: string[];
   dueDate?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Comment {
+  id: number;
+  issueId?: number;
+  docId?: number;
+  releaseId?: number;
+  authorId: number;
+  author?: {
+    id: number;
+    username: string;
+    fullName: string;
+    avatarUrl?: string;
+  };
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ActivityLog {
+  id: number;
+  action: string;
+  entityType: string;
+  entityId: number;
+  entityTitle?: string;
+  user?: {
+    id: number;
+    username: string;
+    fullName: string;
+  };
+  changes?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface ActivityLogResponse {
+  activities: ActivityLog[];
+  hasMore: boolean;
 }
 
 export interface Doc {
@@ -261,6 +299,64 @@ export class ForgeClient {
     return this.request<{ message: string }>(
       'DELETE',
       `/api/issues/${id}`,
+      undefined,
+      true,
+      workspaceKey
+    );
+  }
+
+  async moveIssue(
+    id: number,
+    data: { status: string; beforeId?: number | null; afterId?: number | null },
+    workspaceKey?: string
+  ): Promise<Issue> {
+    return this.request<Issue>('PATCH', `/api/issues/${id}/move`, data, true, workspaceKey);
+  }
+
+  async setIssueStatus(
+    id: number,
+    status: string,
+    workspaceKey?: string
+  ): Promise<Issue> {
+    return this.request<Issue>('PATCH', `/api/issues/${id}/status`, { status }, true, workspaceKey);
+  }
+
+  async listIssueComments(id: number, workspaceKey?: string): Promise<Comment[]> {
+    return this.request<Comment[]>(
+      'GET',
+      `/api/issues/${id}/comments`,
+      undefined,
+      true,
+      workspaceKey
+    );
+  }
+
+  async createIssueComment(
+    id: number,
+    content: string,
+    workspaceKey?: string
+  ): Promise<Comment> {
+    return this.request<Comment>(
+      'POST',
+      `/api/issues/${id}/comments`,
+      { content },
+      true,
+      workspaceKey
+    );
+  }
+
+  async getIssueActivity(
+    id: number,
+    params?: { limit?: number; offset?: number },
+    workspaceKey?: string
+  ): Promise<ActivityLogResponse> {
+    const search = new URLSearchParams();
+    if (params?.limit !== undefined) search.set('limit', String(params.limit));
+    if (params?.offset !== undefined) search.set('offset', String(params.offset));
+    const query = search.toString();
+    return this.request<ActivityLogResponse>(
+      'GET',
+      `/api/issues/${id}/activity${query ? `?${query}` : ''}`,
       undefined,
       true,
       workspaceKey
